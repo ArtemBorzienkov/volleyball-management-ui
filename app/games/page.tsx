@@ -10,8 +10,6 @@ import { Badge } from '@/components/ui/badge'
 import { games, events } from '@/lib/data'
 import { Search, Filter, Calendar, MapPin } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
-import Loading from './loading'
 
 export default function GamesPage() {
   const searchParams = useSearchParams()
@@ -146,8 +144,4 @@ export default function GamesPage() {
       </main>
     </div>
   )
-}
-
-export function Loading() {
-  return null
 }
