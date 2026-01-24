@@ -15,10 +15,6 @@ interface PlayerCardProps {
 export function PlayerCard({ player, rank, showStats = true }: PlayerCardProps) {
   const winRate = getPlayerWinRate(player)
   const pointsDiff = getPlayerPointsDiff(player)
-  const initials = player.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
 
   return (
     <Link href={`/players/${player.id}`}>
@@ -32,7 +28,7 @@ export function PlayerCard({ player, rank, showStats = true }: PlayerCardProps) 
             )}
             <Avatar className="h-12 w-12 border-2 border-border">
               <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                {initials}
+                {player.name}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
@@ -77,11 +73,6 @@ interface PlayerCardCompactProps {
 }
 
 export function PlayerCardCompact({ player, subtitle }: PlayerCardCompactProps) {
-  const initials = player.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-
   return (
     <Link
       href={`/players/${player.id}`}
@@ -89,7 +80,7 @@ export function PlayerCardCompact({ player, subtitle }: PlayerCardCompactProps) 
     >
       <Avatar className="h-8 w-8">
         <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-          {initials}
+          {player.name}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">

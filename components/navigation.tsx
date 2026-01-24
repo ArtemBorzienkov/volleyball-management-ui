@@ -11,17 +11,19 @@ import {
   LineChart,
   Menu,
   X,
+  Plus,
 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 
 const navItems = [
   { href: '/', label: 'Overview', icon: BarChart3 },
-  { href: '/players', label: 'Players', icon: Users },
-  { href: '/games', label: 'Games', icon: Trophy },
-  { href: '/events', label: 'Events', icon: Calendar },
-  { href: '/rankings', label: 'Rankings', icon: BarChart3 },
-  { href: '/analytics', label: 'Analytics', icon: LineChart },
+  { href: '/add-results', label: 'Add Results', icon: Plus },
+  // { href: '/players', label: 'Players', icon: Users },
+  // { href: '/games', label: 'Games', icon: Trophy },
+  // { href: '/events', label: 'Events', icon: Calendar },
+  // { href: '/rankings', label: 'Rankings', icon: BarChart3 },
+  // { href: '/analytics', label: 'Analytics', icon: LineChart },
 ]
 
 export function Navigation() {

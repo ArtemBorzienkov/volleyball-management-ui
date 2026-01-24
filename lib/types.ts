@@ -76,3 +76,10 @@ export interface TeamStats {
   winRate: number
   avgPointsDiff: number
 }
+
+export interface PlayerRanking {
+  metric: string
+  player: Player
+  rank: number
+  value: number
+}

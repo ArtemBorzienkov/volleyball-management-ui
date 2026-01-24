@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useSearchParams, Suspense } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { Navigation } from '@/components/navigation'
 import { PlayerCard } from '@/components/player-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'

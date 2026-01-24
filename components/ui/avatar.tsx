@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import * as AvatarPrimitive from '@radix-ui/react-avatar'
+import { User } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -46,7 +47,9 @@ function AvatarFallback({
         className,
       )}
       {...props}
-    />
+    >
+      <User className="h-1/2 w-1/2 text-muted-foreground" />
+    </AvatarPrimitive.Fallback>
   )
 }
 

@@ -1,0 +1,427 @@
+'use client'
+
+import { Navigation } from '@/components/navigation'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { useForm, Controller, useFieldArray } from 'react-hook-form'
+import { Plus, X } from 'lucide-react'
+import { useState } from 'react'
+import API from '@/lib/api'
+import type { Player } from '@/lib/types'
+
+export default function AddResultsPage() {
+  // Fetch all players
+  const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
+    queryKey: ['players'],
+    queryFn: () => fetch(API.GET_ALL_PLAYERS).then((res) => res.json()),
+  })
+
+  // Form for adding results
+  type GameResult = {
+    team1Player1: string
+    team1Player2: string
+    team2Player1: string
+    team2Player2: string
+    team1Points: number
+    team2Points: number
+  }
+
+  type FormData = {
+    eventName: string
+    eventDate: string
+    eventLocation: string
+    games: GameResult[]
+  }
+
+  const { register, handleSubmit, control, reset } = useForm<FormData>({
+    defaultValues: {
+      eventName: '',
+      eventDate: '',
+      eventLocation: '',
+      games: [
+        {
+          team1Player1: '',
+          team1Player2: '',
+          team2Player1: '',
+          team2Player2: '',
+          team1Points: 0,
+          team2Points: 0,
+        },
+      ],
+    },
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'games',
+  })
+
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+
+  const createEventWithGamesMutation = useMutation({
+    mutationFn: async (payload: {
+      name: string
+      date: string
+      location?: string
+      games: Array<{
+        team1Player1Id: string
+        team1Player2Id: string
+        team2Player1Id: string
+        team2Player2Id: string
+        team1Points: number
+        team2Points: number
+      }>
+    }) => {
+      const response = await fetch(API.CREATE_EVENT_WITH_GAMES, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          message: 'Failed to create event with games',
+        }))
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+      }
+
+      return response.json()
+    },
+    onSuccess: () => {
+      setSubmitSuccess(true)
+      setSubmitError(null)
+      reset()
+      // Clear success message after 3 seconds
+      setTimeout(() => setSubmitSuccess(false), 3000)
+    },
+    onError: (error: Error) => {
+      setSubmitError(error.message || 'Failed to submit results. Please try again.')
+      setSubmitSuccess(false)
+    },
+  })
+
+  const onSubmit = (data: FormData) => {
+    setSubmitError(null)
+    setSubmitSuccess(false)
+
+    // Transform form data to match backend DTO structure
+    const payload = {
+      name: data.eventName,
+      date: data.eventDate,
+      location: data.eventLocation || undefined,
+      games: data.games.map((game) => ({
+        team1Player1Id: game.team1Player1,
+        team1Player2Id: game.team1Player2,
+        team2Player1Id: game.team2Player1,
+        team2Player2Id: game.team2Player2,
+        team1Points: game.team1Points,
+        team2Points: game.team2Points,
+      })),
+    }
+
+    createEventWithGamesMutation.mutate(payload)
+  }
+
+  if (isLoadingPlayers) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center py-12">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Hero Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Add Tournament Results
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Record game results and tournament information.
+          </p>
+        </div>
+
+        {/* Add Results Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Add Results
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* Event Information */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold">Event Information</h3>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="space-y-2">
+                    <label htmlFor="eventName" className="text-sm font-medium">
+                      Event Name
+                    </label>
+                    <Input
+                      id="eventName"
+                      placeholder="Tournament name"
+                      {...register('eventName', { required: true })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="eventDate" className="text-sm font-medium">
+                      Date
+                    </label>
+                    <Input
+                      id="eventDate"
+                      type="date"
+                      {...register('eventDate', { required: true })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="eventLocation" className="text-sm font-medium">
+                      Location
+                    </label>
+                    <Input
+                      id="eventLocation"
+                      placeholder="Venue location"
+                      {...register('eventLocation', { required: true })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Game Results */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold">Game Results</h3>
+
+                {fields.map((field, index) => (
+                  <div key={field.id} className="space-y-4 rounded-lg border p-4 relative">
+                    {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => remove(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <h4 className="text-sm font-medium">Game {index + 1}</h4>
+                    <div className="grid gap-6 md:grid-cols-2">
+                      {/* Team 1 */}
+                      <div className="space-y-4 rounded-lg border p-4">
+                        <h5 className="text-xs font-medium">Team 1</h5>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <label className="text-xs text-muted-foreground">Player 1</label>
+                            <Controller
+                              name={`games.${index}.team1Player1`}
+                              control={control}
+                              rules={{ required: true }}
+                              render={({ field }) => (
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select player" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {players.map((player) => (
+                                      <SelectItem key={player.id} value={player.id}>
+                                        {player.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs text-muted-foreground">Player 2</label>
+                            <Controller
+                              name={`games.${index}.team1Player2`}
+                              control={control}
+                              rules={{ required: true }}
+                              render={({ field }) => (
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select player" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {players.map((player) => (
+                                      <SelectItem key={player.id} value={player.id}>
+                                        {player.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs text-muted-foreground">Points</label>
+                          <Input
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            {...register(`games.${index}.team1Points`, {
+                              required: true,
+                              min: 0,
+                              valueAsNumber: true,
+                            })}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Team 2 */}
+                      <div className="space-y-4 rounded-lg border p-4">
+                        <h5 className="text-xs font-medium">Team 2</h5>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <label className="text-xs text-muted-foreground">Player 1</label>
+                            <Controller
+                              name={`games.${index}.team2Player1`}
+                              control={control}
+                              rules={{ required: true }}
+                              render={({ field }) => (
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select player" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {players.map((player) => (
+                                      <SelectItem key={player.id} value={player.id}>
+                                        {player.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs text-muted-foreground">Player 2</label>
+                            <Controller
+                              name={`games.${index}.team2Player2`}
+                              control={control}
+                              rules={{ required: true }}
+                              render={({ field }) => (
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select player" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {players.map((player) => (
+                                      <SelectItem key={player.id} value={player.id}>
+                                        {player.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs text-muted-foreground">Points</label>
+                          <Input
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            {...register(`games.${index}.team2Points`, {
+                              required: true,
+                              min: 0,
+                              valueAsNumber: true,
+                            })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    append({
+                      team1Player1: '',
+                      team1Player2: '',
+                      team2Player1: '',
+                      team2Player2: '',
+                      team1Points: 0,
+                      team2Points: 0,
+                    })
+                  }
+                  className="w-full sm:w-auto"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add one more game result
+                </Button>
+              </div>
+
+              {/* Error Message */}
+              {submitError && (
+                <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
+                  <p className="text-sm text-destructive">{submitError}</p>
+                </div>
+              )}
+
+              {/* Success Message */}
+              {submitSuccess && (
+                <div className="rounded-lg border border-green-500 bg-green-500/10 p-4">
+                  <p className="text-sm text-green-700 dark:text-green-400">
+                    Event and games created successfully!
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    reset()
+                    setSubmitError(null)
+                    setSubmitSuccess(false)
+                  }}
+                  disabled={createEventWithGamesMutation.isPending}
+                >
+                  Reset
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createEventWithGamesMutation.isPending}
+                >
+                  {createEventWithGamesMutation.isPending
+                    ? 'Submitting...'
+                    : 'Submit Results'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  )
+}
