@@ -11,7 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { Plus, X } from 'lucide-react'
 import { useState } from 'react'
@@ -19,6 +27,13 @@ import API from '@/lib/api'
 import type { Player } from '@/lib/types'
 
 export default function AddResultsPage() {
+  const queryClient = useQueryClient()
+  const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false)
+  const [fieldToUpdate, setFieldToUpdate] = useState<{
+    gameIndex: number
+    fieldName: 'team1Player1' | 'team1Player2' | 'team2Player1' | 'team2Player2'
+  } | null>(null)
+
   // Fetch all players
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
     queryKey: ['players'],
@@ -42,7 +57,7 @@ export default function AddResultsPage() {
     games: GameResult[]
   }
 
-  const { register, handleSubmit, control, reset } = useForm<FormData>({
+  const { register, handleSubmit, control, reset, setValue } = useForm<FormData>({
     defaultValues: {
       eventName: '',
       eventDate: '',
@@ -67,6 +82,94 @@ export default function AddResultsPage() {
 
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+
+  // Form for creating a new player
+  type CreatePlayerFormData = {
+    name: string
+    gender?: string
+    avatar?: string
+  }
+
+  const {
+    register: registerPlayer,
+    handleSubmit: handleSubmitPlayer,
+    reset: resetPlayerForm,
+    control: controlPlayer,
+    formState: { errors: playerErrors },
+  } = useForm<CreatePlayerFormData>({
+    defaultValues: {
+      name: '',
+      gender: '',
+      avatar: '',
+    },
+  })
+
+  // Mutation for creating a new player
+  const createPlayerMutation = useMutation({
+    mutationFn: async (payload: CreatePlayerFormData) => {
+      const response = await fetch(API.CREATE_PLAYER, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: payload.name,
+          gender: payload.gender || undefined,
+          avatar: payload.avatar || undefined,
+          active: true,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          message: 'Failed to create player',
+        }))
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+      }
+
+      return response.json()
+    },
+    onSuccess: async (newPlayer: Player) => {
+      // Invalidate and refetch players list
+      await queryClient.invalidateQueries({ queryKey: ['players'] })
+      
+      // If we have a field to update, set it to the new player's ID
+      if (fieldToUpdate) {
+        // Wait a bit for the players list to refresh, then update the field
+        setTimeout(() => {
+          const { gameIndex, fieldName } = fieldToUpdate
+          if (fieldName === 'team1Player1') {
+            setValue(`games.${gameIndex}.team1Player1`, newPlayer.id)
+          } else if (fieldName === 'team1Player2') {
+            setValue(`games.${gameIndex}.team1Player2`, newPlayer.id)
+          } else if (fieldName === 'team2Player1') {
+            setValue(`games.${gameIndex}.team2Player1`, newPlayer.id)
+          } else if (fieldName === 'team2Player2') {
+            setValue(`games.${gameIndex}.team2Player2`, newPlayer.id)
+          }
+        }, 300)
+      }
+      
+      setIsAddPlayerModalOpen(false)
+      resetPlayerForm()
+      setFieldToUpdate(null)
+    },
+    onError: (error: Error) => {
+      console.error('Failed to create player:', error)
+    },
+  })
+
+  const onAddPlayerSubmit = (data: CreatePlayerFormData) => {
+    createPlayerMutation.mutate(data)
+  }
+
+  const handleAddNewPlayerClick = (
+    gameIndex: number,
+    fieldName: 'team1Player1' | 'team1Player2' | 'team2Player1' | 'team2Player2'
+  ) => {
+    setFieldToUpdate({ gameIndex, fieldName })
+    setIsAddPlayerModalOpen(true)
+  }
 
   const createEventWithGamesMutation = useMutation({
     mutationFn: async (payload: {
@@ -239,7 +342,16 @@ export default function AddResultsPage() {
                               control={control}
                               rules={{ required: true }}
                               render={({ field }) => (
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select
+                                  onValueChange={(value) => {
+                                    if (value === '__add_new__') {
+                                      handleAddNewPlayerClick(index, 'team1Player1')
+                                    } else {
+                                      field.onChange(value)
+                                    }
+                                  }}
+                                  value={field.value}
+                                >
                                   <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select player" />
                                   </SelectTrigger>
@@ -249,6 +361,13 @@ export default function AddResultsPage() {
                                         {player.name}
                                       </SelectItem>
                                     ))}
+                                    <SelectItem
+                                      value="__add_new__"
+                                      className="text-primary font-medium"
+                                    >
+                                      <Plus className="h-4 w-4 inline mr-2" />
+                                      Add new player
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               )}
@@ -261,7 +380,16 @@ export default function AddResultsPage() {
                               control={control}
                               rules={{ required: true }}
                               render={({ field }) => (
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select
+                                  onValueChange={(value) => {
+                                    if (value === '__add_new__') {
+                                      handleAddNewPlayerClick(index, 'team1Player2')
+                                    } else {
+                                      field.onChange(value)
+                                    }
+                                  }}
+                                  value={field.value}
+                                >
                                   <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select player" />
                                   </SelectTrigger>
@@ -271,6 +399,13 @@ export default function AddResultsPage() {
                                         {player.name}
                                       </SelectItem>
                                     ))}
+                                    <SelectItem
+                                      value="__add_new__"
+                                      className="text-primary font-medium"
+                                    >
+                                      <Plus className="h-4 w-4 inline mr-2" />
+                                      Add new player
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               )}
@@ -303,7 +438,16 @@ export default function AddResultsPage() {
                               control={control}
                               rules={{ required: true }}
                               render={({ field }) => (
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select
+                                  onValueChange={(value) => {
+                                    if (value === '__add_new__') {
+                                      handleAddNewPlayerClick(index, 'team2Player1')
+                                    } else {
+                                      field.onChange(value)
+                                    }
+                                  }}
+                                  value={field.value}
+                                >
                                   <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select player" />
                                   </SelectTrigger>
@@ -313,6 +457,13 @@ export default function AddResultsPage() {
                                         {player.name}
                                       </SelectItem>
                                     ))}
+                                    <SelectItem
+                                      value="__add_new__"
+                                      className="text-primary font-medium"
+                                    >
+                                      <Plus className="h-4 w-4 inline mr-2" />
+                                      Add new player
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               )}
@@ -325,7 +476,16 @@ export default function AddResultsPage() {
                               control={control}
                               rules={{ required: true }}
                               render={({ field }) => (
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <Select
+                                  onValueChange={(value) => {
+                                    if (value === '__add_new__') {
+                                      handleAddNewPlayerClick(index, 'team2Player2')
+                                    } else {
+                                      field.onChange(value)
+                                    }
+                                  }}
+                                  value={field.value}
+                                >
                                   <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select player" />
                                   </SelectTrigger>
@@ -335,6 +495,13 @@ export default function AddResultsPage() {
                                         {player.name}
                                       </SelectItem>
                                     ))}
+                                    <SelectItem
+                                      value="__add_new__"
+                                      className="text-primary font-medium"
+                                    >
+                                      <Plus className="h-4 w-4 inline mr-2" />
+                                      Add new player
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               )}
@@ -421,6 +588,81 @@ export default function AddResultsPage() {
             </form>
           </CardContent>
         </Card>
+
+        {/* Add New Player Modal */}
+        <Dialog open={isAddPlayerModalOpen} onOpenChange={setIsAddPlayerModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Player</DialogTitle>
+              <DialogDescription>
+                Create a new player to add to the tournament.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmitPlayer(onAddPlayerSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="playerName" className="text-sm font-medium">
+                  Name <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  id="playerName"
+                  placeholder="Enter player name"
+                  {...registerPlayer('name', { required: 'Player name is required' })}
+                />
+                {playerErrors.name && (
+                  <p className="text-sm text-destructive">{playerErrors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="playerGender" className="text-sm font-medium">
+                  Gender
+                </label>
+                <Controller
+                  name="gender"
+                  control={controlPlayer}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="playerAvatar" className="text-sm font-medium">
+                  Avatar URL
+                </label>
+                <Input
+                  id="playerAvatar"
+                  type="url"
+                  placeholder="https://example.com/avatar.jpg"
+                  {...registerPlayer('avatar')}
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsAddPlayerModalOpen(false)
+                    resetPlayerForm()
+                    setFieldToUpdate(null)
+                  }}
+                  disabled={createPlayerMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createPlayerMutation.isPending}>
+                  {createPlayerMutation.isPending ? 'Creating...' : 'Create Player'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   )
