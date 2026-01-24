@@ -33,6 +33,8 @@ jobs:
           context: .
           push: true
           tags: artemborzienkov/volleyball-management-ui:${{ github.run_id }}
+          build-args: |
+            NEXT_PUBLIC_HOST_URL=http://64.227.120.106:3000
 
       - name: Deploy and run new image to digital ocean
         uses: appleboy/ssh-action@master
@@ -45,4 +47,4 @@ jobs:
             docker stop volleyball-management-ui &&
             docker rm volleyball-management-ui &&
             docker pull artemborzienkov/volleyball-management-ui:${{ github.run_id }} &&
-            docker run -d --name volleyball-management-ui -p 8080:3000 -e NODE_ENV=prod -e NEXT_PUBLIC_HOST_URL=64.227.120.106:3000 artemborzienkov/volleyball-management-ui:${{ github.run_id }}
+            docker run -d --name volleyball-management-ui -p 8080:3000 -e NODE_ENV=prod artemborzienkov/volleyball-management-ui:${{ github.run_id }}
