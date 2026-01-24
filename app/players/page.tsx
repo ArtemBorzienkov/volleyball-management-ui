@@ -16,7 +16,7 @@ type FilterType = 'all' | 'active' | 'inactive' | 'male' | 'female'
 
 const Loading = () => null
 
-export default function PlayersPage() {
+function PlayersContent() {
   const searchParams = useSearchParams()
   const [searchQuery, setSearchQuery] = useState(searchParams?.get('query') || '')
   const [activeFilter, setActiveFilter] = useState<FilterType>(searchParams?.get('filter') as FilterType || 'all')
@@ -52,6 +52,60 @@ export default function PlayersPage() {
   ]
 
   return (
+    <>
+      {/* Filters */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search players..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {filters.map((filter) => (
+                <Button
+                  key={filter.value}
+                  variant={activeFilter === filter.value ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setActiveFilter(filter.value)}
+                >
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Players Grid */}
+      {filteredPlayers.length > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredPlayers.map((player, idx) => (
+            <PlayerCard key={player.id} player={player} />
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Filter className="h-12 w-12 text-muted-foreground/50" />
+            <p className="mt-4 text-lg font-medium">No players found</p>
+            <p className="text-sm text-muted-foreground">
+              Try adjusting your search or filter criteria.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  )
+}
+
+export default function PlayersPage() {
+  return (
     <div className="min-h-screen bg-background">
       <Navigation />
 
@@ -76,54 +130,8 @@ export default function PlayersPage() {
           </div>
         </div>
 
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search players..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {filters.map((filter) => (
-                  <Button
-                    key={filter.value}
-                    variant={activeFilter === filter.value ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setActiveFilter(filter.value)}
-                  >
-                    {filter.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Players Grid */}
         <Suspense fallback={<Loading />}>
-          {filteredPlayers.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredPlayers.map((player, idx) => (
-                <PlayerCard key={player.id} player={player} />
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Filter className="h-12 w-12 text-muted-foreground/50" />
-                <p className="mt-4 text-lg font-medium">No players found</p>
-                <p className="text-sm text-muted-foreground">
-                  Try adjusting your search or filter criteria.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          <PlayersContent />
         </Suspense>
       </main>
     </div>
