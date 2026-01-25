@@ -1,0 +1,84 @@
+{
+  "nav": {
+    "overview": "Агляд",
+    "addResults": "Дадаць вынікі"
+  },
+  "home": {
+    "title": "Аналітыка пляжнага валейбола",
+    "subtitle": "Адсочвайце турніры, аналізуйце вынікі гульцоў і знаходзьце пераможныя камбінацыі.",
+    "stats": {
+      "activePlayers": "Актыўныя гульцы",
+      "totalGames": "Усяго гульняў",
+      "tournaments": "Турніры",
+      "avgWinRate": "Сярэдні працэнт перамог"
+    },
+    "topPlayers": {
+      "title": "Топ гульцы",
+      "viewAll": "Праглядзець усе",
+      "noPlayers": "Гульцоў не знойдзена."
+    },
+    "recentGames": {
+      "title": "Апошнія гульні",
+      "viewAll": "Праглядзець усе",
+      "noGames": "Апошніх гульняў не знойдзена."
+    },
+    "statsDescriptions": {
+      "totalRegistered": "усяго зарэгістравана",
+      "acrossAllTournaments": "Ва ўсіх турнірах",
+      "upcoming": "будучыя",
+      "top10Players": "Топ 10 гульцоў"
+    }
+  },
+  "addResults": {
+    "title": "Дадаць вынікі турніру",
+    "subtitle": "Запісаць вынікі гульняў і інфармацыю пра турнір.",
+    "cardTitle": "Дадаць вынікі",
+    "eventInformation": "Інфармацыя пра падзею",
+    "eventName": "Назва падзеі",
+    "eventNamePlaceholder": "Назва турніру",
+    "date": "Дата",
+    "location": "Месца правядзення",
+    "locationPlaceholder": "Месца правядзення",
+    "gameResults": "Вынікі гульняў",
+    "game": "Гульня",
+    "team1": "Каманда 1",
+    "team2": "Каманда 2",
+    "player1": "Гулец 1",
+    "player2": "Гулец 2",
+    "points": "Ачкі",
+    "selectPlayer": "Выберыце гульца",
+    "addNewPlayer": "Дадаць новага гульца",
+    "addOneMoreGame": "Дадаць яшчэ адзін вынік гульні",
+    "reset": "Скінуць",
+    "submit": "Адправіць вынікі",
+    "submitting": "Адпраўка...",
+    "success": "Падзею і гульні паспяхова створана!",
+    "addPlayerModal": {
+      "title": "Дадаць новага гульца",
+      "description": "Стварыце новага гульца для дадання да турніру.",
+      "name": "Імя",
+      "namePlaceholder": "Увядзіце імя гульца",
+      "nameRequired": "Імя гульца абавязковае",
+      "gender": "Пол",
+      "genderPlaceholder": "Выберыце пол (неабавязкова)",
+      "male": "Мужчына",
+      "female": "Жанчына",
+      "avatarUrl": "URL аватара",
+      "avatarPlaceholder": "https://example.com/avatar.jpg",
+      "cancel": "Скасаваць",
+      "create": "Стварыць гульца",
+      "creating": "Стварэнне..."
+    }
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "save": "Захаваць",
+    "cancel": "Скасаваць",
+    "submit": "Адправіць",
+    "reset": "Скінуць",
+    "delete": "Выдаліць",
+    "edit": "Рэдагаваць",
+    "view": "Праглядзець",
+    "close": "Закрыць"
+  }
+}

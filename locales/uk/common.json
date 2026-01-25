@@ -1,0 +1,84 @@
+{
+  "nav": {
+    "overview": "Огляд",
+    "addResults": "Додати результати"
+  },
+  "home": {
+    "title": "Аналітика пляжного волейболу",
+    "subtitle": "Відстежуйте турніри, аналізуйте результати гравців та знаходьте переможні комбінації.",
+    "stats": {
+      "activePlayers": "Активні гравці",
+      "totalGames": "Всього ігор",
+      "tournaments": "Турніри",
+      "avgWinRate": "Середній відсоток перемог"
+    },
+    "topPlayers": {
+      "title": "Топ гравці",
+      "viewAll": "Переглянути всі",
+      "noPlayers": "Гравців не знайдено."
+    },
+    "recentGames": {
+      "title": "Останні ігри",
+      "viewAll": "Переглянути всі",
+      "noGames": "Останніх ігор не знайдено."
+    },
+    "statsDescriptions": {
+      "totalRegistered": "всього зареєстровано",
+      "acrossAllTournaments": "У всіх турнірах",
+      "upcoming": "майбутні",
+      "top10Players": "Топ 10 гравців"
+    }
+  },
+  "addResults": {
+    "title": "Додати результати турніру",
+    "subtitle": "Записати результати ігор та інформацію про турнір.",
+    "cardTitle": "Додати результати",
+    "eventInformation": "Інформація про подію",
+    "eventName": "Назва події",
+    "eventNamePlaceholder": "Назва турніру",
+    "date": "Дата",
+    "location": "Місце проведення",
+    "locationPlaceholder": "Місце проведення",
+    "gameResults": "Результати ігор",
+    "game": "Гра",
+    "team1": "Команда 1",
+    "team2": "Команда 2",
+    "player1": "Гравець 1",
+    "player2": "Гравець 2",
+    "points": "Очки",
+    "selectPlayer": "Виберіть гравця",
+    "addNewPlayer": "Додати нового гравця",
+    "addOneMoreGame": "Додати ще один результат гри",
+    "reset": "Скинути",
+    "submit": "Відправити результати",
+    "submitting": "Відправка...",
+    "success": "Подію та ігри успішно створено!",
+    "addPlayerModal": {
+      "title": "Додати нового гравця",
+      "description": "Створіть нового гравця для додавання до турніру.",
+      "name": "Ім'я",
+      "namePlaceholder": "Введіть ім'я гравця",
+      "nameRequired": "Ім'я гравця обов'язкове",
+      "gender": "Стать",
+      "genderPlaceholder": "Виберіть стать (необов'язково)",
+      "male": "Чоловік",
+      "female": "Жінка",
+      "avatarUrl": "URL аватара",
+      "avatarPlaceholder": "https://example.com/avatar.jpg",
+      "cancel": "Скасувати",
+      "create": "Створити гравця",
+      "creating": "Створення..."
+    }
+  },
+  "common": {
+    "loading": "Завантаження...",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "submit": "Відправити",
+    "reset": "Скинути",
+    "delete": "Видалити",
+    "edit": "Редагувати",
+    "view": "Переглянути",
+    "close": "Закрити"
+  }
+}

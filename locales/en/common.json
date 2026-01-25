@@ -1,0 +1,84 @@
+{
+  "nav": {
+    "overview": "Overview",
+    "addResults": "Add Results"
+  },
+  "home": {
+    "title": "Beach Volleyball Analytics",
+    "subtitle": "Track tournaments, analyze player performance, and discover winning combinations.",
+    "stats": {
+      "activePlayers": "Active Players",
+      "totalGames": "Total Games",
+      "tournaments": "Tournaments",
+      "avgWinRate": "Avg Win Rate"
+    },
+    "topPlayers": {
+      "title": "Top Players",
+      "viewAll": "View All",
+      "noPlayers": "No players found."
+    },
+    "recentGames": {
+      "title": "Recent Games",
+      "viewAll": "View All",
+      "noGames": "No recent games found."
+    },
+    "statsDescriptions": {
+      "totalRegistered": "total registered",
+      "acrossAllTournaments": "Across all tournaments",
+      "upcoming": "upcoming",
+      "top10Players": "Top 10 players"
+    }
+  },
+  "addResults": {
+    "title": "Add Tournament Results",
+    "subtitle": "Record game results and tournament information.",
+    "cardTitle": "Add Results",
+    "eventInformation": "Event Information",
+    "eventName": "Event Name",
+    "eventNamePlaceholder": "Tournament name",
+    "date": "Date",
+    "location": "Location",
+    "locationPlaceholder": "Venue location",
+    "gameResults": "Game Results",
+    "game": "Game",
+    "team1": "Team 1",
+    "team2": "Team 2",
+    "player1": "Player 1",
+    "player2": "Player 2",
+    "points": "Points",
+    "selectPlayer": "Select player",
+    "addNewPlayer": "Add new player",
+    "addOneMoreGame": "Add one more game result",
+    "reset": "Reset",
+    "submit": "Submit Results",
+    "submitting": "Submitting...",
+    "success": "Event and games created successfully!",
+    "addPlayerModal": {
+      "title": "Add New Player",
+      "description": "Create a new player to add to the tournament.",
+      "name": "Name",
+      "namePlaceholder": "Enter player name",
+      "nameRequired": "Player name is required",
+      "gender": "Gender",
+      "genderPlaceholder": "Select gender (optional)",
+      "male": "Male",
+      "female": "Female",
+      "avatarUrl": "Avatar URL",
+      "avatarPlaceholder": "https://example.com/avatar.jpg",
+      "cancel": "Cancel",
+      "create": "Create Player",
+      "creating": "Creating..."
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "reset": "Reset",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close"
+  }
+}

@@ -15,20 +15,23 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useTranslation } from 'react-i18next'
+import { LanguageSwitcher } from '@/components/language-switcher'
 
 const navItems = [
-  { href: '/', label: 'Overview', icon: BarChart3 },
-  { href: '/add-results', label: 'Add Results', icon: Plus },
-  // { href: '/players', label: 'Players', icon: Users },
-  // { href: '/games', label: 'Games', icon: Trophy },
-  // { href: '/events', label: 'Events', icon: Calendar },
-  // { href: '/rankings', label: 'Rankings', icon: BarChart3 },
-  // { href: '/analytics', label: 'Analytics', icon: LineChart },
+  { href: '/', labelKey: 'nav.overview', icon: BarChart3 },
+  { href: '/add-results', labelKey: 'nav.addResults', icon: Plus },
+  // { href: '/players', labelKey: 'nav.players', icon: Users },
+  // { href: '/games', labelKey: 'nav.games', icon: Trophy },
+  // { href: '/events', labelKey: 'nav.events', icon: Calendar },
+  // { href: '/rankings', labelKey: 'nav.rankings', icon: BarChart3 },
+  // { href: '/analytics', labelKey: 'nav.analytics', icon: LineChart },
 ]
 
 export function Navigation() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { t } = useTranslation()
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -58,10 +61,11 @@ export function Navigation() {
                   )}
                 >
                   <item.icon className="h-4 w-4" />
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               )
             })}
+            <LanguageSwitcher />
           </nav>
 
           <Button
@@ -98,10 +102,13 @@ export function Navigation() {
                     )}
                   >
                     <item.icon className="h-4 w-4" />
-                    {item.label}
+                    {t(item.labelKey)}
                   </Link>
                 )
               })}
+              <div className="px-3 py-2">
+                <LanguageSwitcher />
+              </div>
             </div>
           </nav>
         )}

@@ -23,10 +23,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { Plus, X } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import API from '@/lib/api'
 import type { Player } from '@/lib/types'
 
 export default function AddResultsPage() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false)
   const [fieldToUpdate, setFieldToUpdate] = useState<{
@@ -243,7 +245,7 @@ export default function AddResultsPage() {
         <Navigation />
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground">{t('common.loading')}</p>
           </div>
         </main>
       </div>
@@ -258,10 +260,10 @@ export default function AddResultsPage() {
         {/* Hero Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Add Tournament Results
+            {t('addResults.title')}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Record game results and tournament information.
+            {t('addResults.subtitle')}
           </p>
         </div>
 
@@ -270,28 +272,28 @@ export default function AddResultsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              Add Results
+              {t('addResults.cardTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Event Information */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold">Event Information</h3>
+                <h3 className="text-sm font-semibold">{t('addResults.eventInformation')}</h3>
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <label htmlFor="eventName" className="text-sm font-medium">
-                      Event Name
+                      {t('addResults.eventName')}
                     </label>
                     <Input
                       id="eventName"
-                      placeholder="Tournament name"
+                      placeholder={t('addResults.eventNamePlaceholder')}
                       {...register('eventName', { required: true })}
                     />
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="eventDate" className="text-sm font-medium">
-                      Date
+                      {t('addResults.date')}
                     </label>
                     <Input
                       id="eventDate"
@@ -301,11 +303,11 @@ export default function AddResultsPage() {
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="eventLocation" className="text-sm font-medium">
-                      Location
+                      {t('addResults.location')}
                     </label>
                     <Input
                       id="eventLocation"
-                      placeholder="Venue location"
+                      placeholder={t('addResults.locationPlaceholder')}
                       {...register('eventLocation', { required: true })}
                     />
                   </div>
@@ -314,7 +316,7 @@ export default function AddResultsPage() {
 
               {/* Game Results */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold">Game Results</h3>
+                <h3 className="text-sm font-semibold">{t('addResults.gameResults')}</h3>
 
                 {fields.map((field, index) => (
                   <div key={field.id} className="space-y-4 rounded-lg border p-4 relative">
@@ -329,14 +331,14 @@ export default function AddResultsPage() {
                         <X className="h-4 w-4" />
                       </Button>
                     )}
-                    <h4 className="text-sm font-medium">Game {index + 1}</h4>
+                    <h4 className="text-sm font-medium">{t('addResults.game')} {index + 1}</h4>
                     <div className="grid gap-6 md:grid-cols-2">
                       {/* Team 1 */}
                       <div className="space-y-4 rounded-lg border p-4">
-                        <h5 className="text-xs font-medium">Team 1</h5>
+                        <h5 className="text-xs font-medium">{t('addResults.team1')}</h5>
                         <div className="grid gap-4 sm:grid-cols-2">
                           <div className="space-y-2">
-                            <label className="text-xs text-muted-foreground">Player 1</label>
+                            <label className="text-xs text-muted-foreground">{t('addResults.player1')}</label>
                             <Controller
                               name={`games.${index}.team1Player1`}
                               control={control}
@@ -366,7 +368,7 @@ export default function AddResultsPage() {
                                       className="text-primary font-medium"
                                     >
                                       <Plus className="h-4 w-4 inline mr-2" />
-                                      Add new player
+                                      {t('addResults.addNewPlayer')}
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -374,7 +376,7 @@ export default function AddResultsPage() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-xs text-muted-foreground">Player 2</label>
+                            <label className="text-xs text-muted-foreground">{t('addResults.player2')}</label>
                             <Controller
                               name={`games.${index}.team1Player2`}
                               control={control}
@@ -404,7 +406,7 @@ export default function AddResultsPage() {
                                       className="text-primary font-medium"
                                     >
                                       <Plus className="h-4 w-4 inline mr-2" />
-                                      Add new player
+                                      {t('addResults.addNewPlayer')}
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -413,7 +415,7 @@ export default function AddResultsPage() {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-xs text-muted-foreground">Points</label>
+                          <label className="text-xs text-muted-foreground">{t('addResults.points')}</label>
                           <Input
                             type="number"
                             min="0"
@@ -429,7 +431,7 @@ export default function AddResultsPage() {
 
                       {/* Team 2 */}
                       <div className="space-y-4 rounded-lg border p-4">
-                        <h5 className="text-xs font-medium">Team 2</h5>
+                        <h5 className="text-xs font-medium">{t('addResults.team2')}</h5>
                         <div className="grid gap-4 sm:grid-cols-2">
                           <div className="space-y-2">
                             <label className="text-xs text-muted-foreground">Player 1</label>
@@ -462,7 +464,7 @@ export default function AddResultsPage() {
                                       className="text-primary font-medium"
                                     >
                                       <Plus className="h-4 w-4 inline mr-2" />
-                                      Add new player
+                                      {t('addResults.addNewPlayer')}
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -470,7 +472,7 @@ export default function AddResultsPage() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-xs text-muted-foreground">Player 2</label>
+                            <label className="text-xs text-muted-foreground">{t('addResults.player2')}</label>
                             <Controller
                               name={`games.${index}.team2Player2`}
                               control={control}
@@ -500,7 +502,7 @@ export default function AddResultsPage() {
                                       className="text-primary font-medium"
                                     >
                                       <Plus className="h-4 w-4 inline mr-2" />
-                                      Add new player
+                                      {t('addResults.addNewPlayer')}
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -509,7 +511,7 @@ export default function AddResultsPage() {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-xs text-muted-foreground">Points</label>
+                          <label className="text-xs text-muted-foreground">{t('addResults.points')}</label>
                           <Input
                             type="number"
                             min="0"
@@ -543,7 +545,7 @@ export default function AddResultsPage() {
                   className="w-full sm:w-auto"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add one more game result
+                  {t('addResults.addOneMoreGame')}
                 </Button>
               </div>
 
@@ -558,7 +560,7 @@ export default function AddResultsPage() {
               {submitSuccess && (
                 <div className="rounded-lg border border-green-500 bg-green-500/10 p-4">
                   <p className="text-sm text-green-700 dark:text-green-400">
-                    Event and games created successfully!
+                    {t('addResults.success')}
                   </p>
                 </div>
               )}
@@ -574,15 +576,15 @@ export default function AddResultsPage() {
                   }}
                   disabled={createEventWithGamesMutation.isPending}
                 >
-                  Reset
+                  {t('addResults.reset')}
                 </Button>
                 <Button
                   type="submit"
                   disabled={createEventWithGamesMutation.isPending}
                 >
                   {createEventWithGamesMutation.isPending
-                    ? 'Submitting...'
-                    : 'Submit Results'}
+                    ? t('addResults.submitting')
+                    : t('addResults.submit')}
                 </Button>
               </div>
             </form>
@@ -593,20 +595,20 @@ export default function AddResultsPage() {
         <Dialog open={isAddPlayerModalOpen} onOpenChange={setIsAddPlayerModalOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Player</DialogTitle>
+              <DialogTitle>{t('addResults.addPlayerModal.title')}</DialogTitle>
               <DialogDescription>
-                Create a new player to add to the tournament.
+                {t('addResults.addPlayerModal.description')}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmitPlayer(onAddPlayerSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="playerName" className="text-sm font-medium">
-                  Name <span className="text-destructive">*</span>
+                  {t('addResults.addPlayerModal.name')} <span className="text-destructive">*</span>
                 </label>
                 <Input
                   id="playerName"
-                  placeholder="Enter player name"
-                  {...registerPlayer('name', { required: 'Player name is required' })}
+                  placeholder={t('addResults.addPlayerModal.namePlaceholder')}
+                  {...registerPlayer('name', { required: t('addResults.addPlayerModal.nameRequired') })}
                 />
                 {playerErrors.name && (
                   <p className="text-sm text-destructive">{playerErrors.name.message}</p>
@@ -614,7 +616,7 @@ export default function AddResultsPage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="playerGender" className="text-sm font-medium">
-                  Gender
+                  {t('addResults.addPlayerModal.gender')}
                 </label>
                 <Controller
                   name="gender"
@@ -622,11 +624,11 @@ export default function AddResultsPage() {
                   render={({ field }) => (
                     <Select onValueChange={field.onChange} value={field.value || ''}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select gender (optional)" />
+                        <SelectValue placeholder={t('addResults.addPlayerModal.genderPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="male">{t('addResults.addPlayerModal.male')}</SelectItem>
+                        <SelectItem value="female">{t('addResults.addPlayerModal.female')}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -634,12 +636,12 @@ export default function AddResultsPage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="playerAvatar" className="text-sm font-medium">
-                  Avatar URL
+                  {t('addResults.addPlayerModal.avatarUrl')}
                 </label>
                 <Input
                   id="playerAvatar"
                   type="url"
-                  placeholder="https://example.com/avatar.jpg"
+                  placeholder={t('addResults.addPlayerModal.avatarPlaceholder')}
                   {...registerPlayer('avatar')}
                 />
               </div>
@@ -654,10 +656,10 @@ export default function AddResultsPage() {
                   }}
                   disabled={createPlayerMutation.isPending}
                 >
-                  Cancel
+                  {t('addResults.addPlayerModal.cancel')}
                 </Button>
                 <Button type="submit" disabled={createPlayerMutation.isPending}>
-                  {createPlayerMutation.isPending ? 'Creating...' : 'Create Player'}
+                  {createPlayerMutation.isPending ? t('addResults.addPlayerModal.creating') : t('addResults.addPlayerModal.create')}
                 </Button>
               </DialogFooter>
             </form>

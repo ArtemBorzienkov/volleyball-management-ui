@@ -1,0 +1,84 @@
+{
+  "nav": {
+    "overview": "Przegląd",
+    "addResults": "Dodaj wyniki"
+  },
+  "home": {
+    "title": "Analityka siatkówki plażowej",
+    "subtitle": "Śledź turnieje, analizuj wyniki graczy i odkrywaj zwycięskie kombinacje.",
+    "stats": {
+      "activePlayers": "Aktywni gracze",
+      "totalGames": "Wszystkie gry",
+      "tournaments": "Turnieje",
+      "avgWinRate": "Średni wskaźnik zwycięstw"
+    },
+    "topPlayers": {
+      "title": "Najlepsi gracze",
+      "viewAll": "Zobacz wszystkich",
+      "noPlayers": "Nie znaleziono graczy."
+    },
+    "recentGames": {
+      "title": "Ostatnie gry",
+      "viewAll": "Zobacz wszystkie",
+      "noGames": "Nie znaleziono ostatnich gier."
+    },
+    "statsDescriptions": {
+      "totalRegistered": "wszystkich zarejestrowanych",
+      "acrossAllTournaments": "We wszystkich turniejach",
+      "upcoming": "nadchodzące",
+      "top10Players": "Top 10 graczy"
+    }
+  },
+  "addResults": {
+    "title": "Dodaj wyniki turnieju",
+    "subtitle": "Zapisz wyniki gier i informacje o turnieju.",
+    "cardTitle": "Dodaj wyniki",
+    "eventInformation": "Informacje o wydarzeniu",
+    "eventName": "Nazwa wydarzenia",
+    "eventNamePlaceholder": "Nazwa turnieju",
+    "date": "Data",
+    "location": "Lokalizacja",
+    "locationPlaceholder": "Miejsce wydarzenia",
+    "gameResults": "Wyniki gier",
+    "game": "Gra",
+    "team1": "Drużyna 1",
+    "team2": "Drużyna 2",
+    "player1": "Gracz 1",
+    "player2": "Gracz 2",
+    "points": "Punkty",
+    "selectPlayer": "Wybierz gracza",
+    "addNewPlayer": "Dodaj nowego gracza",
+    "addOneMoreGame": "Dodaj jeszcze jeden wynik gry",
+    "reset": "Resetuj",
+    "submit": "Prześlij wyniki",
+    "submitting": "Przesyłanie...",
+    "success": "Wydarzenie i gry zostały pomyślnie utworzone!",
+    "addPlayerModal": {
+      "title": "Dodaj nowego gracza",
+      "description": "Utwórz nowego gracza, aby dodać go do turnieju.",
+      "name": "Imię",
+      "namePlaceholder": "Wprowadź imię gracza",
+      "nameRequired": "Imię gracza jest wymagane",
+      "gender": "Płeć",
+      "genderPlaceholder": "Wybierz płeć (opcjonalnie)",
+      "male": "Mężczyzna",
+      "female": "Kobieta",
+      "avatarUrl": "URL awatara",
+      "avatarPlaceholder": "https://example.com/avatar.jpg",
+      "cancel": "Anuluj",
+      "create": "Utwórz gracza",
+      "creating": "Tworzenie..."
+    }
+  },
+  "common": {
+    "loading": "Ładowanie...",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "submit": "Prześlij",
+    "reset": "Resetuj",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "view": "Zobacz",
+    "close": "Zamknij"
+  }
+}

@@ -10,10 +10,12 @@ import { Users, Trophy, Calendar, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import API from '@/lib/api'
 import type { Player, Game, Event, TeamStats, PlayerRanking } from '@/lib/types'
 
 export default function HomePage() {
+  const { t } = useTranslation()
   // Fetch all players
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
     queryKey: ['players'],
@@ -65,7 +67,7 @@ export default function HomePage() {
         <Navigation />
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground">{t('common.loading')}</p>
           </div>
         </main>
       </div>
@@ -80,37 +82,37 @@ export default function HomePage() {
         {/* Hero Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Beach Volleyball Analytics
+            {t('home.title')}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Track tournaments, analyze player performance, and discover winning combinations.
+            {t('home.subtitle')}
           </p>
         </div>
 
         {/* Stats Overview */}
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Active Players"
+            title={t('home.stats.activePlayers')}
             value={activePlayers}
-            description={`${players.length} total registered`}
+            description={`${players.length} ${t('home.statsDescriptions.totalRegistered')}`}
             icon={Users}
           />
           <StatCard
-            title="Total Games"
+            title={t('home.stats.totalGames')}
             value={allGames.length}
-            description="Across all tournaments"
+            description={t('home.statsDescriptions.acrossAllTournaments')}
             icon={Trophy}
           />
           <StatCard
-            title="Tournaments"
+            title={t('home.stats.tournaments')}
             value={allEvents.length}
-            description={`${upcomingEvents.length} upcoming`}
+            description={`${upcomingEvents.length} ${t('home.statsDescriptions.upcoming')}`}
             icon={Calendar}
           />
           <StatCard
-            title="Avg Win Rate"
+            title={t('home.stats.avgWinRate')}
             value="52%"
-            description="Top 10 players"
+            description={t('home.statsDescriptions.top10Players')}
             icon={TrendingUp}
           />
         </div>
@@ -120,9 +122,9 @@ export default function HomePage() {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Top Players</CardTitle>
+                <CardTitle className="text-lg">{t('home.topPlayers.title')}</CardTitle>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/rankings">View All</Link>
+                  <Link href="/rankings">{t('home.topPlayers.viewAll')}</Link>
                 </Button>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -131,7 +133,7 @@ export default function HomePage() {
                     <PlayerCard key={`top-player-${player.id}-${idx}`} player={player} rank={idx + 1} />
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">No players found.</p>
+                  <p className="text-sm text-muted-foreground">{t('home.topPlayers.noPlayers')}</p>
                 )}
               </CardContent>
             </Card>
