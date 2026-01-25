@@ -32,8 +32,10 @@ export default function AddResultsPage() {
   const queryClient = useQueryClient()
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false)
   const [fieldToUpdate, setFieldToUpdate] = useState<{
-    gameIndex: number
-    fieldName: 'team1Player1' | 'team1Player2' | 'team2Player1' | 'team2Player2'
+    gameIndex?: number
+    placeIndex?: number
+    fieldName?: 'team1Player1' | 'team1Player2' | 'team2Player1' | 'team2Player2'
+    type: 'game' | 'place'
   } | null>(null)
 
   // Fetch all players
@@ -52,10 +54,16 @@ export default function AddResultsPage() {
     team2Points: number
   }
 
+  type PlaceResult = {
+    place: string
+    playerId: string
+  }
+
   type FormData = {
     eventName: string
     eventDate: string
     eventLocation: string
+    places: PlaceResult[]
     games: GameResult[]
   }
 
@@ -64,6 +72,12 @@ export default function AddResultsPage() {
       eventName: '',
       eventDate: '',
       eventLocation: '',
+      places: [
+        {
+          place: '',
+          playerId: '',
+        },
+      ],
       games: [
         {
           team1Player1: '',
@@ -77,9 +91,14 @@ export default function AddResultsPage() {
     },
   })
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields: gameFields, append: appendGame, remove: removeGame } = useFieldArray({
     control,
     name: 'games',
+  })
+
+  const { fields: placeFields, append: appendPlace, remove: removePlace } = useFieldArray({
+    control,
+    name: 'places',
   })
 
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -139,15 +158,19 @@ export default function AddResultsPage() {
       if (fieldToUpdate) {
         // Wait a bit for the players list to refresh, then update the field
         setTimeout(() => {
-          const { gameIndex, fieldName } = fieldToUpdate
-          if (fieldName === 'team1Player1') {
-            setValue(`games.${gameIndex}.team1Player1`, newPlayer.id)
-          } else if (fieldName === 'team1Player2') {
-            setValue(`games.${gameIndex}.team1Player2`, newPlayer.id)
-          } else if (fieldName === 'team2Player1') {
-            setValue(`games.${gameIndex}.team2Player1`, newPlayer.id)
-          } else if (fieldName === 'team2Player2') {
-            setValue(`games.${gameIndex}.team2Player2`, newPlayer.id)
+          if (fieldToUpdate.type === 'game' && fieldToUpdate.gameIndex !== undefined && fieldToUpdate.fieldName) {
+            const { gameIndex, fieldName } = fieldToUpdate
+            if (fieldName === 'team1Player1') {
+              setValue(`games.${gameIndex}.team1Player1`, newPlayer.id)
+            } else if (fieldName === 'team1Player2') {
+              setValue(`games.${gameIndex}.team1Player2`, newPlayer.id)
+            } else if (fieldName === 'team2Player1') {
+              setValue(`games.${gameIndex}.team2Player1`, newPlayer.id)
+            } else if (fieldName === 'team2Player2') {
+              setValue(`games.${gameIndex}.team2Player2`, newPlayer.id)
+            }
+          } else if (fieldToUpdate.type === 'place' && fieldToUpdate.placeIndex !== undefined) {
+            setValue(`places.${fieldToUpdate.placeIndex}.playerId`, newPlayer.id)
           }
         }, 300)
       }
@@ -169,7 +192,12 @@ export default function AddResultsPage() {
     gameIndex: number,
     fieldName: 'team1Player1' | 'team1Player2' | 'team2Player1' | 'team2Player2'
   ) => {
-    setFieldToUpdate({ gameIndex, fieldName })
+    setFieldToUpdate({ gameIndex, fieldName, type: 'game' })
+    setIsAddPlayerModalOpen(true)
+  }
+
+  const handleAddNewPlayerForPlace = (placeIndex: number) => {
+    setFieldToUpdate({ placeIndex, type: 'place' })
     setIsAddPlayerModalOpen(true)
   }
 
@@ -178,6 +206,7 @@ export default function AddResultsPage() {
       name: string
       date: string
       location?: string
+      places?: Record<string, string>
       games: Array<{
         team1Player1Id: string
         team1Player2Id: string
@@ -221,11 +250,20 @@ export default function AddResultsPage() {
     setSubmitError(null)
     setSubmitSuccess(false)
 
+    // Transform places array to JSON object (place number -> player ID)
+    const placesObject: Record<string, string> = {}
+    data.places.forEach((place) => {
+      if (place.place && place.playerId) {
+        placesObject[place.place] = place.playerId
+      }
+    })
+
     // Transform form data to match backend DTO structure
     const payload = {
       name: data.eventName,
       date: data.eventDate,
       location: data.eventLocation || undefined,
+      places: Object.keys(placesObject).length > 0 ? placesObject : undefined,
       games: data.games.map((game) => ({
         team1Player1Id: game.team1Player1,
         team1Player2Id: game.team1Player2,
@@ -314,19 +352,114 @@ export default function AddResultsPage() {
                 </div>
               </div>
 
-              {/* Game Results */}
+              {/* Tournament Places */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold">{t('addResults.gameResults')}</h3>
-
-                {fields.map((field, index) => (
+                <h3 className="text-sm font-semibold">{t('addResults.tournamentPlaces')}</h3>
+                {placeFields.map((field, index) => (
                   <div key={field.id} className="space-y-4 rounded-lg border p-4 relative">
-                    {fields.length > 1 && (
+                    {placeFields.length > 1 && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         className="absolute top-2 right-2"
-                        onClick={() => remove(index)}
+                        onClick={() => removePlace(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-xs text-muted-foreground">{t('addResults.place')}</label>
+                        <Controller
+                          name={`places.${index}.place`}
+                          control={control}
+                          render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder={t('addResults.selectPlace')} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({ length: 12 }, (_, i) => i + 1).map((placeNum) => (
+                                  <SelectItem key={placeNum} value={placeNum.toString()}>
+                                    {placeNum}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs text-muted-foreground">{t('addResults.player')}</label>
+                        <Controller
+                          name={`places.${index}.playerId`}
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              onValueChange={(value) => {
+                                if (value === '__add_new__') {
+                                  handleAddNewPlayerForPlace(index)
+                                } else {
+                                  field.onChange(value)
+                                }
+                              }}
+                              value={field.value}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder={t('addResults.selectPlayer')} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {players.map((player) => (
+                                  <SelectItem key={player.id} value={player.id}>
+                                    {player.name}
+                                  </SelectItem>
+                                ))}
+                                <SelectItem
+                                  value="__add_new__"
+                                  className="text-primary font-medium"
+                                >
+                                  <Plus className="h-4 w-4 inline mr-2" />
+                                  {t('addResults.addNewPlayer')}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    appendPlace({
+                      place: '',
+                      playerId: '',
+                    })
+                  }
+                  className="w-full sm:w-auto"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('addResults.addAnotherPlace')}
+                </Button>
+              </div>
+
+              {/* Game Results */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold">{t('addResults.gameResults')}</h3>
+
+                {gameFields.map((field, index) => (
+                  <div key={field.id} className="space-y-4 rounded-lg border p-4 relative">
+                    {gameFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => removeGame(index)}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -533,7 +666,7 @@ export default function AddResultsPage() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    append({
+                    appendGame({
                       team1Player1: '',
                       team1Player2: '',
                       team2Player1: '',
