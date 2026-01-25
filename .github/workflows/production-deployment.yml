@@ -34,7 +34,7 @@ jobs:
           push: true
           tags: artemborzienkov/volleyball-management-ui:${{ github.run_id }}
           build-args: |
-            NEXT_PUBLIC_HOST_URL=http://64.227.120.106:3000
+            NEXT_PUBLIC_HOST_URL=https://api.waw-beach-volley.site
 
       - name: Deploy and run new image to digital ocean
         uses: appleboy/ssh-action@master
