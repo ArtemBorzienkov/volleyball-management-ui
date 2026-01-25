@@ -47,4 +47,4 @@ jobs:
             docker stop volleyball-management-ui &&
             docker rm volleyball-management-ui &&
             docker pull artemborzienkov/volleyball-management-ui:${{ github.run_id }} &&
-            docker run -d --name volleyball-management-ui -p 8080:8080 -e NODE_ENV=prod artemborzienkov/volleyball-management-ui:${{ github.run_id }}
+            docker run -d --name volleyball-management-ui -p 8080:3000 -e NODE_ENV=prod artemborzienkov/volleyball-management-ui:${{ github.run_id }}
