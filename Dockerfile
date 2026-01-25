@@ -7,6 +7,9 @@ WORKDIR /usr/app
 ARG NEXT_PUBLIC_HOST_URL
 ENV NEXT_PUBLIC_HOST_URL=$NEXT_PUBLIC_HOST_URL
 
+ARG NEXT_PUBLIC_ADMIN_PASSWORD
+ENV NEXT_PUBLIC_ADMIN_PASSWORD=$NEXT_PUBLIC_ADMIN_PASSWORD
+
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)

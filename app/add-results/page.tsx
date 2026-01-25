@@ -206,7 +206,7 @@ export default function AddResultsPage() {
       name: string
       date: string
       location?: string
-      places?: Record<string, string>
+      places?: Record<string, string[]>
       games: Array<{
         team1Player1Id: string
         team1Player2Id: string
@@ -250,11 +250,14 @@ export default function AddResultsPage() {
     setSubmitError(null)
     setSubmitSuccess(false)
 
-    // Transform places array to JSON object (place number -> player ID)
-    const placesObject: Record<string, string> = {}
+    // Transform places array to JSON object (place number -> array of player IDs)
+    const placesObject: Record<string, string[]> = {}
     data.places.forEach((place) => {
       if (place.place && place.playerId) {
-        placesObject[place.place] = place.playerId
+        if (!placesObject[place.place]) {
+          placesObject[place.place] = []
+        }
+        placesObject[place.place].push(place.playerId)
       }
     })
 

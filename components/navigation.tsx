@@ -13,12 +13,12 @@ import {
   X,
   Plus,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next'
 import { LanguageSwitcher } from '@/components/language-switcher'
 
-const navItems = [
+const allNavItems = [
   { href: '/', labelKey: 'nav.overview', icon: BarChart3 },
   { href: '/add-results', labelKey: 'nav.addResults', icon: Plus },
   // { href: '/players', labelKey: 'nav.players', icon: Users },
@@ -31,7 +31,22 @@ const navItems = [
 export function Navigation() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const { t } = useTranslation()
+
+  useEffect(() => {
+    setIsAdmin(process.env.NEXT_PUBLIC_ADMIN_PASSWORD === localStorage.getItem('ADMIN_PASSWORD'))
+  }, [])
+
+  // Filter nav items based on admin status
+  const navItems = allNavItems.filter((item) => {
+    // Always show overview
+    if (item.href === '/') return true
+    // Show add-results only if admin
+    if (item.href === '/add-results') return isAdmin
+    // Show other items (when uncommented)
+    return true
+  })
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
