@@ -83,6 +83,14 @@ export default function HomePage() {
   const upcomingEvents = allEvents.filter((e) => e.status === 'upcoming')
   const activePlayers = players.filter((p) => p.active).length
 
+  // Calculate average win rate for top 10 players
+  const calculateAvgWinRate = () => {
+    if (topPlayersByWinRate.length === 0) return 0
+    const sum = topPlayersByWinRate.reduce((acc, ranking) => acc + ranking.value, 0)
+    return Math.round(sum / topPlayersByWinRate.length)
+  }
+  const avgWinRate = calculateAvgWinRate()
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -133,7 +141,7 @@ export default function HomePage() {
           />
           <StatCard
             title={t('home.stats.avgWinRate')}
-            value="52%"
+            value={`${avgWinRate}%`}
             description={t('home.statsDescriptions.top10Players')}
             icon={TrendingUp}
           />
