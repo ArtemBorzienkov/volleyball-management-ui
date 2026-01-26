@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import type { Player } from '@/lib/types'
 import { getPlayerWinRate, getPlayerPointsDiff } from '@/lib/data'
-import { TrendingUp, Trophy } from 'lucide-react'
+import { TrendingUp, Trophy, Medal } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 interface PlayerCardProps {
@@ -32,14 +32,108 @@ export function PlayerCard({
   const winRate = getPlayerWinRate(player)
   const pointsDiff = getPlayerPointsDiff(player)
 
+  const renderRankBadge = () => {
+    if (!rank) return null
+    
+    if (rank === 1) {
+      return (
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="drop-shadow-sm"
+          >
+            <defs>
+              <linearGradient id="goldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                <stop offset="50%" stopColor="#FFA500" stopOpacity="1" />
+                <stop offset="100%" stopColor="#FF8C00" stopOpacity="1" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M16 2L20 12H28L21 18L24 28L16 22L8 28L11 18L4 12H12L16 2Z"
+              fill="url(#goldGradient)"
+              stroke="#FFA500"
+              strokeWidth="0.5"
+            />
+            <circle cx="16" cy="16" r="4" fill="#FFD700" opacity="0.3" />
+          </svg>
+        </div>
+      )
+    }
+    if (rank === 2) {
+      return (
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="drop-shadow-sm"
+          >
+            <defs>
+              <linearGradient id="silverGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#E8E8E8" stopOpacity="1" />
+                <stop offset="50%" stopColor="#C0C0C0" stopOpacity="1" />
+                <stop offset="100%" stopColor="#A8A8A8" stopOpacity="1" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M16 2L20 12H28L21 18L24 28L16 22L8 28L11 18L4 12H12L16 2Z"
+              fill="url(#silverGradient)"
+              stroke="#C0C0C0"
+              strokeWidth="0.5"
+            />
+            <circle cx="16" cy="16" r="4" fill="#E8E8E8" opacity="0.3" />
+          </svg>
+        </div>
+      )
+    }
+    if (rank === 3) {
+      return (
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="drop-shadow-sm"
+          >
+            <defs>
+              <linearGradient id="bronzeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#CD7F32" stopOpacity="1" />
+                <stop offset="50%" stopColor="#B87333" stopOpacity="1" />
+                <stop offset="100%" stopColor="#8B4513" stopOpacity="1" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M16 2L20 12H28L21 18L24 28L16 22L8 28L11 18L4 12H12L16 2Z"
+              fill="url(#bronzeGradient)"
+              stroke="#B87333"
+              strokeWidth="0.5"
+            />
+            <circle cx="16" cy="16" r="4" fill="#CD7F32" opacity="0.3" />
+          </svg>
+        </div>
+      )
+    }
+    
+    return (
+      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#363636] text-sm font-medium text-foreground">
+        {rank}
+      </div>
+    )
+  }
+
   if (!hasBorder) {
     return (
       <div className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-secondary/50">
-        {rank && (
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#363636] text-sm font-medium text-foreground">
-            {rank}
-          </div>
-        )}
+        {renderRankBadge()}
         <Avatar className="h-10 w-10 flex-shrink-0">
           <AvatarFallback className="bg-[#4F403D] text-[#BDBDBD] font-semibold text-sm">
             {player.name.charAt(0).toUpperCase()}
@@ -79,11 +173,7 @@ export function PlayerCard({
     <Card className="group transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
-          {rank && (
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold">
-              {rank}
-            </div>
-          )}
+          {renderRankBadge()}
           <Avatar className="h-12 w-12 border-2 border-border">
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
               {player.name}
