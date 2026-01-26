@@ -14,8 +14,12 @@
     },
     "topPlayers": {
       "title": "Топ гульцы",
+      "byWonEvents": "Па выйграных турнірах",
+      "byWinRate": "Па працэнце перамог у гульнях",
+      "byGamesPlayed": "Па колькасці гульняў",
       "viewAll": "Праглядзець усе",
-      "noPlayers": "Гульцоў не знойдзена."
+      "noPlayers": "Гульцоў не знойдзена.",
+      "totalEvents": "Усяго"
     },
     "recentGames": {
       "title": "Апошнія гульні",

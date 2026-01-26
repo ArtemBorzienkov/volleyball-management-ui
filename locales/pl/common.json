@@ -14,8 +14,12 @@
     },
     "topPlayers": {
       "title": "Najlepsi gracze",
+      "byWonEvents": "Po wygranych turniejach",
+      "byWinRate": "Po wskaźniku zwycięstw w grach",
+      "byGamesPlayed": "Po liczbie gier",
       "viewAll": "Zobacz wszystkich",
-      "noPlayers": "Nie znaleziono graczy."
+      "noPlayers": "Nie znaleziono graczy.",
+      "totalEvents": "Wszystkie"
     },
     "recentGames": {
       "title": "Ostatnie gry",

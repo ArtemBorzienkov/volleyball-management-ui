@@ -14,6 +14,9 @@ const API = {
   GET_TEAM_BY_ID: (id: string) =>
     `${process.env.NEXT_PUBLIC_HOST_URL}/teams/${id}`,
   GET_TOP_PLAYERS_BY_WINS: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/wins`,
+  GET_TOP_PLAYERS_BY_WIN_RATE: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/win-rate`,
+  GET_TOP_PLAYERS_BY_WON_EVENTS: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/won-events`,
+  GET_TOP_PLAYERS_BY_GAMES_PLAYED: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/games-played`,
   GET_BEST_TEAM_COMBINATIONS: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/best-team-combinations`,
 };
 

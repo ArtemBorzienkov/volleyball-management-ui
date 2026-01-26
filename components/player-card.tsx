@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -5,65 +7,130 @@ import { Badge } from '@/components/ui/badge'
 import type { Player } from '@/lib/types'
 import { getPlayerWinRate, getPlayerPointsDiff } from '@/lib/data'
 import { TrendingUp, Trophy } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface PlayerCardProps {
   player: Player
   rank?: number
   showStats?: boolean
+  hasBorder?: boolean
+  metric?: string // The ranking metric (e.g., 'eventsWon', 'winRate', 'gamesPlayed')
+  totalEvents?: number // Total events participated in (for eventsWon metric)
+  eventsWon?: number // Events won (for eventsWon metric)
 }
 
-export function PlayerCard({ player, rank, showStats = true }: PlayerCardProps) {
+export function PlayerCard({ 
+  player, 
+  rank, 
+  showStats = true, 
+  hasBorder = false,
+  metric,
+  totalEvents,
+  eventsWon,
+}: PlayerCardProps) {
+  const { t } = useTranslation()
   const winRate = getPlayerWinRate(player)
   const pointsDiff = getPlayerPointsDiff(player)
 
+  if (!hasBorder) {
+    return (
+      <div className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-secondary/50">
+        {rank && (
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#363636] text-sm font-medium text-foreground">
+            {rank}
+          </div>
+        )}
+        <Avatar className="h-10 w-10 flex-shrink-0">
+          <AvatarFallback className="bg-[#4F403D] text-[#BDBDBD] font-semibold text-sm">
+            {player.name.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate font-semibold text-foreground">
+            {player.name}
+          </h3>
+          {showStats && (
+            <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+              {metric !== 'eventsWon' && (
+                <span className="flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3" />
+                  {winRate}% WR
+                </span>
+              )}
+              {metric === 'eventsWon' && totalEvents !== undefined && eventsWon !== undefined ? (
+                <span>
+                  {totalEvents} {t('home.topPlayers.totalEvents')} - {eventsWon}W
+                </span>
+              ) : (
+                metric !== 'eventsWon' && (
+                  <span>
+                    {player.totalWins}W - {player.totalLosses}L
+                  </span>
+                )
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <Link href={`/players/${player.id}`}>
-      <Card className="group transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4">
-            {rank && (
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold">
-                {rank}
-              </div>
-            )}
-            <Avatar className="h-12 w-12 border-2 border-border">
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+    <Card className="group transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-4">
+          {rank && (
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold">
+              {rank}
+            </div>
+          )}
+          <Avatar className="h-12 w-12 border-2 border-border">
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              {player.name}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="truncate font-semibold group-hover:text-primary transition-colors">
                 {player.name}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="truncate font-semibold group-hover:text-primary transition-colors">
-                  {player.name}
-                </h3>
-                {!player.active && (
-                  <Badge variant="secondary" className="text-xs">
-                    Inactive
-                  </Badge>
-                )}
-              </div>
-              {showStats && (
-                <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+              </h3>
+              {!player.active && (
+                <Badge variant="secondary" className="text-xs">
+                  Inactive
+                </Badge>
+              )}
+            </div>
+            {showStats && (
+              <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+                {metric !== 'eventsWon' && (
                   <span className="flex items-center gap-1">
                     <TrendingUp className="h-3 w-3" />
                     {winRate}% WR
                   </span>
+                )}
+                {metric === 'eventsWon' && totalEvents !== undefined && eventsWon !== undefined ? (
                   <span>
-                    {player.totalWins}W - {player.totalLosses}L
+                    {totalEvents} {t('home.topPlayers.totalEvents')} - {eventsWon}W
                   </span>
-                </div>
-              )}
-            </div>
-            {showStats && player.tournamentsWon > 0 && (
-              <div className="flex items-center gap-1 text-primary">
-                <Trophy className="h-4 w-4" />
-                <span className="text-sm font-medium">{player.tournamentsWon}</span>
+                ) : (
+                  metric !== 'eventsWon' && (
+                    <span>
+                      {player.totalWins}W - {player.totalLosses}L
+                    </span>
+                  )
+                )}
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
-    </Link>
+          {showStats && player.tournamentsWon > 0 && (
+            <div className="flex items-center gap-1 text-primary">
+              <Trophy className="h-4 w-4" />
+              <span className="text-sm font-medium">{player.tournamentsWon}</span>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 

@@ -14,8 +14,12 @@
     },
     "topPlayers": {
       "title": "Топ гравці",
+      "byWonEvents": "За виграними турнірами",
+      "byWinRate": "За відсотком перемог у іграх",
+      "byGamesPlayed": "За кількістю ігор",
       "viewAll": "Переглянути всі",
-      "noPlayers": "Гравців не знайдено."
+      "noPlayers": "Гравців не знайдено.",
+      "totalEvents": "Всього"
     },
     "recentGames": {
       "title": "Останні ігри",

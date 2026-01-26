@@ -82,4 +82,6 @@ export interface PlayerRanking {
   player: Player
   rank: number
   value: number
+  totalEvents?: number // Total events participated in (for eventsWon metric)
+  eventsWon?: number // Events won (for eventsWon metric)
 }

@@ -14,8 +14,12 @@
     },
     "topPlayers": {
       "title": "Top Players",
+      "byWonEvents": "By Won Events",
+      "byWinRate": "By Games Win Rate",
+      "byGamesPlayed": "By Games Played",
       "viewAll": "View All",
-      "noPlayers": "No players found."
+      "noPlayers": "No players found.",
+      "totalEvents": "Total"
     },
     "recentGames": {
       "title": "Recent Games",
