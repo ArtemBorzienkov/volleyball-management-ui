@@ -27,6 +27,44 @@ import { GenderFilter, type GenderFilter as GenderFilterType } from '@/component
 
 const Loading = () => null
 
+function PlayersPageContent() {
+  const searchParams = useSearchParams()
+  const [searchQuery, setSearchQuery] = useState(searchParams?.get('query') || '')
+  const [genderFilter, setGenderFilter] = useState<GenderFilterType>('ALL')
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Players</h1>
+            <p className="mt-1 text-muted-foreground">
+              Browse and search through all registered players.
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <GenderFilter value={genderFilter} onChange={setGenderFilter} />
+            <div className="relative w-full sm:w-auto sm:min-w-[300px]">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search players..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+        </div>
+
+        <PlayersContent searchQuery={searchQuery} genderFilter={genderFilter} />
+      </main>
+    </div>
+  )
+}
+
 function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; genderFilter: GenderFilterType }) {
   const { t } = useTranslation()
   
@@ -159,41 +197,9 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
 }
 
 export default function PlayersPage() {
-  const searchParams = useSearchParams()
-  const [searchQuery, setSearchQuery] = useState(searchParams?.get('query') || '')
-  const [genderFilter, setGenderFilter] = useState<GenderFilterType>('ALL')
-
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Players</h1>
-            <p className="mt-1 text-muted-foreground">
-              Browse and search through all registered players.
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <GenderFilter value={genderFilter} onChange={setGenderFilter} />
-            <div className="relative w-full sm:w-auto sm:min-w-[300px]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search players..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-        </div>
-
-        <Suspense fallback={<Loading />}>
-          <PlayersContent searchQuery={searchQuery} genderFilter={genderFilter} />
-        </Suspense>
-      </main>
-    </div>
+    <Suspense fallback={<Loading />}>
+      <PlayersPageContent />
+    </Suspense>
   )
 }
