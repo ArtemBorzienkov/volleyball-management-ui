@@ -31,7 +31,9 @@ export function LanguageSwitcher() {
       <SelectTrigger className="w-[140px]">
         <div className="flex items-center gap-2">
           <Languages className="h-4 w-4" />
-          <SelectValue>{currentLanguage.name}</SelectValue>
+          <SelectValue>
+            <span suppressHydrationWarning>{currentLanguage.name}</span>
+          </SelectValue>
         </div>
       </SelectTrigger>
       <SelectContent>

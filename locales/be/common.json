@@ -19,7 +19,9 @@
       "byGamesPlayed": "Па колькасці гульняў",
       "viewAll": "Праглядзець усе",
       "noPlayers": "Гульцоў не знойдзена.",
-      "totalEvents": "Усяго"
+      "totalEvents": "Усяго",
+      "total": "Усяго",
+      "totalGames": "Усяго Гульняў"
     },
     "recentGames": {
       "title": "Апошнія гульні",

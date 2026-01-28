@@ -76,7 +76,7 @@ export function Navigation() {
                   )}
                 >
                   <item.icon className="h-4 w-4" />
-                  {t(item.labelKey)}
+                  <span suppressHydrationWarning>{t(item.labelKey)}</span>
                 </Link>
               )
             })}
@@ -117,7 +117,7 @@ export function Navigation() {
                     )}
                   >
                     <item.icon className="h-4 w-4" />
-                    {t(item.labelKey)}
+                    <span suppressHydrationWarning>{t(item.labelKey)}</span>
                   </Link>
                 )
               })}

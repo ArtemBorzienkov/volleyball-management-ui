@@ -77,11 +77,17 @@ export interface TeamStats {
   avgPointsDiff: number
 }
 
+export interface MedalCounts {
+  gold: number
+  silver: number
+  bronze: number
+}
+
 export interface PlayerRanking {
   metric: string
   player: Player
   rank: number
-  value: number
+  value: number | MedalCounts // Number for most metrics, MedalCounts for eventsWon metric
   totalEvents?: number // Total events participated in (for eventsWon metric)
-  eventsWon?: number // Events won (for eventsWon metric)
+  eventsWon?: number // Deprecated - use value.gold for eventsWon metric
 }

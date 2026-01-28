@@ -19,7 +19,9 @@
       "byGamesPlayed": "By Games Played",
       "viewAll": "View All",
       "noPlayers": "No players found.",
-      "totalEvents": "Total"
+      "totalEvents": "Total",
+      "total": "Total",
+      "totalGames": "Total Games"
     },
     "recentGames": {
       "title": "Recent Games",

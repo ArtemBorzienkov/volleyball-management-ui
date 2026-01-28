@@ -10,7 +10,9 @@ import { Users, Trophy, Calendar, TrendingUp } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import API from '@/lib/api'
-import type { Player, Game, Event, TeamStats, PlayerRanking } from '@/lib/types'
+import type { Player, Game, Event, TeamStats, PlayerRanking, MedalCounts } from '@/lib/types'
+import { getPlayerWinRate } from '@/lib/data'
+import { GoldMedalIcon, SilverMedalIcon, BronzeMedalIcon } from '@/components/medal-icons'
 
 interface GroupedRankingResponse {
   ALL: PlayerRanking[]
@@ -86,7 +88,10 @@ export default function HomePage() {
   // Calculate average win rate for top 10 players
   const calculateAvgWinRate = () => {
     if (topPlayersByWinRate.length === 0) return 0
-    const sum = topPlayersByWinRate.reduce((acc, ranking) => acc + ranking.value, 0)
+    const sum = topPlayersByWinRate.reduce((acc, ranking) => {
+      const value = typeof ranking.value === 'number' ? ranking.value : 0
+      return acc + value
+    }, 0)
     return Math.round(sum / topPlayersByWinRate.length)
   }
   const avgWinRate = calculateAvgWinRate()
@@ -97,7 +102,7 @@ export default function HomePage() {
         <Navigation />
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">{t('common.loading')}</p>
+            <p className="text-muted-foreground" suppressHydrationWarning>{t('common.loading')}</p>
           </div>
         </main>
       </div>
@@ -163,17 +168,45 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="space-y-0">
                   {topPlayersByWonEvents.length > 0 ? (
-                    topPlayersByWonEvents.map((ranking) => (
-                      <PlayerCard 
-                        key={`won-events-${ranking.player.id}-${ranking.rank}`} 
-                        player={ranking.player} 
-                        rank={ranking.rank} 
-                        hasBorder={false}
-                        metric={ranking.metric}
-                        totalEvents={ranking.totalEvents}
-                        eventsWon={ranking.eventsWon}
-                      />
-                    ))
+                    topPlayersByWonEvents.map((ranking) => {
+                      // Check if value is a MedalCounts object
+                      const isMedalValue = (value: number | MedalCounts): value is MedalCounts => {
+                        return typeof value === 'object' && 'gold' in value && 'silver' in value && 'bronze' in value
+                      }
+
+                      const medalCounts = isMedalValue(ranking.value) ? ranking.value : null
+                      const totalEvents = ranking.totalEvents || 0
+
+                      return (
+                        <PlayerCard 
+                          key={`won-events-${ranking.player.id}-${ranking.rank}`} 
+                          player={ranking.player} 
+                          rank={ranking.rank} 
+                          hasBorder={false}
+                          statsContent={
+                            medalCounts ? (
+                              <div className="flex items-center gap-2">
+                                <span>
+                                  {totalEvents} {t('home.topPlayers.total')}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  {medalCounts.gold}
+                                  <GoldMedalIcon className="h-4 w-4" />
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  {medalCounts.silver}
+                                  <SilverMedalIcon className="h-4 w-4" />
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  {medalCounts.bronze}
+                                  <BronzeMedalIcon className="h-4 w-4" />
+                                </span>
+                              </div>
+                            ) : null
+                          }
+                        />
+                      )
+                    })
                   ) : (
                     <p className="text-sm text-muted-foreground p-4">{t('home.topPlayers.noPlayers')}</p>
                   )}
@@ -187,14 +220,28 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="space-y-0">
                   {topPlayersByWinRate.length > 0 ? (
-                    topPlayersByWinRate.map((ranking) => (
-                      <PlayerCard 
-                        key={`win-rate-${ranking.player.id}-${ranking.rank}`} 
-                        player={ranking.player} 
-                        rank={ranking.rank} 
-                        hasBorder={false}
-                      />
-                    ))
+                    topPlayersByWinRate.map((ranking) => {
+                      const winRate = getPlayerWinRate(ranking.player)
+                      return (
+                        <PlayerCard 
+                          key={`win-rate-${ranking.player.id}-${ranking.rank}`} 
+                          player={ranking.player} 
+                          rank={ranking.rank} 
+                          hasBorder={false}
+                          statsContent={
+                            <>
+                              <span className="flex items-center gap-1">
+                                <TrendingUp className="h-3 w-3" />
+                                {winRate}% WR
+                              </span>
+                              <span>
+                                {ranking.player.totalWins}W - {ranking.player.totalLosses}L
+                              </span>
+                            </>
+                          }
+                        />
+                      )
+                    })
                   ) : (
                     <p className="text-sm text-muted-foreground p-4">{t('home.topPlayers.noPlayers')}</p>
                   )}
@@ -208,14 +255,29 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="space-y-0">
                   {topPlayersByGamesPlayed.length > 0 ? (
-                    topPlayersByGamesPlayed.map((ranking) => (
-                      <PlayerCard 
-                        key={`games-played-${ranking.player.id}-${ranking.rank}`} 
-                        player={ranking.player} 
-                        rank={ranking.rank} 
-                        hasBorder={false}
-                      />
-                    ))
+                    topPlayersByGamesPlayed.map((ranking) => {
+                      const winRate = getPlayerWinRate(ranking.player)
+                      const totalGames = typeof ranking.value === 'number' ? ranking.value : 0
+                      return (
+                        <PlayerCard 
+                          key={`games-played-${ranking.player.id}-${ranking.rank}`} 
+                          player={ranking.player} 
+                          rank={ranking.rank} 
+                          hasBorder={false}
+                          statsContent={
+                            <>
+                              <span>
+                                {typeof totalGames === 'number' ? totalGames : 0} {t('home.topPlayers.totalGames')}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <TrendingUp className="h-3 w-3" />
+                                {winRate}% WR
+                              </span>
+                            </>
+                          }
+                        />
+                      )
+                    })
                   ) : (
                     <p className="text-sm text-muted-foreground p-4">{t('home.topPlayers.noPlayers')}</p>
                   )}

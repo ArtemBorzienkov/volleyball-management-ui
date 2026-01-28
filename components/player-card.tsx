@@ -5,18 +5,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import type { Player } from '@/lib/types'
-import { getPlayerWinRate, getPlayerPointsDiff } from '@/lib/data'
-import { TrendingUp, Trophy, Medal } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
+import { Trophy } from 'lucide-react'
 
 interface PlayerCardProps {
   player: Player
   rank?: number
   showStats?: boolean
   hasBorder?: boolean
-  metric?: string // The ranking metric (e.g., 'eventsWon', 'winRate', 'gamesPlayed')
-  totalEvents?: number // Total events participated in (for eventsWon metric)
-  eventsWon?: number // Events won (for eventsWon metric)
+  statsContent?: React.ReactNode // Custom JSX content for stats display
 }
 
 export function PlayerCard({ 
@@ -24,13 +20,8 @@ export function PlayerCard({
   rank, 
   showStats = true, 
   hasBorder = false,
-  metric,
-  totalEvents,
-  eventsWon,
+  statsContent,
 }: PlayerCardProps) {
-  const { t } = useTranslation()
-  const winRate = getPlayerWinRate(player)
-  const pointsDiff = getPlayerPointsDiff(player)
 
   const renderRankBadge = () => {
     if (!rank) return null
@@ -143,25 +134,9 @@ export function PlayerCard({
           <h3 className="truncate font-semibold text-foreground">
             {player.name}
           </h3>
-          {showStats && (
+          {showStats && statsContent && (
             <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
-              {metric !== 'eventsWon' && (
-                <span className="flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  {winRate}% WR
-                </span>
-              )}
-              {metric === 'eventsWon' && totalEvents !== undefined && eventsWon !== undefined ? (
-                <span>
-                  {totalEvents} {t('home.topPlayers.totalEvents')} - {eventsWon}W
-                </span>
-              ) : (
-                metric !== 'eventsWon' && (
-                  <span>
-                    {player.totalWins}W - {player.totalLosses}L
-                  </span>
-                )
-              )}
+              {statsContent}
             </div>
           )}
         </div>
@@ -190,25 +165,9 @@ export function PlayerCard({
                 </Badge>
               )}
             </div>
-            {showStats && (
+            {showStats && statsContent && (
               <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
-                {metric !== 'eventsWon' && (
-                  <span className="flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3" />
-                    {winRate}% WR
-                  </span>
-                )}
-                {metric === 'eventsWon' && totalEvents !== undefined && eventsWon !== undefined ? (
-                  <span>
-                    {totalEvents} {t('home.topPlayers.totalEvents')} - {eventsWon}W
-                  </span>
-                ) : (
-                  metric !== 'eventsWon' && (
-                    <span>
-                      {player.totalWins}W - {player.totalLosses}L
-                    </span>
-                  )
-                )}
+                {statsContent}
               </div>
             )}
           </div>

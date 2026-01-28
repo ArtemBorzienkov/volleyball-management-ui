@@ -19,7 +19,9 @@
       "byGamesPlayed": "Po liczbie gier",
       "viewAll": "Zobacz wszystkich",
       "noPlayers": "Nie znaleziono graczy.",
-      "totalEvents": "Wszystkie"
+      "totalEvents": "Wszystkie",
+      "total": "Wszystkie",
+      "totalGames": "Wszystkie Gry"
     },
     "recentGames": {
       "title": "Ostatnie gry",
