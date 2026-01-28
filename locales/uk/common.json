@@ -1,6 +1,7 @@
 {
   "nav": {
     "overview": "Огляд",
+    "players": "Гравці",
     "addResults": "Додати результати"
   },
   "home": {
@@ -20,8 +21,10 @@
       "viewAll": "Переглянути всі",
       "noPlayers": "Гравців не знайдено.",
       "totalEvents": "Всього",
-      "total": "Всього",
-      "totalGames": "Всього Ігр"
+      "total": "Турнір",
+      "totalGames": "ігор",
+      "lastGames": "Останні ігри",
+      "tournamentResults": "Результати турнірів"
     },
     "recentGames": {
       "title": "Останні ігри",

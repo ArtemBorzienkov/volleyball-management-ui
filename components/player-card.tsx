@@ -4,15 +4,22 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import type { Player } from '@/lib/types'
-import { Trophy } from 'lucide-react'
+import type { Player, FullPlayer } from '@/lib/types'
+import { Trophy, TrendingUp, CheckCircle2, XCircle } from 'lucide-react'
+import { GoldMedalIcon, SilverMedalIcon, BronzeMedalIcon } from '@/components/medal-icons'
+import { useTranslation } from 'react-i18next'
 
 interface PlayerCardProps {
-  player: Player
+  player: Player | FullPlayer
   rank?: number
   showStats?: boolean
   hasBorder?: boolean
   statsContent?: React.ReactNode // Custom JSX content for stats display
+}
+
+// Type guard to check if player is FullPlayer
+function isFullPlayer(player: Player | FullPlayer): player is FullPlayer {
+  return 'totalEvents' in player && 'medals' in player && 'winRate' in player
 }
 
 export function PlayerCard({ 
@@ -122,6 +129,79 @@ export function PlayerCard({
   }
 
   if (!hasBorder) {
+    const { t } = useTranslation()
+    const isFull = isFullPlayer(player)
+
+    // If FullPlayer with extended stats, show grid card layout
+    if (isFull && !statsContent) {
+      return (
+        <Link href={`/players/${player.id}`}>
+          <div className="flex items-center gap-4 rounded-lg border border-border px-4 py-3 transition-colors hover:bg-secondary/50">
+            <Avatar className="h-10 w-10 flex-shrink-0">
+              <AvatarFallback className="bg-[#4F403D] text-[#BDBDBD] font-semibold text-sm">
+                {player.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate font-semibold text-foreground">
+                    {player.name}
+                  </h3>
+                  {showStats && (
+                    <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+                      {/* Single row: Total Events + Medals + Total games + Win Rate */}
+                      <span>
+                        {player.totalEvents} {t('home.topPlayers.total')}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        {player.medals.gold}
+                        <GoldMedalIcon className="h-4 w-4" />
+                      </span>
+                      <span className="flex items-center gap-1">
+                        {player.medals.silver}
+                        <SilverMedalIcon className="h-4 w-4" />
+                      </span>
+                      <span className="flex items-center gap-1">
+                        {player.medals.bronze}
+                        <BronzeMedalIcon className="h-4 w-4" />
+                      </span>
+                      <span>
+                        {player.totalGames} {t('home.topPlayers.totalGames')}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <TrendingUp className="h-3 w-3" />
+                        {Math.round(player.winRate)}% WR
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {/* Recent games icons on the right */}
+                {player.recentGames && player.recentGames.length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {player.recentGames.map((result, idx) => (
+                      <div key={idx} title={result === 'win' ? 'Win' : 'Loss'}>
+                        {result === 'win' ? (
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
+                          </div>
+                        ) : (
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500/20">
+                            <XCircle className="h-3.5 w-3.5 text-red-400" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Link>
+      )
+    }
+
+    // Default borderless layout
     return (
       <div className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-secondary/50">
         {renderRankBadge()}

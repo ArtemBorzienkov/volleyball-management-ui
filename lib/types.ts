@@ -91,3 +91,11 @@ export interface PlayerRanking {
   totalEvents?: number // Total events participated in (for eventsWon metric)
   eventsWon?: number // Deprecated - use value.gold for eventsWon metric
 }
+
+export interface FullPlayer extends Player {
+  totalEvents: number
+  medals: MedalCounts
+  totalGames: number
+  winRate: number
+  recentGames: string[] // Array of 'win' | 'lose'
+}

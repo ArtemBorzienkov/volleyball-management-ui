@@ -1,5 +1,6 @@
 const API = {
   GET_ALL_PLAYERS: `${process.env.NEXT_PUBLIC_HOST_URL}/players`,
+  GET_FULL_PLAYERS: `${process.env.NEXT_PUBLIC_HOST_URL}/players/full`,
   GET_PLAYER_BY_ID: (id: string) =>
     `${process.env.NEXT_PUBLIC_HOST_URL}/players/${id}`,
   CREATE_PLAYER: `${process.env.NEXT_PUBLIC_HOST_URL}/players`,
