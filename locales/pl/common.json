@@ -21,8 +21,9 @@
       "viewAll": "Zobacz wszystkich",
       "noPlayers": "Nie znaleziono graczy.",
       "totalEvents": "Wszystkie",
-      "total": "Turniej",
-      "totalGames": "gier",
+      "total": "Wszystkie",
+      "totalTournaments": "Wszystkie turnieje",
+      "totalGames": "Wszystkie gry",
       "lastGames": "Ostatnie gry",
       "tournamentResults": "Wyniki turniejów"
     },

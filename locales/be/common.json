@@ -21,8 +21,9 @@
       "viewAll": "Праглядзець усе",
       "noPlayers": "Гульцоў не знойдзена.",
       "totalEvents": "Усяго",
-      "total": "Турнір",
-      "totalGames": "гульняў",
+      "total": "Усяго",
+      "totalTournaments": "Усяго турніраў",
+      "totalGames": "Усяго гульняў",
       "lastGames": "Апошнія гульні",
       "tournamentResults": "Вынікі турніраў"
     },

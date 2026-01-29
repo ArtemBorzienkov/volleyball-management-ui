@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Select,
@@ -19,20 +20,49 @@ const languages = [
 
 export function LanguageSwitcher() {
   const { i18n } = useTranslation()
+  const [currentLanguage, setCurrentLanguage] = useState<string>(() => {
+    // Initialize from localStorage if available, otherwise use i18n.language
+    if (typeof window !== 'undefined') {
+      const storedLang = localStorage.getItem('i18nextLng')
+        if (storedLang && ['en', 'uk', 'pl', 'be'].includes(storedLang)) {
+          return storedLang
+        }
+    }
+    return i18n.language || 'en'
+  })
+
+  useEffect(() => {
+    // Sync with i18n language on mount and when it changes
+    const updateLanguage = () => {
+      setCurrentLanguage(i18n.language || 'en')
+    }
+
+    // Initial sync
+    updateLanguage()
+
+    // Listen for language changes
+    i18n.on('languageChanged', updateLanguage)
+
+    return () => {
+      i18n.off('languageChanged', updateLanguage)
+    }
+  }, [i18n])
 
   const handleLanguageChange = (value: string) => {
     i18n.changeLanguage(value)
+    localStorage.setItem('i18nextLng', value)
+    setCurrentLanguage(value)
   }
 
-  const currentLanguage = languages.find((lang) => lang.code === i18n.language) || languages[0]
+  const currentLanguageData = languages.find((lang) => lang.code === currentLanguage) || languages[0]
 
   return (
-    <Select value={i18n.language} onValueChange={handleLanguageChange}>
+    <Select value={currentLanguage} onValueChange={handleLanguageChange}>
       <SelectTrigger className="w-[140px]">
         <div className="flex items-center gap-2">
           <Languages className="h-4 w-4" />
           <SelectValue>
-            <span suppressHydrationWarning>{currentLanguage.name}</span>
+            <span suppressHydrationWarning>{currentLanguageData.name}</span>
           </SelectValue>
         </div>
       </SelectTrigger>

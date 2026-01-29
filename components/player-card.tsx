@@ -179,7 +179,7 @@ export function PlayerCard({
                 {/* Recent games icons on the right */}
                 {player.recentGames && player.recentGames.length > 0 && (
                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {player.recentGames.map((result, idx) => (
+                    {[...player.recentGames].reverse().map((result, idx) => (
                       <div key={idx} title={result === 'win' ? 'Win' : 'Loss'}>
                         {result === 'win' ? (
                           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20">

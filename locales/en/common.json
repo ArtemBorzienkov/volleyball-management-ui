@@ -21,8 +21,9 @@
       "viewAll": "View All",
       "noPlayers": "No players found.",
       "totalEvents": "Total",
-      "total": "Tournament",
-      "totalGames": "games",
+      "total": "Total",
+      "totalTournaments": "Total Tournaments",
+      "totalGames": "Total Games",
       "lastGames": "Last Games",
       "tournamentResults": "Tournament Results"
     },

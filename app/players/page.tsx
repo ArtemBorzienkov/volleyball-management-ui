@@ -94,20 +94,20 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
           </CardContent>
         </Card>
       ) : filteredPlayers.length > 0 ? (
-        <Card>
+        <Card className="py-2">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[60px]"></TableHead>
-                  <TableHead className="uppercase">
+                  <TableHead>
                     {t('nav.players')} ({filteredPlayers.length})
                   </TableHead>
-                  <TableHead className="text-center uppercase">{t('home.topPlayers.total')}</TableHead>
-                  <TableHead className="text-center uppercase">{t('home.topPlayers.tournamentResults')}</TableHead>
-                  <TableHead className="text-center uppercase">{t('home.topPlayers.totalGames')}</TableHead>
-                  <TableHead className="text-center uppercase">WR %</TableHead>
-                  <TableHead className="text-center uppercase">{t('home.topPlayers.lastGames')}</TableHead>
+                  <TableHead className="text-center">{t('home.topPlayers.totalTournaments')}</TableHead>
+                  <TableHead className="text-center">{t('home.topPlayers.tournamentResults')}</TableHead>
+                  <TableHead className="text-center">{t('home.topPlayers.totalGames')}</TableHead>
+                  <TableHead className="text-center">WR %</TableHead>
+                  <TableHead className="text-center">{t('home.topPlayers.lastGames')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -159,7 +159,7 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
                     <TableCell className="text-center">
                       {player.recentGames && player.recentGames.length > 0 && (
                         <div className="flex items-center justify-center gap-1.5">
-                          {player.recentGames.map((result, idx) => (
+                          {[...player.recentGames].reverse().map((result, idx) => (
                             <div key={idx} title={result === 'win' ? 'Win' : 'Loss'}>
                               {result === 'win' ? (
                                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20">
