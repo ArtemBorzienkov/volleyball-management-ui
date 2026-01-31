@@ -2,6 +2,7 @@
   "nav": {
     "overview": "Overview",
     "players": "Players",
+    "events": "Events",
     "addResults": "Add Results"
   },
   "home": {
@@ -83,6 +84,27 @@
       "cancel": "Cancel",
       "create": "Create Player",
       "creating": "Creating..."
+    }
+  },
+  "events": {
+    "title": "Events",
+    "loading": "Loading events...",
+    "completed": "Completed Events",
+    "tournamentPlaces": "Tournament Places",
+    "topPoints": "Top Points",
+    "highlights": "Highlights",
+    "games": "Games",
+    "participants": "Participants",
+    "points": "pts",
+    "status": {
+      "upcoming": "Upcoming",
+      "ongoing": "Ongoing",
+      "completed": "Completed"
+    },
+    "highlightsText": {
+      "winsInRow": "{{player}}: {{value}} wins in a row",
+      "noWins": "{{player}}: No wins ({{value}}L)",
+      "perfect": "{{player}}: Perfect ({{value}}W-0L)"
     }
   },
   "common": {

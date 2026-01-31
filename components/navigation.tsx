@@ -21,9 +21,9 @@ import { LanguageSwitcher } from '@/components/language-switcher'
 const allNavItems = [
   { href: '/', labelKey: 'nav.overview', icon: BarChart3 },
   { href: '/players', labelKey: 'nav.players', icon: Users },
+  { href: '/events', labelKey: 'nav.events', icon: Calendar },
   { href: '/add-results', labelKey: 'nav.addResults', icon: Plus },
   // { href: '/games', labelKey: 'nav.games', icon: Trophy },
-  // { href: '/events', labelKey: 'nav.events', icon: Calendar },
   // { href: '/rankings', labelKey: 'nav.rankings', icon: BarChart3 },
   // { href: '/analytics', labelKey: 'nav.analytics', icon: LineChart },
 ]

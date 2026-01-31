@@ -2,6 +2,7 @@
   "nav": {
     "overview": "Агляд",
     "players": "Гульцы",
+    "events": "Падзеі",
     "addResults": "Дадаць вынікі"
   },
   "home": {
@@ -83,6 +84,27 @@
       "cancel": "Скасаваць",
       "create": "Стварыць гульца",
       "creating": "Стварэнне..."
+    }
+  },
+  "events": {
+    "title": "Падзеі",
+    "loading": "Загрузка падзей...",
+    "completed": "Завершаныя падзеі",
+    "tournamentPlaces": "Месцы ў турніры",
+    "topPoints": "Топ ачкоў",
+    "highlights": "Дасягненні",
+    "games": "Гульняў",
+    "participants": "Удзельнікаў",
+    "points": "ач",
+    "status": {
+      "upcoming": "Будучыя",
+      "ongoing": "Трываюць",
+      "completed": "Завершаныя"
+    },
+    "highlightsText": {
+      "winsInRow": "{{player}}: {{value}} перамог запар",
+      "noWins": "{{player}}: Без перамог ({{value}}П)",
+      "perfect": "{{player}}: Ідэальна ({{value}}П-0П)"
     }
   },
   "common": {

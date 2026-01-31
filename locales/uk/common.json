@@ -2,6 +2,7 @@
   "nav": {
     "overview": "Огляд",
     "players": "Гравці",
+    "events": "Події",
     "addResults": "Додати результати"
   },
   "home": {
@@ -83,6 +84,27 @@
       "cancel": "Скасувати",
       "create": "Створити гравця",
       "creating": "Створення..."
+    }
+  },
+  "events": {
+    "title": "Події",
+    "loading": "Завантаження подій...",
+    "completed": "Завершені події",
+    "tournamentPlaces": "Місця в турнірі",
+    "topPoints": "Топ очок",
+    "highlights": "Досягнення",
+    "games": "Ігор",
+    "participants": "Учасників",
+    "points": "оч",
+    "status": {
+      "upcoming": "Майбутні",
+      "ongoing": "Тривають",
+      "completed": "Завершені"
+    },
+    "highlightsText": {
+      "winsInRow": "{{player}}: {{value}} перемог поспіль",
+      "noWins": "{{player}}: Без перемог ({{value}}П)",
+      "perfect": "{{player}}: Ідеально ({{value}}П-0П)"
     }
   },
   "common": {

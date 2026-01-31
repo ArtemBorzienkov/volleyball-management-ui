@@ -1,11 +1,81 @@
+'use client'
+
+import { useMemo, type ReactElement } from 'react'
 import { Navigation } from '@/components/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { events } from '@/lib/data'
-import { MapPin, Calendar, Users, Trophy, ChevronRight } from 'lucide-react'
+import { MapPin, Calendar, Users, Trophy, ChevronRight, TrendingUp, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { useQuery } from '@tanstack/react-query'
+import API from '@/lib/api'
+import type { Event, Player, Game, Team } from '@/lib/types'
+import { GoldMedalIcon, SilverMedalIcon, BronzeMedalIcon } from '@/components/medal-icons'
+import { useTranslation } from 'react-i18next'
+
+// Backend EventResponseDto interface
+interface BackendEventResponseDto {
+  id: string
+  name: string
+  date: string | Date
+  location?: string
+  data?: Record<string, string[]> // { gold: [playerId1, playerId2], silver: [...], bronze: [...] }
+  games?: any[]
+  members?: any[]
+  createdAt: string | Date
+  updatedAt: string | Date
+}
+
+// Backend GameResponseDto interface
+interface BackendGameResponseDto {
+  id: string
+  eventId: string
+  team1Player1Id: string
+  team1Player2Id: string
+  team2Player1Id: string
+  team2Player2Id: string
+  team1Points: number
+  team2Points: number
+  date: string | Date
+  location?: string
+}
+
+// Event places structure - handles all places (numeric keys "1", "2", "3" or string keys "gold", "silver", "bronze")
+interface EventPlaces {
+  [placeKey: string]: Player[] // e.g., "1": [player1, player2], "2": [player3], "gold": [player4], etc.
+}
+
+// Player event statistics
+interface PlayerEventStats {
+  player: Player
+  wins: number
+  losses: number
+  winsInRow: number
+  hasNoWins: boolean
+  hasNoLosses: boolean
+}
+
+// Player points
+interface PlayerPoints {
+  player: Player
+  points: number
+}
+
+// Event summary statistics
+interface EventSummaryStats {
+  participantCount: number
+  totalPoints: number
+  averagePointsPerPlayer: number
+}
+
+// Extended Event interface with places
+interface EventWithPlaces extends Event {
+  places?: EventPlaces
+  playerStats?: PlayerEventStats[]
+  playerPoints?: PlayerPoints[]
+  summaryStats?: EventSummaryStats
+}
 
 function getInitials(name: string) {
   return name
@@ -14,18 +84,334 @@ function getInitials(name: string) {
     .join('')
 }
 
-function EventCard({ event }: { event: (typeof events)[0] }) {
-  const startDate = new Date(event.startDate)
-  const endDate = new Date(event.endDate)
+// Extract event places from backend event data - extracts ALL places
+function extractEventPlaces(
+  backendEvent: BackendEventResponseDto,
+  playersById: Record<string, Player>
+): EventPlaces {
+  const places: EventPlaces = {}
 
-  const dateRange = `${startDate.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })} - ${endDate.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })}`
+  if (backendEvent.data) {
+    // Extract all keys from data field
+    for (const [placeKey, playerIds] of Object.entries(backendEvent.data)) {
+      if (Array.isArray(playerIds)) {
+        places[placeKey] = []
+        for (const playerId of playerIds) {
+          const player = playersById[playerId]
+          if (player) {
+            places[placeKey].push(player)
+          }
+        }
+      }
+    }
+  }
+
+  return places
+}
+
+// Calculate player points from backend games (before mapping to frontend Game structure)
+function calculatePlayerPointsFromBackendGames(
+  backendGames: BackendGameResponseDto[],
+  playersById: Record<string, Player>
+): PlayerPoints[] {
+  const pointsMap = new Map<string, number>()
+
+  for (const backendGame of backendGames) {
+    // Add team1Points to team1 players
+    const team1Players = [backendGame.team1Player1Id, backendGame.team1Player2Id]
+    for (const playerId of team1Players) {
+      if (!pointsMap.has(playerId)) {
+        pointsMap.set(playerId, 0)
+      }
+      pointsMap.set(playerId, pointsMap.get(playerId)! + backendGame.team1Points)
+    }
+
+    // Add team2Points to team2 players
+    const team2Players = [backendGame.team2Player1Id, backendGame.team2Player2Id]
+    for (const playerId of team2Players) {
+      if (!pointsMap.has(playerId)) {
+        pointsMap.set(playerId, 0)
+      }
+      pointsMap.set(playerId, pointsMap.get(playerId)! + backendGame.team2Points)
+    }
+  }
+
+  // Convert to array and sort by points descending
+  const playerPoints: PlayerPoints[] = []
+  for (const [playerId, points] of pointsMap.entries()) {
+    const player = playersById[playerId]
+    if (player) {
+      playerPoints.push({ player, points })
+    }
+  }
+
+  return playerPoints.sort((a, b) => b.points - a.points)
+}
+
+// Calculate player points from frontend Game structure (alternative method)
+function calculatePlayerPoints(
+  games: Game[],
+  playersById: Record<string, Player>
+): PlayerPoints[] {
+  const pointsMap = new Map<string, number>()
+
+  for (const game of games) {
+    // Get points from score structure
+    // Sum all sets points for team1
+    let team1Points = 0
+    if (game.score.sets && game.score.sets.length > 0) {
+      for (const set of game.score.sets) {
+        team1Points += set.team1 || 0
+      }
+    } else {
+      // Fallback: use team1Sets if sets array is empty
+      team1Points = game.score.team1Sets || 0
+    }
+
+    // Sum all sets points for team2
+    let team2Points = 0
+    if (game.score.sets && game.score.sets.length > 0) {
+      for (const set of game.score.sets) {
+        team2Points += set.team2 || 0
+      }
+    } else {
+      // Fallback: use team2Sets if sets array is empty
+      team2Points = game.score.team2Sets || 0
+    }
+
+    // Add points for team1 players
+    const team1Players = [game.team1.player1.id, game.team1.player2.id]
+    for (const playerId of team1Players) {
+      if (!pointsMap.has(playerId)) {
+        pointsMap.set(playerId, 0)
+      }
+      pointsMap.set(playerId, pointsMap.get(playerId)! + team1Points)
+    }
+
+    // Add points for team2 players
+    const team2Players = [game.team2.player1.id, game.team2.player2.id]
+    for (const playerId of team2Players) {
+      if (!pointsMap.has(playerId)) {
+        pointsMap.set(playerId, 0)
+      }
+      pointsMap.set(playerId, pointsMap.get(playerId)! + team2Points)
+    }
+  }
+
+  // Convert to array and sort by points descending
+  const playerPoints: PlayerPoints[] = []
+  for (const [playerId, points] of pointsMap.entries()) {
+    const player = playersById[playerId]
+    if (player) {
+      playerPoints.push({ player, points })
+    }
+  }
+
+  return playerPoints.sort((a, b) => b.points - a.points)
+}
+
+// Calculate event summary statistics from backend games
+function calculateEventSummaryStatsFromBackendGames(
+  backendGames: BackendGameResponseDto[],
+  places?: EventPlaces
+): EventSummaryStats {
+  // Count unique participants from games
+  const participantIds = new Set<string>()
+  let totalPoints = 0
+
+  for (const backendGame of backendGames) {
+    participantIds.add(backendGame.team1Player1Id)
+    participantIds.add(backendGame.team1Player2Id)
+    participantIds.add(backendGame.team2Player1Id)
+    participantIds.add(backendGame.team2Player2Id)
+
+    // Sum total points from all games
+    totalPoints += backendGame.team1Points + backendGame.team2Points
+  }
+
+  // Also include participants from places if available
+  if (places) {
+    for (const playerArray of Object.values(places)) {
+      for (const player of playerArray) {
+        participantIds.add(player.id)
+      }
+    }
+  }
+
+  const participantCount = participantIds.size
+  const averagePointsPerPlayer = participantCount > 0 ? Math.round(totalPoints / participantCount) : 0
+
+  return {
+    participantCount,
+    totalPoints,
+    averagePointsPerPlayer,
+  }
+}
+
+// Calculate event summary statistics from frontend Game structure (alternative method)
+function calculateEventSummaryStats(
+  games: Game[],
+  places?: EventPlaces
+): EventSummaryStats {
+  // Count unique participants from games
+  const participantIds = new Set<string>()
+  let totalPoints = 0
+
+  for (const game of games) {
+    participantIds.add(game.team1.player1.id)
+    participantIds.add(game.team1.player2.id)
+    participantIds.add(game.team2.player1.id)
+    participantIds.add(game.team2.player2.id)
+
+    // Sum total points from all games
+    let team1Points = 0
+    let team2Points = 0
+    
+    if (game.score.sets && game.score.sets.length > 0) {
+      for (const set of game.score.sets) {
+        team1Points += set.team1 || 0
+        team2Points += set.team2 || 0
+      }
+    } else {
+      team1Points = game.score.team1Sets || 0
+      team2Points = game.score.team2Sets || 0
+    }
+    
+    totalPoints += team1Points + team2Points
+  }
+
+  // Also include participants from places if available
+  if (places) {
+    for (const playerArray of Object.values(places)) {
+      for (const player of playerArray) {
+        participantIds.add(player.id)
+      }
+    }
+  }
+
+  const participantCount = participantIds.size
+  const averagePointsPerPlayer = participantCount > 0 ? Math.round(totalPoints / participantCount) : 0
+
+  return {
+    participantCount,
+    totalPoints,
+    averagePointsPerPlayer,
+  }
+}
+
+// Map backend game to frontend Game structure
+function mapBackendGameToFrontend(
+  backendGame: BackendGameResponseDto,
+  playersById: Record<string, Player>
+): Game | null {
+  const player1 = playersById[backendGame.team1Player1Id]
+  const player2 = playersById[backendGame.team1Player2Id]
+  const player3 = playersById[backendGame.team2Player1Id]
+  const player4 = playersById[backendGame.team2Player2Id]
+
+  // Skip if any player is missing
+  if (!player1 || !player2 || !player3 || !player4) {
+    return null
+  }
+
+  const team1: Team = {
+    player1,
+    player2,
+  }
+
+  const team2: Team = {
+    player1: player3,
+    player2: player4,
+  }
+
+  // Determine winner based on points
+  const winner: 'team1' | 'team2' = backendGame.team1Points > backendGame.team2Points ? 'team1' : 'team2'
+
+  // Create score structure (using points as sets for simplicity)
+  const team1Sets = backendGame.team1Points > backendGame.team2Points ? 1 : 0
+  const team2Sets = backendGame.team2Points > backendGame.team1Points ? 1 : 0
+
+  return {
+    id: backendGame.id,
+    team1,
+    team2,
+    score: {
+      team1Sets,
+      team2Sets,
+      sets: [{ team1: backendGame.team1Points, team2: backendGame.team2Points }],
+    },
+    date: typeof backendGame.date === 'string' ? backendGame.date : backendGame.date.toISOString(),
+    location: backendGame.location || '',
+    eventId: backendGame.eventId,
+    winner,
+  }
+}
+
+// Calculate player statistics from games
+function calculatePlayerEventStats(
+  games: Game[],
+  playersById: Record<string, Player>
+): PlayerEventStats[] {
+  const statsMap = new Map<string, PlayerEventStats>()
+
+  // Sort games by date to process chronologically
+  const sortedGames = [...games].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+  // Track current streak for each player
+  const currentStreaks = new Map<string, number>()
+
+  for (const game of sortedGames) {
+    const allPlayers = [
+      game.team1.player1,
+      game.team1.player2,
+      game.team2.player1,
+      game.team2.player2,
+    ]
+
+    for (const player of allPlayers) {
+      if (!statsMap.has(player.id)) {
+        statsMap.set(player.id, {
+          player,
+          wins: 0,
+          losses: 0,
+          winsInRow: 0,
+          hasNoWins: false,
+          hasNoLosses: false,
+        })
+        currentStreaks.set(player.id, 0)
+      }
+
+      const stats = statsMap.get(player.id)!
+      const inTeam1 =
+        game.team1.player1.id === player.id || game.team1.player2.id === player.id
+      const won = (inTeam1 && game.winner === 'team1') || (!inTeam1 && game.winner === 'team2')
+
+      if (won) {
+        stats.wins++
+        const currentStreak = (currentStreaks.get(player.id) || 0) + 1
+        currentStreaks.set(player.id, currentStreak)
+        stats.winsInRow = Math.max(stats.winsInRow, currentStreak)
+      } else {
+        stats.losses++
+        currentStreaks.set(player.id, 0)
+      }
+    }
+  }
+
+  // Finalize stats
+  const statsArray = Array.from(statsMap.values())
+  for (const stat of statsArray) {
+    stat.hasNoWins = stat.losses > 0 && stat.wins === 0
+    stat.hasNoLosses = stat.wins > 0 && stat.losses === 0
+    // Update winsInRow to current streak
+    stat.winsInRow = currentStreaks.get(stat.player.id) || 0
+  }
+
+  return statsArray
+}
+
+function EventCard({ event }: { event: EventWithPlaces }) {
+  const { t } = useTranslation()
 
   const statusColors = {
     upcoming: 'bg-blue-500/20 text-blue-400',
@@ -33,57 +419,277 @@ function EventCard({ event }: { event: (typeof events)[0] }) {
     completed: 'bg-muted text-muted-foreground',
   }
 
+  // Get top highlights - each player can have only one highlight per event
+  const highlights = useMemo(() => {
+    if (!event.playerStats || event.status === 'upcoming') {
+      return []
+    }
+
+    const playerHighlightsMap = new Map<string, { type: 'streak' | 'noWins' | 'perfect'; player: Player; value: number }>()
+
+    // Process all players and assign the best highlight for each
+    for (const stat of event.playerStats) {
+      const playerId = stat.player.id
+      
+      // Priority: perfect > streak > noWins
+      // Only assign if player doesn't have a highlight yet or if this is a better one
+      
+      // Check for perfect record (highest priority)
+      if (stat.hasNoLosses && stat.wins > 0) {
+        const existing = playerHighlightsMap.get(playerId)
+        if (!existing || existing.type !== 'perfect') {
+          playerHighlightsMap.set(playerId, { type: 'perfect', player: stat.player, value: stat.wins })
+        }
+      }
+      // Check for win streak (medium priority, only if not perfect)
+      else if (stat.winsInRow > 0) {
+        const existing = playerHighlightsMap.get(playerId)
+        if (!existing) {
+          playerHighlightsMap.set(playerId, { type: 'streak', player: stat.player, value: stat.winsInRow })
+        } else if (existing.type === 'streak' && stat.winsInRow > existing.value) {
+          // Update if this streak is higher
+          playerHighlightsMap.set(playerId, { type: 'streak', player: stat.player, value: stat.winsInRow })
+        }
+      }
+      // Check for no wins (lowest priority, only if no other highlight)
+      else if (stat.hasNoWins) {
+        const existing = playerHighlightsMap.get(playerId)
+        if (!existing) {
+          playerHighlightsMap.set(playerId, { type: 'noWins', player: stat.player, value: stat.losses })
+        }
+      }
+    }
+
+    // Convert map to array and sort by priority and value
+    const highlightsList = Array.from(playerHighlightsMap.values())
+      .filter((highlight) => {
+        // Filter out streak highlights with value 1
+        return !(highlight.type === 'streak' && highlight.value === 1)
+      })
+      .sort((a, b) => {
+        // Priority order: perfect > streak > noWins
+        const priorityOrder = { perfect: 3, streak: 2, noWins: 1 }
+        const priorityDiff = priorityOrder[b.type] - priorityOrder[a.type]
+        if (priorityDiff !== 0) return priorityDiff
+        
+        // If same priority, sort by value (descending)
+        return b.value - a.value
+      })
+      .slice(0, 5) // Limit to 5 highlights
+
+    return highlightsList
+  }, [event.playerStats, event.status])
+
   return (
-    <Link href={`/events/${event.id}`}>
-      <Card className="group h-full transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge className={cn('capitalize', statusColors[event.status])}>
-                  {event.status}
-                </Badge>
-              </div>
-              <h3 className="font-semibold text-lg group-hover:text-primary transition-colors truncate">
+    <>
+      <Card className="group transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
+        <CardContent className="p-4">
+          {/* Header Section - All in one row */}
+          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap min-w-0 flex-1">
+              <Badge className={cn('capitalize text-xs flex-shrink-0', statusColors[event.status])} suppressHydrationWarning>
+                {t(`events.status.${event.status}`)}
+              </Badge>
+              <h3 className="font-semibold text-base group-hover:text-primary transition-colors truncate">
                 {event.name}
               </h3>
-              <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                <p className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {dateRange}
-                </p>
-                <p className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  <span className="truncate">{event.location}</span>
-                </p>
-                <p className="flex items-center gap-2">
-                  <Trophy className="h-4 w-4" />
-                  {event.games.length} Games
-                </p>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                <span className="flex items-center gap-1.5 whitespace-nowrap">
+                  <Calendar className="h-3.5 w-3.5" />
+                  {new Date(event.startDate).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
+                {event.location && (
+                  <span className="flex items-center gap-1.5 whitespace-nowrap">
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span className="truncate">{event.location}</span>
+                  </span>
+                )}
+                <span className="flex items-center gap-1.5 whitespace-nowrap" suppressHydrationWarning>
+                  <Trophy className="h-3.5 w-3.5" />
+                  {event.games.length} {t('events.games')}
+                </span>
+                {event.summaryStats && event.summaryStats.participantCount > 0 && (
+                  <span className="flex items-center gap-1.5 whitespace-nowrap" suppressHydrationWarning>
+                    <Users className="h-3.5 w-3.5" />
+                    {event.summaryStats.participantCount} {t('events.participants')}
+                  </span>
+                )}
               </div>
             </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
           </div>
 
-          {event.status === 'completed' && event.winners.length > 0 && (
+          {/* Columns Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
+            {/* Column 1: Tournament Places */}
+            {event.places && Object.keys(event.places).length > 0 && (
+              <div className="space-y-2 md:pr-4 md:border-r md:border-border flex flex-col items-center">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2" suppressHydrationWarning>
+                  {t('events.tournamentPlaces')}
+                </h4>
+                {(() => {
+                  // Sort place keys: handle numeric keys and special keys (gold/silver/bronze)
+                  const sortedPlaceKeys = Object.keys(event.places).sort((a, b) => {
+                    // Map special keys to numbers for sorting
+                    const keyMap: Record<string, number> = {
+                      gold: 1,
+                      silver: 2,
+                      bronze: 3,
+                    }
+                    
+                    const aNum = keyMap[a] ?? (isNaN(Number(a)) ? 999 : Number(a))
+                    const bNum = keyMap[b] ?? (isNaN(Number(b)) ? 999 : Number(b))
+                    
+                    return aNum - bNum
+                  })
+
+                  // Filter out empty places and limit to max 8 items
+                  const validPlaceKeys = sortedPlaceKeys.filter(
+                    (key) => event.places![key] && event.places![key].length > 0
+                  )
+                  const limitedPlaceKeys = validPlaceKeys.slice(0, 8)
+                  
+                  // Determine grid columns: 1 column for ≤4 places, 2 columns for 5-8 places
+                  const gridCols = limitedPlaceKeys.length <= 4 ? 'grid-cols-1' : 'grid-cols-2'
+
+                  return (
+                    <div className={`grid ${gridCols} gap-x-4 gap-y-1.5`}>
+
+                      {limitedPlaceKeys.map((placeKey) => {
+                        const players = event.places![placeKey]
+
+                        // Determine display label and icon
+                        let MedalIcon: typeof GoldMedalIcon | null = null
+                        
+                        if (placeKey === 'gold' || placeKey === '1') {
+                          MedalIcon = GoldMedalIcon
+                        } else if (placeKey === 'silver' || placeKey === '2') {
+                          MedalIcon = SilverMedalIcon
+                        } else if (placeKey === 'bronze' || placeKey === '3') {
+                          MedalIcon = BronzeMedalIcon
+                        }
+
+                        return (
+                          <div key={placeKey} className="flex items-center gap-2">
+                            {MedalIcon ? (
+                              <MedalIcon className="h-4 w-4 flex-shrink-0" />
+                            ) : (
+                              <span className="text-xs font-semibold text-muted-foreground w-4 text-center flex-shrink-0">
+                                {placeKey}
+                              </span>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <span className="text-xs font-medium">
+                                {players.map((player) => player.name).join(', ')}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
+
+            {/* Column 2: Top Points */}
+            {event.playerPoints && event.playerPoints.length > 0 && (
+              <div className="space-y-2 md:px-4 md:border-r md:border-border flex flex-col items-center">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2" suppressHydrationWarning>
+                  {t('events.topPoints')}
+                </h4>
+                <div className="space-y-1.5 flex flex-col items-center w-full">
+                  {event.playerPoints.slice(0, 5).map((playerPoint) => (
+                    <div key={playerPoint.player.id} className="flex items-center justify-center gap-2">
+                      <span className="text-xs font-medium truncate">
+                        {playerPoint.player.name.split(' ')[0]}
+                      </span>
+                      <span className="text-xs font-semibold text-primary" suppressHydrationWarning>
+                        {playerPoint.points} {t('events.points')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Column 3: Player Highlights */}
+            {highlights.length > 0 && (
+              <div className="space-y-2 md:pl-4 flex flex-col items-center">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2" suppressHydrationWarning>
+                  {t('events.highlights')}
+                </h4>
+                <div className="space-y-1.5 flex flex-col items-center w-full">
+                  {highlights.map((highlight, idx) => (
+                    <Badge
+                      key={`${highlight.player.id}-${highlight.type}-${idx}`}
+                      variant="outline"
+                      className={cn(
+                        'text-[11px] px-2 py-1 w-full justify-center',
+                        highlight.type === 'streak' && 'border-green-500/50 text-green-400',
+                        highlight.type === 'noWins' && 'border-red-500/50 text-red-400',
+                        highlight.type === 'perfect' && 'border-blue-500/50 text-blue-400'
+                      )}
+                    >
+                      {highlight.type === 'streak' && (
+                        <>
+                          <TrendingUp className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
+                          <span className="truncate" suppressHydrationWarning>
+                            {t('events.highlightsText.winsInRow', {
+                              player: highlight.player.name.split(' ')[0],
+                              value: highlight.value,
+                            })}
+                          </span>
+                        </>
+                      )}
+                      {highlight.type === 'noWins' && (
+                        <>
+                          <AlertCircle className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
+                          <span className="truncate" suppressHydrationWarning>
+                            {t('events.highlightsText.noWins', {
+                              player: highlight.player.name.split(' ')[0],
+                              value: highlight.value,
+                            })}
+                          </span>
+                        </>
+                      )}
+                      {highlight.type === 'perfect' && (
+                        <>
+                          <Trophy className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
+                          <span className="truncate" suppressHydrationWarning>
+                            {t('events.highlightsText.perfect', {
+                              player: highlight.player.name.split(' ')[0],
+                              value: highlight.value,
+                            })}
+                          </span>
+                        </>
+                      )}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Legacy Winners Display (for backward compatibility) */}
+          {event.status === 'completed' && event.winners.length > 0 && !event.places && (
             <div className="mt-4 pt-4 border-t border-border">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                Winners
-              </p>
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
                   {event.winners.map((winner) => (
                     <Avatar
                       key={winner.id}
-                      className="h-8 w-8 border-2 border-background"
+                      className="h-6 w-6 border-2 border-background"
                     >
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-[10px] font-semibold">
                         {getInitials(winner.name)}
                       </AvatarFallback>
                     </Avatar>
                   ))}
                 </div>
-                <span className="text-sm font-medium">
+                <span className="text-xs font-medium">
                   {event.winners.map((w) => w.name.split(' ')[0]).join(' & ')}
                 </span>
               </div>
@@ -91,14 +697,144 @@ function EventCard({ event }: { event: (typeof events)[0] }) {
           )}
         </CardContent>
       </Card>
-    </Link>
+    </>
   )
 }
 
+// Map backend EventResponseDto to frontend Event interface
+function mapBackendEventToFrontend(
+  backendEvent: BackendEventResponseDto,
+  gamesByEventId: Record<string, BackendGameResponseDto[]>,
+  playersById: Record<string, Player>
+): EventWithPlaces {
+  const eventDate = new Date(backendEvent.date)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const eventDateOnly = new Date(eventDate)
+  eventDateOnly.setHours(0, 0, 0, 0)
+
+  // Determine status
+  let status: 'upcoming' | 'ongoing' | 'completed'
+  // Check if event has places data (indicates completed event)
+  const hasPlacesData = backendEvent.data && Object.keys(backendEvent.data).length > 0
+  if (hasPlacesData) {
+    // If places exist, event is completed
+    status = 'completed'
+  } else if (eventDateOnly < today) {
+    status = 'completed'
+  } else if (eventDateOnly.getTime() === today.getTime()) {
+    status = 'ongoing'
+  } else {
+    status = 'upcoming'
+  }
+
+  // Extract winners from data.gold or data["1"] (for backward compatibility)
+  const winners: Player[] = []
+  const winnersKey = backendEvent.data?.gold || backendEvent.data?.['1']
+  if (winnersKey && Array.isArray(winnersKey)) {
+    for (const playerId of winnersKey) {
+      const player = playersById[playerId]
+      if (player) {
+        winners.push(player)
+      }
+    }
+  }
+
+  // Extract places (all places, not just top 3)
+  const places = extractEventPlaces(backendEvent, playersById)
+  const hasPlaces = Object.keys(places).length > 0
+
+  // Get games for this event and map them
+  const backendGames = gamesByEventId[backendEvent.id] || []
+  const games: Game[] = backendGames
+    .map((backendGame) => mapBackendGameToFrontend(backendGame, playersById))
+    .filter((game): game is Game => game !== null)
+
+  // Calculate player statistics
+  const playerStats = games.length > 0 ? calculatePlayerEventStats(games, playersById) : []
+
+  // Calculate player points from backend games (more accurate)
+  const playerPoints = backendGames.length > 0 
+    ? calculatePlayerPointsFromBackendGames(backendGames, playersById)
+    : []
+
+  // Calculate summary statistics from backend games
+  const summaryStats = backendGames.length > 0
+    ? calculateEventSummaryStatsFromBackendGames(backendGames, hasPlaces ? places : undefined)
+    : undefined
+
+  return {
+    id: backendEvent.id,
+    name: backendEvent.name,
+    startDate: eventDate.toISOString(),
+    endDate: eventDate.toISOString(), // Use same date for both start and end
+    location: backendEvent.location || '',
+    games: games,
+    winners: winners,
+    status: status,
+    places: hasPlaces ? places : undefined,
+    playerStats: playerStats.length > 0 ? playerStats : undefined,
+    playerPoints: playerPoints.length > 0 ? playerPoints : undefined,
+    summaryStats: summaryStats,
+  }
+}
+
 export default function EventsPage() {
+  // Fetch events from API
+  const { data: backendEvents = [], isLoading: isLoadingEvents } = useQuery<BackendEventResponseDto[]>({
+    queryKey: ['events'],
+    queryFn: () => fetch(API.GET_ALL_EVENTS).then((res) => res.json()),
+  })
+
+  // Fetch all games with full details
+  const { data: gamesData, isLoading: isLoadingGames } = useQuery<{ games: BackendGameResponseDto[]; allGamesCount: number }>({
+    queryKey: ['games'],
+    queryFn: () => fetch(API.GET_ALL_GAMES).then((res) => res.json()),
+  })
+
+  // Fetch all players to map winner IDs and create game teams
+  const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
+    queryKey: ['players'],
+    queryFn: () => fetch(API.GET_ALL_PLAYERS).then((res) => res.json()),
+  })
+
+  const isLoading = isLoadingEvents || isLoadingGames || isLoadingPlayers
+
+  // Create lookup maps
+  const gamesByEventId = useMemo(() => {
+    const map: Record<string, BackendGameResponseDto[]> = {}
+    if (gamesData?.games) {
+      for (const game of gamesData.games) {
+        if (!map[game.eventId]) {
+          map[game.eventId] = []
+        }
+        map[game.eventId].push(game)
+      }
+    }
+    return map
+  }, [gamesData?.games])
+
+  const playersById = useMemo(() => {
+    const map: Record<string, Player> = {}
+    for (const player of players) {
+      map[player.id] = player
+    }
+    return map
+  }, [players])
+
+  // Map backend events to frontend events
+  const events = useMemo(() => {
+    return backendEvents.map((backendEvent) =>
+      mapBackendEventToFrontend(backendEvent, gamesByEventId, playersById)
+    )
+  }, [backendEvents, gamesByEventId, playersById])
+
+  // Filter events by status
   const upcomingEvents = events.filter((e) => e.status === 'upcoming')
   const ongoingEvents = events.filter((e) => e.status === 'ongoing')
   const completedEvents = events.filter((e) => e.status === 'completed')
+
+  const { t } = useTranslation()
 
   return (
     <div className="min-h-screen bg-background">
@@ -107,92 +843,26 @@ export default function EventsPage() {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Events</h1>
-          <p className="mt-1 text-muted-foreground">
-            Browse upcoming and past tournaments.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight" suppressHydrationWarning>{t('events.title')}</h1>
         </div>
 
-        {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-3 mb-8">
-          <Card>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="rounded-lg bg-blue-500/10 p-3">
-                <Calendar className="h-5 w-5 text-blue-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{upcomingEvents.length}</p>
-                <p className="text-sm text-muted-foreground">Upcoming</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="rounded-lg bg-green-500/10 p-3">
-                <Users className="h-5 w-5 text-green-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{ongoingEvents.length}</p>
-                <p className="text-sm text-muted-foreground">Ongoing</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="rounded-lg bg-primary/10 p-3">
-                <Trophy className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{completedEvents.length}</p>
-                <p className="text-sm text-muted-foreground">Completed</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Upcoming Events */}
-        {upcomingEvents.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-blue-400" />
-              Upcoming Events
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {upcomingEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-muted-foreground" suppressHydrationWarning>{t('events.loading')}</p>
           </div>
-        )}
-
-        {/* Ongoing Events */}
-        {ongoingEvents.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-green-400" />
-              Ongoing Events
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {ongoingEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Completed Events */}
-        {completedEvents.length > 0 && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-muted-foreground" />
-              Completed Events
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {completedEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
-          </div>
+        ) : (
+          <>
+            {/* Completed Events */}
+            {completedEvents.length > 0 && (
+              <div>
+                <div className="space-y-4">
+                  {completedEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

@@ -2,6 +2,7 @@
   "nav": {
     "overview": "Przegląd",
     "players": "Gracze",
+    "events": "Wydarzenia",
     "addResults": "Dodaj wyniki"
   },
   "home": {
@@ -83,6 +84,27 @@
       "cancel": "Anuluj",
       "create": "Utwórz gracza",
       "creating": "Tworzenie..."
+    }
+  },
+  "events": {
+    "title": "Wydarzenia",
+    "loading": "Ładowanie wydarzeń...",
+    "completed": "Zakończone wydarzenia",
+    "tournamentPlaces": "Miejsca w turnieju",
+    "topPoints": "Najlepsze punkty",
+    "highlights": "Osiągnięcia",
+    "games": "Gier",
+    "participants": "Uczestników",
+    "points": "pkt",
+    "status": {
+      "upcoming": "Nadchodzące",
+      "ongoing": "Trwające",
+      "completed": "Zakończone"
+    },
+    "highlightsText": {
+      "winsInRow": "{{player}}: {{value}} zwycięstw z rzędu",
+      "noWins": "{{player}}: Brak zwycięstw ({{value}}P)",
+      "perfect": "{{player}}: Idealnie ({{value}}Z-0P)"
     }
   },
   "common": {
