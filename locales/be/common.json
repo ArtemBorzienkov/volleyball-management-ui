@@ -105,6 +105,14 @@
       "winsInRow": "{{player}}: {{value}} перамог запар",
       "noWins": "{{player}}: Без перамог ({{value}}П)",
       "perfect": "{{player}}: Ідэальна ({{value}}П-0П)"
+    },
+    "table": {
+      "place": "Месца",
+      "player": "Гулец",
+      "winsLosses": "П-П",
+      "points": "Ачкі",
+      "gamesWL": "Гульні П-П",
+      "pointsWL": "Ачкі П-П"
     }
   },
   "common": {

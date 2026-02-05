@@ -56,6 +56,17 @@ interface PlayerEventStats {
   hasNoLosses: boolean
 }
 
+// Player table row data
+interface PlayerTableRow {
+  player: Player
+  place: number
+  wins: number
+  losses: number
+  points: number
+  pointsWon: number
+  pointsLost: number
+}
+
 // Player points
 interface PlayerPoints {
   player: Player
@@ -410,6 +421,171 @@ function calculatePlayerEventStats(
   return statsArray
 }
 
+// Build player table data sorted by place
+function buildPlayerTableData(
+  event: EventWithPlaces
+): PlayerTableRow[] {
+  const playerMap = new Map<string, PlayerTableRow>()
+
+  // First, assign places from event.places
+  if (event.places) {
+    const sortedPlaceKeys = Object.keys(event.places).sort((a, b) => {
+      const keyMap: Record<string, number> = {
+        gold: 1,
+        silver: 2,
+        bronze: 3,
+      }
+      const aNum = keyMap[a] ?? (isNaN(Number(a)) ? 999 : Number(a))
+      const bNum = keyMap[b] ?? (isNaN(Number(b)) ? 999 : Number(b))
+      return aNum - bNum
+    })
+
+    let currentPlace = 1
+    for (const placeKey of sortedPlaceKeys) {
+      const players = event.places[placeKey]
+      if (players && players.length > 0) {
+        for (const player of players) {
+          if (!playerMap.has(player.id)) {
+            playerMap.set(player.id, {
+              player,
+              place: currentPlace,
+              wins: 0,
+              losses: 0,
+              points: 0,
+              pointsWon: 0,
+              pointsLost: 0,
+            })
+          }
+        }
+        // Increment place by number of players at this place
+        currentPlace += players.length
+      }
+    }
+  }
+
+  // Add wins, losses, and calculate points won/lost from games
+  if (event.games && event.games.length > 0) {
+    for (const game of event.games) {
+      const team1Players = [game.team1.player1.id, game.team1.player2.id]
+      const team2Players = [game.team2.player1.id, game.team2.player2.id]
+      
+      // Get team points
+      let team1Points = 0
+      let team2Points = 0
+      if (game.score.sets && game.score.sets.length > 0) {
+        for (const set of game.score.sets) {
+          team1Points += set.team1 || 0
+          team2Points += set.team2 || 0
+        }
+      } else {
+        team1Points = game.score.team1Sets || 0
+        team2Points = game.score.team2Sets || 0
+      }
+
+      // Update team1 players
+      for (const playerId of team1Players) {
+        let row = playerMap.get(playerId)
+        if (!row) {
+          const player = game.team1.player1.id === playerId ? game.team1.player1 : game.team1.player2
+          row = {
+            player,
+            place: 999,
+            wins: 0,
+            losses: 0,
+            points: 0,
+            pointsWon: 0,
+            pointsLost: 0,
+          }
+          playerMap.set(playerId, row)
+        }
+        row.pointsWon += team1Points
+        row.pointsLost += team2Points
+        if (game.winner === 'team1') {
+          row.wins++
+        } else {
+          row.losses++
+        }
+      }
+
+      // Update team2 players
+      for (const playerId of team2Players) {
+        let row = playerMap.get(playerId)
+        if (!row) {
+          const player = game.team2.player1.id === playerId ? game.team2.player1 : game.team2.player2
+          row = {
+            player,
+            place: 999,
+            wins: 0,
+            losses: 0,
+            points: 0,
+            pointsWon: 0,
+            pointsLost: 0,
+          }
+          playerMap.set(playerId, row)
+        }
+        row.pointsWon += team2Points
+        row.pointsLost += team1Points
+        if (game.winner === 'team2') {
+          row.wins++
+        } else {
+          row.losses++
+        }
+      }
+    }
+  }
+
+  // Fallback: Add wins and losses from playerStats if games not available
+  if (event.playerStats && (!event.games || event.games.length === 0)) {
+    for (const stat of event.playerStats) {
+      const row = playerMap.get(stat.player.id)
+      if (row) {
+        row.wins = stat.wins
+        row.losses = stat.losses
+      } else {
+        playerMap.set(stat.player.id, {
+          player: stat.player,
+          place: 999,
+          wins: stat.wins,
+          losses: stat.losses,
+          points: 0,
+          pointsWon: 0,
+          pointsLost: 0,
+        })
+      }
+    }
+  }
+
+  // Add total points from playerPoints (for backward compatibility)
+  if (event.playerPoints) {
+    for (const playerPoint of event.playerPoints) {
+      const row = playerMap.get(playerPoint.player.id)
+      if (row) {
+        row.points = playerPoint.points
+      } else {
+        playerMap.set(playerPoint.player.id, {
+          player: playerPoint.player,
+          place: 999,
+          wins: 0,
+          losses: 0,
+          points: playerPoint.points,
+          pointsWon: 0,
+          pointsLost: 0,
+        })
+      }
+    }
+  }
+
+  // Convert to array and sort by place
+  return Array.from(playerMap.values()).sort((a, b) => {
+    // First sort by place
+    if (a.place !== b.place) {
+      return a.place - b.place
+    }
+    // If same place, sort by points descending
+    return b.points - a.points
+  })
+}
+
 function EventCard({ event }: { event: EventWithPlaces }) {
   const { t } = useTranslation()
 
@@ -418,6 +594,14 @@ function EventCard({ event }: { event: EventWithPlaces }) {
     ongoing: 'bg-green-500/20 text-green-400',
     completed: 'bg-muted text-muted-foreground',
   }
+
+  // Build table data
+  const playerTableData = useMemo(() => {
+    if (event.status === 'upcoming' || (!event.places && !event.playerStats && !event.playerPoints)) {
+      return []
+    }
+    return buildPlayerTableData(event)
+  }, [event])
 
   // Get top highlights - each player can have only one highlight per event
   const highlights = useMemo(() => {
@@ -521,157 +705,167 @@ function EventCard({ event }: { event: EventWithPlaces }) {
             </div>
           </div>
 
-          {/* Columns Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
-            {/* Column 1: Tournament Places */}
-            {event.places && Object.keys(event.places).length > 0 && (
-              <div className="space-y-2 md:pr-4 md:border-r md:border-border flex flex-col items-center">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2" suppressHydrationWarning>
-                  {t('events.tournamentPlaces')}
-                </h4>
-                {(() => {
-                  // Sort place keys: handle numeric keys and special keys (gold/silver/bronze)
-                  const sortedPlaceKeys = Object.keys(event.places).sort((a, b) => {
-                    // Map special keys to numbers for sorting
-                    const keyMap: Record<string, number> = {
-                      gold: 1,
-                      silver: 2,
-                      bronze: 3,
-                    }
-                    
-                    const aNum = keyMap[a] ?? (isNaN(Number(a)) ? 999 : Number(a))
-                    const bNum = keyMap[b] ?? (isNaN(Number(b)) ? 999 : Number(b))
-                    
-                    return aNum - bNum
-                  })
-
-                  // Filter out empty places and limit to max 8 items
-                  const validPlaceKeys = sortedPlaceKeys.filter(
-                    (key) => event.places![key] && event.places![key].length > 0
-                  )
-                  const limitedPlaceKeys = validPlaceKeys.slice(0, 8)
-                  
-                  // Determine grid columns: 1 column for ≤4 places, 2 columns for 5-8 places
-                  const gridCols = limitedPlaceKeys.length <= 4 ? 'grid-cols-1' : 'grid-cols-2'
-
-                  return (
-                    <div className={`grid ${gridCols} gap-x-4 gap-y-1.5`}>
-
-                      {limitedPlaceKeys.map((placeKey) => {
-                        const players = event.places![placeKey]
-
-                        // Determine display label and icon
-                        let MedalIcon: typeof GoldMedalIcon | null = null
-                        
-                        if (placeKey === 'gold' || placeKey === '1') {
-                          MedalIcon = GoldMedalIcon
-                        } else if (placeKey === 'silver' || placeKey === '2') {
-                          MedalIcon = SilverMedalIcon
-                        } else if (placeKey === 'bronze' || placeKey === '3') {
-                          MedalIcon = BronzeMedalIcon
-                        }
-
-                        return (
-                          <div key={placeKey} className="flex items-center gap-2">
-                            {MedalIcon ? (
-                              <MedalIcon className="h-4 w-4 flex-shrink-0" />
-                            ) : (
-                              <span className="text-xs font-semibold text-muted-foreground w-4 text-center flex-shrink-0">
-                                {placeKey}
-                              </span>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <span className="text-xs font-medium">
-                                {players.map((player) => player.name).join(', ')}
-                              </span>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )
-                })()}
-              </div>
-            )}
-
-            {/* Column 2: Top Points */}
-            {event.playerPoints && event.playerPoints.length > 0 && (
-              <div className="space-y-2 md:px-4 md:border-r md:border-border flex flex-col items-center">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2" suppressHydrationWarning>
-                  {t('events.topPoints')}
-                </h4>
-                <div className="space-y-1.5 flex flex-col items-center w-full">
-                  {event.playerPoints.slice(0, 5).map((playerPoint) => (
-                    <div key={playerPoint.player.id} className="flex items-center justify-center gap-2">
-                      <span className="text-xs font-medium truncate">
-                        {playerPoint.player.name.split(' ')[0]}
+          {/* Players List and Highlights - Three Sections */}
+          {(playerTableData.length > 0 || highlights.length > 0) && (
+            <div className="pt-4 border-t border-border">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* Left Column - First Half of Players */}
+                {playerTableData.length > 0 && (
+                  <div className="space-y-2">
+                    {/* Header */}
+                    <div className="flex items-center justify-between gap-2 pb-2 border-b border-border">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[50%]">
+                        {t('events.table.player')}
                       </span>
-                      <span className="text-xs font-semibold text-primary" suppressHydrationWarning>
-                        {playerPoint.points} {t('events.points')}
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-border pl-2 text-center min-w-[80px]">
+                        {t('events.table.gamesWL')}
+                      </span>
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-border pl-2 text-right min-w-[80px]">
+                        {t('events.table.pointsWL')}
                       </span>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                    {playerTableData.slice(0, Math.ceil(playerTableData.length / 2)).map((row) => {
+                      // Determine medal icon for top 3 places
+                      let MedalIcon: typeof GoldMedalIcon | typeof SilverMedalIcon | typeof BronzeMedalIcon | null = null
+                      if (row.place === 1) {
+                        MedalIcon = GoldMedalIcon
+                      } else if (row.place === 2) {
+                        MedalIcon = SilverMedalIcon
+                      } else if (row.place === 3) {
+                        MedalIcon = BronzeMedalIcon
+                      }
 
-            {/* Column 3: Player Highlights */}
-            {highlights.length > 0 && (
-              <div className="space-y-2 md:pl-4 flex flex-col items-center">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2" suppressHydrationWarning>
-                  {t('events.highlights')}
-                </h4>
-                <div className="space-y-1.5 flex flex-col items-center w-full">
-                  {highlights.map((highlight, idx) => (
-                    <Badge
-                      key={`${highlight.player.id}-${highlight.type}-${idx}`}
-                      variant="outline"
-                      className={cn(
-                        'text-[11px] px-2 py-1 w-full justify-center',
-                        highlight.type === 'streak' && 'border-green-500/50 text-green-400',
-                        highlight.type === 'noWins' && 'border-red-500/50 text-red-400',
-                        highlight.type === 'perfect' && 'border-blue-500/50 text-blue-400'
-                      )}
-                    >
-                      {highlight.type === 'streak' && (
-                        <>
-                          <TrendingUp className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
-                          <span className="truncate" suppressHydrationWarning>
-                            {t('events.highlightsText.winsInRow', {
-                              player: highlight.player.name.split(' ')[0],
-                              value: highlight.value,
-                            })}
+                      return (
+                        <div key={row.player.id} className="flex items-center gap-2">
+                          {MedalIcon ? (
+                            <MedalIcon className="h-4 w-4 flex-shrink-0" />
+                          ) : (
+                            <span className="text-xs font-medium text-muted-foreground w-4 text-center flex-shrink-0">
+                              {row.place}
+                            </span>
+                          )}
+                          <span className="text-sm font-medium flex-1 min-w-0 truncate">
+                            {row.player.name}
                           </span>
-                        </>
-                      )}
-                      {highlight.type === 'noWins' && (
-                        <>
-                          <AlertCircle className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
-                          <span className="truncate" suppressHydrationWarning>
-                            {t('events.highlightsText.noWins', {
-                              player: highlight.player.name.split(' ')[0],
-                              value: highlight.value,
-                            })}
+                          <span className="text-sm text-muted-foreground flex-1 border-border pl-2 text-center min-w-[80px]">
+                            {row.wins}-{row.losses}
                           </span>
-                        </>
-                      )}
-                      {highlight.type === 'perfect' && (
-                        <>
-                          <Trophy className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
-                          <span className="truncate" suppressHydrationWarning>
-                            {t('events.highlightsText.perfect', {
-                              player: highlight.player.name.split(' ')[0],
-                              value: highlight.value,
-                            })}
+                          <span className="text-sm font-semibold text-primary border-border pl-2 text-right min-w-[60px]">
+                            {row.pointsWon}-{row.pointsLost}
                           </span>
-                        </>
-                      )}
-                    </Badge>
-                  ))}
-                </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* Middle Column - Second Half of Players */}
+                {playerTableData.length > 0 && (
+                  <div className="space-y-2">
+                    {/* Header */}
+                    <div className="flex items-center justify-between gap-2 pb-2 border-b border-border">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[50%]">
+                        {t('events.table.player')}
+                      </span>
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-border pl-2 text-center min-w-[80px]">
+                        {t('events.table.gamesWL')}
+                      </span>
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-border pl-2 text-right min-w-[80px]">
+                        {t('events.table.pointsWL')}
+                      </span>
+                    </div>
+                    {playerTableData.slice(Math.ceil(playerTableData.length / 2)).map((row) => {
+                      // Determine medal icon for top 3 places
+                      let MedalIcon: typeof GoldMedalIcon | typeof SilverMedalIcon | typeof BronzeMedalIcon | null = null
+                      if (row.place === 1) {
+                        MedalIcon = GoldMedalIcon
+                      } else if (row.place === 2) {
+                        MedalIcon = SilverMedalIcon
+                      } else if (row.place === 3) {
+                        MedalIcon = BronzeMedalIcon
+                      }
+
+                      return (
+                        <div key={row.player.id} className="flex items-center gap-2">
+                          {MedalIcon ? (
+                            <MedalIcon className="h-4 w-4 flex-shrink-0" />
+                          ) : (
+                            <span className="text-xs font-medium text-muted-foreground w-4 text-center flex-shrink-0">
+                              {row.place}
+                            </span>
+                          )}
+                          <span className="text-sm font-medium flex-1 min-w-0 truncate">
+                            {row.player.name}
+                          </span>
+                          <span className="text-sm text-muted-foreground flex-1 border-border pl-2 text-center">
+                            {row.wins}-{row.losses}
+                          </span>
+                          <span className="text-sm font-semibold text-primary border-border pl-2 text-right">
+                            {row.pointsWon}-{row.pointsLost}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* Right Column - Highlights */}
+                {highlights.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2" suppressHydrationWarning>
+                      {t('events.highlights')}
+                    </h4>
+                    {highlights.map((highlight, idx) => (
+                      <Badge
+                        key={`${highlight.player.id}-${highlight.type}-${idx}`}
+                        variant="outline"
+                        className={cn(
+                          'text-[11px] px-2 py-1 w-full justify-start',
+                          highlight.type === 'streak' && 'border-green-500/50 text-green-400',
+                          highlight.type === 'noWins' && 'border-red-500/50 text-red-400',
+                          highlight.type === 'perfect' && 'border-blue-500/50 text-blue-400'
+                        )}
+                      >
+                        {highlight.type === 'streak' && (
+                          <>
+                            <TrendingUp className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
+                            <span className="truncate" suppressHydrationWarning>
+                              {t('events.highlightsText.winsInRow', {
+                                player: highlight.player.name.split(' ')[0],
+                                value: highlight.value,
+                              })}
+                            </span>
+                          </>
+                        )}
+                        {highlight.type === 'noWins' && (
+                          <>
+                            <AlertCircle className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
+                            <span className="truncate" suppressHydrationWarning>
+                              {t('events.highlightsText.noWins', {
+                                player: highlight.player.name.split(' ')[0],
+                                value: highlight.value,
+                              })}
+                            </span>
+                          </>
+                        )}
+                        {highlight.type === 'perfect' && (
+                          <>
+                            <Trophy className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
+                            <span className="truncate" suppressHydrationWarning>
+                              {t('events.highlightsText.perfect', {
+                                player: highlight.player.name.split(' ')[0],
+                                value: highlight.value,
+                              })}
+                            </span>
+                          </>
+                        )}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Legacy Winners Display (for backward compatibility) */}
           {event.status === 'completed' && event.winners.length > 0 && !event.places && (

@@ -105,6 +105,14 @@
       "winsInRow": "{{player}}: {{value}} zwycięstw z rzędu",
       "noWins": "{{player}}: Brak zwycięstw ({{value}}P)",
       "perfect": "{{player}}: Idealnie ({{value}}Z-0P)"
+    },
+    "table": {
+      "place": "Miejsce",
+      "player": "Gracz",
+      "winsLosses": "Z-P",
+      "points": "Punkty",
+      "gamesWL": "Gry Z-P",
+      "pointsWL": "Punkty Z-P"
     }
   },
   "common": {

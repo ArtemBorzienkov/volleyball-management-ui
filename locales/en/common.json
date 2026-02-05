@@ -105,6 +105,14 @@
       "winsInRow": "{{player}}: {{value}} wins in a row",
       "noWins": "{{player}}: No wins ({{value}}L)",
       "perfect": "{{player}}: Perfect ({{value}}W-0L)"
+    },
+    "table": {
+      "place": "Place",
+      "player": "Player",
+      "winsLosses": "W-L",
+      "points": "Points",
+      "gamesWL": "Games W-L",
+      "pointsWL": "Points W-L"
     }
   },
   "common": {

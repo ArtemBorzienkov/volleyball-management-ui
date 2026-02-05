@@ -105,6 +105,14 @@
       "winsInRow": "{{player}}: {{value}} перемог поспіль",
       "noWins": "{{player}}: Без перемог ({{value}}П)",
       "perfect": "{{player}}: Ідеально ({{value}}П-0П)"
+    },
+    "table": {
+      "place": "Місце",
+      "player": "Гравець",
+      "winsLosses": "П-П",
+      "points": "Очки",
+      "gamesWL": "Ігри П-П",
+      "pointsWL": "Очки П-П"
     }
   },
   "common": {
