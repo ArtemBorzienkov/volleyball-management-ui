@@ -457,8 +457,8 @@ function buildPlayerTableData(
             })
           }
         }
-        // Increment place by number of players at this place
-        currentPlace += players.length
+        // Increment place by 1 for the next place key (not by number of players)
+        currentPlace += 1
       }
     }
   }
