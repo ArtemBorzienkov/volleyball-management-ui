@@ -103,6 +103,7 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
                   <TableHead>
                     {t('nav.players')} ({filteredPlayers.length})
                   </TableHead>
+                  <TableHead className="text-center">{t('home.topPlayers.rank')}</TableHead>
                   <TableHead className="text-center">{t('home.topPlayers.totalTournaments')}</TableHead>
                   <TableHead className="text-center">{t('home.topPlayers.tournamentResults')}</TableHead>
                   <TableHead className="text-center">{t('home.topPlayers.totalGames')}</TableHead>
@@ -122,6 +123,11 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
                     </TableCell>
                     <TableCell>
                         {player.name}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="text-muted-foreground">
+                        {player.rank}
+                      </span>
                     </TableCell>
                     <TableCell className="text-center">
                       <span className="text-muted-foreground">
