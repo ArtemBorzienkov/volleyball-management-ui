@@ -6,7 +6,8 @@ import { StatCard } from '@/components/stat-card'
 import { PlayerCard } from '@/components/player-card'
 import { GenderFilter, type GenderFilter as GenderFilterType } from '@/components/gender-filter'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, Trophy, Calendar, TrendingUp } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Users, Trophy, Calendar, TrendingUp, HelpCircle } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import API from '@/lib/api'
@@ -41,16 +42,16 @@ export default function HomePage() {
     queryFn: () => fetch(`${API.GET_TOP_PLAYERS_BY_WIN_RATE}?limit=10`).then((res) => res.json()),
   })
 
-  // Fetch top players by games played (limit to 10) - grouped by gender
-  const { data: topPlayersByGamesPlayedGrouped, isLoading: isLoadingTopPlayersByGamesPlayed } = useQuery<GroupedRankingResponse>({
-    queryKey: ['top-players-games-played'],
-    queryFn: () => fetch(`${API.GET_TOP_PLAYERS_BY_GAMES_PLAYED}?limit=10`).then((res) => res.json()),
+  // Fetch top players by rank (limit to 10) - grouped by gender
+  const { data: topRankPlayersGrouped, isLoading: isLoadingTopRankPlayers } = useQuery<GroupedRankingResponse>({
+    queryKey: ['top-players-rank'],
+    queryFn: () => fetch(`${API.GET_TOP_PLAYERS_BY_RANK}?limit=10`).then((res) => res.json()),
   })
 
   // Get filtered data based on selected gender filter
   const topPlayersByWonEvents = topPlayersByWonEventsGrouped?.[genderFilter] || []
   const topPlayersByWinRate = topPlayersByWinRateGrouped?.[genderFilter] || []
-  const topPlayersByGamesPlayed = topPlayersByGamesPlayedGrouped?.[genderFilter] || []
+  const topRankPlayers = topRankPlayersGrouped?.[genderFilter] || []
 
   // Fetch all games and get recent ones (limit to 4)
   const { data: gamesData, isLoading: isLoadingGames } = useQuery<{ games: Game[]; allGamesCount: number }>({
@@ -77,7 +78,7 @@ export default function HomePage() {
     isLoadingPlayers || 
     isLoadingTopPlayersByWonEvents || 
     isLoadingTopPlayersByWinRate || 
-    isLoadingTopPlayersByGamesPlayed || 
+    isLoadingTopRankPlayers || 
     isLoadingGames || 
     isLoadingTeams || 
     isLoadingEvents
@@ -151,8 +152,7 @@ export default function HomePage() {
             icon={TrendingUp}
           />
         </div>
-
-        {/* Top Players - 3 Columns */}
+        {/* Top Players - 1 Columns */}
         <div className="mb-8">
           <div className="mx-auto max-w-7xl">
             {/* Gender Filter */}
@@ -161,7 +161,53 @@ export default function HomePage() {
               <GenderFilter value={genderFilter} onChange={setGenderFilter} />
             </div>
             <div className="grid gap-6 md:grid-cols-3">
-              {/* Column 1: Top Players by Won Events */}
+              {/* Column 1: Top Players by Rank */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    {t('home.topPlayers.byRank')}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button type="button" className="inline-flex items-center justify-center">
+                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="max-w-xs">
+                        <p className="text-sm">{t('home.topPlayers.rankExplanation')}</p>
+                      </PopoverContent>
+                    </Popover>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-0">
+                  {topRankPlayers.length > 0 ? (
+                    topRankPlayers.map((ranking) => {
+                      const rank = typeof ranking.value === 'number' ? ranking.value : 0
+                      const totalGames = ranking.player.totalGames || 0
+                      return (
+                        <PlayerCard 
+                          key={`rank-${ranking.player.id}-${ranking.rank}`} 
+                          player={ranking.player} 
+                          rank={ranking.rank} 
+                          hasBorder={false}
+                          statsContent={
+                            <>
+                              <span>
+                                {t('home.topPlayers.rank')}: {typeof rank === 'number' ? rank : 0}
+                              </span>
+                              <span>
+                                {totalGames} {t('home.topPlayers.totalGames')}
+                              </span>
+                            </>
+                          }
+                        />
+                      )
+                    })
+                  ) : (
+                    <p className="text-sm text-muted-foreground p-4">{t('home.topPlayers.noPlayers')}</p>
+                  )}
+                </CardContent>
+              </Card>
+              {/* Column 2: Top Players by Won Events */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">{t('home.topPlayers.byWonEvents')}</CardTitle>
@@ -247,68 +293,9 @@ export default function HomePage() {
                   )}
                 </CardContent>
               </Card>
-
-              {/* Column 3: Top Players by Games Played */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">{t('home.topPlayers.byGamesPlayed')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-0">
-                  {topPlayersByGamesPlayed.length > 0 ? (
-                    topPlayersByGamesPlayed.map((ranking) => {
-                      const winRate = getPlayerWinRate(ranking.player)
-                      const totalGames = typeof ranking.value === 'number' ? ranking.value : 0
-                      return (
-                        <PlayerCard 
-                          key={`games-played-${ranking.player.id}-${ranking.rank}`} 
-                          player={ranking.player} 
-                          rank={ranking.rank} 
-                          hasBorder={false}
-                          statsContent={
-                            <>
-                              <span>
-                                {typeof totalGames === 'number' ? totalGames : 0} {t('home.topPlayers.totalGames')}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <TrendingUp className="h-3 w-3" />
-                                {winRate}% WR
-                              </span>
-                            </>
-                          }
-                        />
-                      )
-                    })
-                  ) : (
-                    <p className="text-sm text-muted-foreground p-4">{t('home.topPlayers.noPlayers')}</p>
-                  )}
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>
-
-        {/* Recent Games */}
-        {/* <div className="mt-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">Recent Games</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/games">View All</Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {recentGames.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {recentGames.map((game) => (
-                    <GameCard key={game.id} game={game} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">No recent games found.</p>
-              )}
-            </CardContent>
-          </Card>
-        </div> */}
       </main>
     </div>
   )

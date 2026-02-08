@@ -18,6 +18,7 @@ const API = {
   GET_TOP_PLAYERS_BY_WIN_RATE: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/win-rate`,
   GET_TOP_PLAYERS_BY_WON_EVENTS: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/won-events`,
   GET_TOP_PLAYERS_BY_GAMES_PLAYED: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/games-played`,
+  GET_TOP_PLAYERS_BY_RANK: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/top-rank`,
   GET_BEST_TEAM_COMBINATIONS: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/best-team-combinations`,
 };
 

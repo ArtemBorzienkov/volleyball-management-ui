@@ -41,13 +41,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        <I18nProvider>
-          <LayoutWrapper>
-            <QueryProvider>
-              {children}
-            </QueryProvider>
-          </LayoutWrapper>
-        </I18nProvider>
+          <I18nProvider>
+            <LayoutWrapper>
+              <QueryProvider>
+                {children}
+              </QueryProvider>
+            </LayoutWrapper>
+          </I18nProvider>
         <Analytics />
       </body>
     </html>
