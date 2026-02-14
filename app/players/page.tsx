@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Search, Filter, TrendingUp } from 'lucide-react'
+import { Search, Filter, ChevronUpIcon, ChevronDownIcon } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import API from '@/lib/api'
@@ -26,6 +26,16 @@ import { CheckCircle2, XCircle } from 'lucide-react'
 import { GenderFilter, type GenderFilter as GenderFilterType } from '@/components/gender-filter'
 
 const Loading = () => null
+
+type SortByOptions = { label: string; value: 'name' | 'rank' | 'totalEvents' | 'totalGames' | 'winRate' }
+
+const sortOptions: SortByOptions[] = [
+  { label: 'Name', value: 'name' },
+  { label: 'Rank', value: 'rank' },
+  { label: 'Total Events', value: 'totalEvents' },
+  { label: 'Total Games', value: 'totalGames' },
+  { label: 'Win Rate', value: 'winRate' },
+]
 
 function PlayersPageContent() {
   const searchParams = useSearchParams()
@@ -67,6 +77,9 @@ function PlayersPageContent() {
 
 function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; genderFilter: GenderFilterType }) {
   const { t } = useTranslation()
+
+  const [sortBy, setSortBy] = useState<SortByOptions['value']>(sortOptions[0].value)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   
   // Fetch full players with extended stats
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<FullPlayer[]>({
@@ -74,7 +87,35 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
     queryFn: () => fetch(API.GET_FULL_PLAYERS).then((res) => res.json()),
   })
 
-  const filteredPlayers = players
+  const handleSortBy = (value: SortByOptions['value']) => {
+    if (sortBy === value) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(value)
+      setSortDirection('asc')
+    }
+  }
+
+  const getSortedPlayers = () => players.sort((a, b) => {
+      if (sortBy === 'name') {
+        return sortDirection === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+      }
+      if (sortBy === 'rank') {
+        return sortDirection === 'asc' ? a.rank - b.rank : b.rank - a.rank
+      }
+      if (sortBy === 'totalEvents') {
+        return sortDirection === 'asc' ? a.totalEvents - b.totalEvents : b.totalEvents - a.totalEvents
+      }
+      if (sortBy === 'totalGames') {
+        return sortDirection === 'asc' ? a.totalGames - b.totalGames : b.totalGames - a.totalGames
+      }
+      if (sortBy === 'winRate') {
+        return sortDirection === 'asc' ? a.winRate - b.winRate : b.winRate - a.winRate
+      }
+      return 0
+    })
+
+  const filteredPlayers = getSortedPlayers()
     .filter((player) => {
       // Filter by gender first
       if (genderFilter === 'W' && player.gender !== 'female') return false
@@ -82,7 +123,6 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
       // Then filter by search query
       return player.name.toLowerCase().includes(searchQuery.toLowerCase())
     })
-    .sort((a, b) => a.name.localeCompare(b.name))
 
   return (
     <>
@@ -98,16 +138,54 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="hover:bg-muted/0 cursor-default">
                   <TableHead className="w-[60px]"></TableHead>
-                  <TableHead>
-                    {t('nav.players')} ({filteredPlayers.length})
+                  <TableHead className="text-center cursor-pointer" onClick={() => handleSortBy('name')}>
+                    <div className="flex items-center gap-1 hover:text-orange-400">
+                      <span>{t('nav.players')}</span>
+                      {sortDirection === 'asc' 
+                        ? <ChevronUpIcon className={`h-4 w-4 hover:text-orange-400 ${sortBy === 'name' ? 'text-orange-400' : ''}`} /> 
+                        : <ChevronDownIcon className={`h-4 w-4 hover:text-orange-400 ${sortBy === 'name' ? 'text-orange-400' : ''}`} />
+                      }
+                    </div>
                   </TableHead>
-                  <TableHead className="text-center">{t('home.topPlayers.rank')}</TableHead>
-                  <TableHead className="text-center">{t('home.topPlayers.totalTournaments')}</TableHead>
+                  <TableHead className="text-center cursor-pointer" onClick={() => handleSortBy('rank')}>
+                    <div className="flex items-center gap-1 hover:text-orange-400">
+                      <span>{t('home.topPlayers.rank')}</span>
+                        {sortDirection === 'asc' 
+                          ? <ChevronUpIcon className={`h-4 w-4 hover:text-orange-400 ${sortBy === 'rank' ? 'text-orange-400' : ''}`} /> 
+                          : <ChevronDownIcon className={`h-4 w-4 hover:text-orange-400 ${sortBy === 'rank' ? 'text-orange-400' : ''}`} />
+                        }
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-center cursor-pointer hover:b" onClick={() => handleSortBy('totalEvents')}>
+                    <div className="flex items-center gap-1 hover:text-orange-400">
+                      <span>{t('home.topPlayers.totalTournaments')}</span>
+                      {sortDirection === 'asc' 
+                        ? <ChevronUpIcon className={`h-4 w-4 hover:text-orange-400 ${sortBy === 'totalEvents' ? 'text-orange-400' : ''}`} /> 
+                        : <ChevronDownIcon className={`h-4 w-4 hover:text-orange-400 ${sortBy === 'totalEvents' ? 'text-orange-400' : ''}`} />
+                      }
+                    </div>
+                  </TableHead>
                   <TableHead className="text-center">{t('home.topPlayers.tournamentResults')}</TableHead>
-                  <TableHead className="text-center">{t('home.topPlayers.totalGames')}</TableHead>
-                  <TableHead className="text-center">WR %</TableHead>
+                  <TableHead className="text-center cursor-pointer hover:b" onClick={() => handleSortBy('totalGames')}>
+                    <div className="flex items-center gap-1 hover:text-orange-400">
+                      <span>{t('home.topPlayers.totalGames')}</span>
+                      {sortDirection === 'asc' 
+                        ? <ChevronUpIcon className={`h-4 w-4 hover:text-orange-400 ${sortBy === 'totalGames' ? 'text-orange-400' : ''}`} /> 
+                        : <ChevronDownIcon className={`h-4 w-4 hover:text-orange-400 ${sortBy === 'totalGames' ? 'text-orange-400' : ''}`} />
+                      }
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-center cursor-pointer hover:b" onClick={() => handleSortBy('winRate')}>
+                    <div className="flex items-center gap-1 hover:text-orange-400">
+                      <span>WR %</span>
+                      {sortDirection === 'asc' 
+                        ? <ChevronUpIcon className={`h-4 w-4 hover:text-orange-400 ${sortBy === 'winRate' ? 'text-orange-400' : ''}`} /> 
+                        : <ChevronDownIcon className={`h-4 w-4 hover:text-orange-400 ${sortBy === 'winRate' ? 'text-orange-400' : ''}`} />
+                      }
+                    </div>
+                  </TableHead>
                   <TableHead className="text-center">{t('home.topPlayers.lastGames')}</TableHead>
                 </TableRow>
               </TableHeader>

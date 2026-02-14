@@ -26,6 +26,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import API from '@/lib/api'
 import type { Player } from '@/lib/types'
+import * as XLSX from 'xlsx'
 
 export default function AddResultsPage() {
   const { t } = useTranslation()
@@ -67,7 +68,7 @@ export default function AddResultsPage() {
     games: GameResult[]
   }
 
-  const { register, handleSubmit, control, reset, setValue } = useForm<FormData>({
+  const { register, handleSubmit, control, reset, setValue, watch } = useForm<FormData>({
     defaultValues: {
       eventName: '',
       eventDate: '',
@@ -124,6 +125,83 @@ export default function AddResultsPage() {
       avatar: '',
     },
   })
+
+  const handleSelectResultFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const playerNamesMap = new Map<string, Player>(players.map((player) => [player.name, player]))
+
+    const fileReader = new FileReader()
+    fileReader.onload = (event: ProgressEvent<FileReader>) => {
+      const data = event.target?.result
+      if (!data) {
+        return
+      }
+
+      const workbook = XLSX.read(data, { type: 'binary' })
+      const sheetName = workbook.SheetNames[0]
+      const sheet = workbook.Sheets[sheetName]
+      
+      // Convert sheet to JSON
+      const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 })
+      const rowsWithData = jsonData.reduce((acc: never[], row: any) => {
+        if (row && row.length > 0) {
+          const parsedRow = row.filter((cell: never) => cell !== null && cell !== undefined)
+          if (parsedRow.length > 0) {
+            acc.push(parsedRow as never)
+          }
+        }
+        return acc
+      }, [] as never[])
+
+      let isPlacesRowPassed = false
+      let isGamesRowPassed = false
+
+      const {places, games} = rowsWithData.reduce((acc:{places: PlaceResult[], games: GameResult[]}, row: string[] | number[]) => {
+        if (row.some((cell: string | number) => cell && typeof cell === 'string' && cell.toLowerCase() === 'places')) {
+          isPlacesRowPassed = true
+          return acc
+        }
+        if (row.some((cell: string | number) => cell && typeof cell === 'string' && cell.toLowerCase() === 'games')) {
+          isGamesRowPassed = true
+          return acc
+        }
+
+        if (isGamesRowPassed) {
+          const [team1Player1, team1Player2, team1Points, team2Points, team2Player1, team2Player2] = row
+          return {
+            ...acc,
+            games: [...acc.games, {
+              team1Player1: playerNamesMap.get(team1Player1 as string)?.id || '',
+              team1Player2: playerNamesMap.get(team1Player2 as string)?.id || '',
+              team1Points,
+              team2Points,
+              team2Player1: playerNamesMap.get(team2Player1 as string)?.id || '',
+              team2Player2: playerNamesMap.get(team2Player2 as string)?.id || '',
+            } as GameResult]
+          }
+        }
+
+        if (isPlacesRowPassed) {
+          const [place, playerName] = row
+          return {
+            ...acc,
+            places: [...acc.places, {
+              place: place.toString(),
+              playerId: playerNamesMap.get(playerName as string)?.id || '',
+            } as PlaceResult]
+          }
+        }
+
+        return acc
+      }, {places: [], games: []} as {places: PlaceResult[], games: GameResult[]})
+
+      setValue('games', games)
+      setValue('places', places)
+    }
+    fileReader.readAsBinaryString(file)
+  }
 
   // Mutation for creating a new player
   const createPlayerMutation = useMutation({
@@ -299,13 +377,18 @@ export default function AddResultsPage() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Hero Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            {t('addResults.title')}
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            {t('addResults.subtitle')}
-          </p>
+        <div className="flex justify-between items-center">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              {t('addResults.title')}
+            </h1>
+            <p className="mt-2 text-muted-foreground">
+              {t('addResults.subtitle')}
+            </p>
+          </div>
+          <div className="mb-8">
+            <Input type="file" placeholder={'Upload xlsx file'} onChange={handleSelectResultFile} />
+          </div>
         </div>
 
         {/* Add Results Form */}
