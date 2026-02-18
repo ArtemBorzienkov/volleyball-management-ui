@@ -142,6 +142,9 @@ export default function AddResultsPage() {
       const workbook = XLSX.read(data, { type: 'binary' })
       const sheetName = workbook.SheetNames[0]
       const sheet = workbook.Sheets[sheetName]
+
+      const parsePlayerNames = (row: string[]) => 
+        row.map((cell: string) => typeof cell === 'string' ? cell.replace(/\n/g, ' ') : cell)
       
       // Convert sheet to JSON
       const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 })
@@ -149,7 +152,7 @@ export default function AddResultsPage() {
         if (row && row.length > 0) {
           const parsedRow = row.filter((cell: never) => cell !== null && cell !== undefined)
           if (parsedRow.length > 0) {
-            acc.push(parsedRow as never)
+            acc.push(parsePlayerNames(parsedRow) as never)
           }
         }
         return acc
