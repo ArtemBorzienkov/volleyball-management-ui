@@ -69,9 +69,12 @@ export default function HomePage() {
   })
 
   // Fetch all events and filter upcoming ones
-  const { data: allEvents = [], isLoading: isLoadingEvents } = useQuery<Event[]>({
+  const { data: allEvents = {events: [], page: 1, hasMore: false, totalEvents: 0}, isLoading: isLoadingEvents } = useQuery({
     queryKey: ['events'],
-    queryFn: () => fetch(API.GET_ALL_EVENTS).then((res) => res.json()),
+    queryFn: () => fetch(API.GET_ALL_EVENTS).then(async (res) => {
+      const {events, page, hasMore, totalEvents} = await res.json()
+      return {events, page, hasMore, totalEvents}
+    }),
   })
 
   const isLoading =
@@ -83,7 +86,7 @@ export default function HomePage() {
     isLoadingTeams || 
     isLoadingEvents
 
-  const upcomingEvents = allEvents.filter((e) => e.status === 'upcoming')
+  const upcomingEvents = allEvents.events.filter((e: Event) => e.status === 'upcoming')
   const activePlayers = players.filter((p) => p.active).length
 
   // Calculate average win rate for top 10 players
@@ -141,7 +144,7 @@ export default function HomePage() {
           />
           <StatCard
             title={t('home.stats.tournaments')}
-            value={allEvents.length}
+            value={allEvents.totalEvents}
             description={`${upcomingEvents.length} ${t('home.statsDescriptions.upcoming')}`}
             icon={Calendar}
           />

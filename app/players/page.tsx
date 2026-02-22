@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
-import Link from 'next/link'
 import { Navigation } from '@/components/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -78,8 +77,8 @@ function PlayersPageContent() {
 function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; genderFilter: GenderFilterType }) {
   const { t } = useTranslation()
 
-  const [sortBy, setSortBy] = useState<SortByOptions['value']>(sortOptions[0].value)
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [sortBy, setSortBy] = useState<SortByOptions['value']>(sortOptions[1].value)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   
   // Fetch full players with extended stats
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<FullPlayer[]>({
@@ -140,6 +139,7 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
               <TableHeader>
                 <TableRow className="hover:bg-muted/0 cursor-default">
                   <TableHead className="w-[60px]"></TableHead>
+                  <TableHead className="w-[60px]"></TableHead>
                   <TableHead className="text-center cursor-pointer" onClick={() => handleSortBy('name')}>
                     <div className="flex items-center gap-1 hover:text-orange-400">
                       <span>{t('nav.players')}</span>
@@ -190,9 +190,12 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPlayers.map((player) => (
+                {filteredPlayers.map((player, index) => (
                   <TableRow key={player.id} className="cursor-pointer hover:bg-secondary/50">
-                    <TableCell className="pl-8">
+                    <TableCell className="pl-4">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="pl-4">
                         <Avatar className="h-10 w-10">
                           <AvatarFallback className="bg-[#4F403D] text-[#BDBDBD] font-semibold text-sm">
                             {player.name.charAt(0).toUpperCase()}
