@@ -411,10 +411,7 @@ function buildPlayerTableData(event: EventWithPlaces): PlayerTableRow[] {
   const playerMap = new Map<string, PlayerTableRow>();
 
   // First, assign places from event.places
-  if (!event.places) {
-    return [];
-  }
-  
+  if (event.places && Object.keys(event.places).length) {
     const sortedPlaceKeys = Object.keys(event.places).sort((a, b) => {
       const keyMap: Record<string, number> = {
         gold: 1,
@@ -425,13 +422,13 @@ function buildPlayerTableData(event: EventWithPlaces): PlayerTableRow[] {
       const bNum = keyMap[b] ?? (isNaN(Number(b)) ? 999 : Number(b));
       return aNum - bNum;
     });
-
+  
     sortedPlaceKeys.forEach(placeKey => {
       const players = event.places?.[placeKey];
       if (!players?.length) {
         return;
       }
-
+  
       for (const player of players) {
         if (!playerMap.has(player.id)) {
           playerMap.set(player.id, {
@@ -446,6 +443,22 @@ function buildPlayerTableData(event: EventWithPlaces): PlayerTableRow[] {
         }
       }
     })
+  } else {
+    event.playerStats?.forEach(stat => {
+      if (!playerMap.has(stat.player.id)) {
+        playerMap.set(stat.player.id, {
+          player: stat.player,
+          place: 0,
+          wins: 0,
+          losses: 0,
+          points: 0,
+          pointsWon: 0,
+          pointsLost: 0,
+        });
+      }
+    });
+  }
+  
 
   // Add wins, losses, and calculate points won/lost from games
   if (event.games && event.games.length > 0) {
@@ -771,7 +784,7 @@ function EventCard({ event }: { event: EventWithPlaces }) {
                               <MedalIcon className="h-4 w-4 flex-shrink-0" />
                             ) : (
                               <span className="text-xs font-medium text-muted-foreground w-4 text-center flex-shrink-0">
-                                {row.place}
+                                {row.place || '-'}
                               </span>
                             )}
                             <span className="text-sm font-medium flex-1 min-w-0 truncate">
@@ -830,7 +843,7 @@ function EventCard({ event }: { event: EventWithPlaces }) {
                               <MedalIcon className="h-4 w-4 flex-shrink-0" />
                             ) : (
                               <span className="text-xs font-medium text-muted-foreground w-4 text-center flex-shrink-0">
-                                {row.place}
+                                {row.place || '-'}
                               </span>
                             )}
                             <span className="text-sm font-medium flex-1 min-w-0 truncate">
@@ -945,9 +958,29 @@ function EventCard({ event }: { event: EventWithPlaces }) {
 // Map backend EventResponseDto to frontend Event interface
 function mapBackendEventToFrontend(
   backendEvent: BackendEventResponseDto,
-  gamesByEventId: Record<string, BackendGameResponseDto[]>,
-  playersById: Record<string, Player>,
+  gamesData: { games: BackendGameResponseDto[]; allGamesCount: number },
+  players: Player[],
 ): EventWithPlaces {
+  const playersById = players.reduce(
+    (acc, player) => {
+      acc[player.id] = player;
+      return acc;
+    },
+    {} as Record<string, Player>,
+  );
+
+  const gamesByEventId =
+    gamesData?.games?.reduce(
+      (acc, game) => {
+        if (!acc[game.eventId]) {
+          acc[game.eventId] = [];
+        }
+        acc[game.eventId].push(game);
+        return acc;
+      },
+      {} as Record<string, BackendGameResponseDto[]>,
+    ) || {};
+
   const dateField =
     (backendEvent as unknown as { startDate?: string; date?: string })[
       "date"
@@ -1011,10 +1044,11 @@ function mapBackendEventToFrontend(
 }
 
 export default function EventsPage() {
+  const [type, setType] = useState<'all' | 'tournament' | 'training'>("all");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [allEvents, setAllEvents] = useState<Record<number, Event[]>>({
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [allEvents, setAllEvents] = useState<Record<number, EventWithPlaces[]>>({
     1: [],
   });
 
@@ -1033,69 +1067,47 @@ export default function EventsPage() {
     queryFn: () => fetch(API.GET_ALL_PLAYERS).then((res) => res.json()),
   });
 
-  const gamesByEventId =
-    gamesData?.games?.reduce(
-      (acc, game) => {
-        if (!acc[game.eventId]) {
-          acc[game.eventId] = [];
-        }
-        acc[game.eventId].push(game);
-        return acc;
-      },
-      {} as Record<string, BackendGameResponseDto[]>,
-    ) || {};
+  const isLoading = isLoadingGames || isLoadingPlayers || isLoadingEvents;
 
-  const playersById = players.reduce(
-    (acc, player) => {
-      acc[player.id] = player;
-      return acc;
-    },
-    {} as Record<string, Player>,
-  );
-
-  const getEvents = (page: number) =>
-    fetch(`${API.GET_ALL_EVENTS}?page=${page}`).then(async (res) => {
+  const getEvents = (page: number, type: 'all' | 'tournament' | 'training') =>
+    fetch(`${API.GET_ALL_EVENTS}?page=${page}&type=${type}`).then(async (res) => {
       const { events, page, hasMore } = await res.json();
-      setIsLoading(false);
+      const eventsWithPlaces = events.map((event: any) =>
+        mapBackendEventToFrontend(event, gamesData || { games: [], allGamesCount: 0 }, players),
+      );
+
+      setIsLoadingEvents(false);
       setHasMore(hasMore);
       setAllEvents((prev) => ({
         ...prev,
-        [page]: events,
+        [page]: eventsWithPlaces,
       }));
+
       return { events, page, hasMore };
     });
 
-  // Fetch events from API
-  const { data: backendEvents, isLoading: isLoadingEvents } = useQuery({
-    queryKey: ["events"],
-    queryFn: () => getEvents(1),
-  });
+    useEffect(() => {
+      if (!players.length || !gamesData?.games.length) {
+        return;
+      }
+      getEvents(1, type);
+    }, [players, gamesData, type]);
 
-  useEffect(() => {
-    if (backendEvents?.events.length && allEvents[page]?.length) {
-      return;
-    }
-
-    setAllEvents((prev) => ({
-      ...prev,
-      [page]: backendEvents?.events || [],
-    }));
-  }, [backendEvents]);
-
-  useEffect(() => {
-    setIsLoading(isLoadingEvents || isLoadingGames || isLoadingPlayers);
-  }, [isLoadingEvents, isLoadingGames, isLoadingPlayers]);
-
-  const events = (allEvents[page] || []).map((event: any) =>
-    mapBackendEventToFrontend(event, gamesByEventId, playersById),
-  );
+  const events = (allEvents[page] || [])
 
   const handlePageChange = (page: number) => {
     setPage(page);
     if (!allEvents[page]?.length) {
-      setIsLoading(true);
-      getEvents(page);
+      setIsLoadingEvents(true);
+      getEvents(page, type);
     }
+  };
+
+  const handleTypeChange = (newType: 'all' | 'tournament' | 'training') => {
+    setType(newType);
+    setPage(1);
+    setAllEvents({ 1: [] });
+    getEvents(1, newType);
   };
 
   const { t } = useTranslation();
@@ -1106,13 +1118,24 @@ export default function EventsPage() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 flex items-center space-between w-full">
           <h1
             className="text-3xl font-bold tracking-tight"
             suppressHydrationWarning
           >
             {t("events.title")}
           </h1>
+          <div className="flex items-center gap-4 w-full justify-end">
+            <Button className="pointer-events-auto cursor-pointer" variant={type === 'all' ? 'default' : 'outline'} onClick={() => handleTypeChange('all')}>
+              All
+            </Button>
+            <Button className="pointer-events-auto cursor-pointer" variant={type === 'tournament' ? 'default' : 'outline'} onClick={() => handleTypeChange('tournament')}>
+              Tournament
+            </Button>
+            <Button className="pointer-events-auto cursor-pointer" variant={type === 'training' ? 'default' : 'outline'} onClick={() => handleTypeChange('training')}>
+              Training
+            </Button>
+          </div>
         </div>
 
         {isLoading ? (
