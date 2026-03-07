@@ -115,7 +115,8 @@
       "winsLosses": "П-П",
       "points": "Очки",
       "gamesWL": "Ігри П-П",
-      "pointsWL": "Очки П-П"
+      "pointsWL": "Очки П-П",
+      "rankChange": "Зміна рейтингу"
     }
   },
   "common": {

@@ -115,7 +115,8 @@
       "winsLosses": "Z-P",
       "points": "Punkty",
       "gamesWL": "Gry Z-P",
-      "pointsWL": "Punkty Z-P"
+      "pointsWL": "Punkty Z-P",
+      "rankChange": "Zmiana rankingu"
     }
   },
   "common": {

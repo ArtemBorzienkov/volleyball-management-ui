@@ -115,7 +115,8 @@
       "winsLosses": "W-L",
       "points": "Points",
       "gamesWL": "Games W-L",
-      "pointsWL": "Points W-L"
+      "pointsWL": "Points W-L",
+      "rankChange": "Rank Change"
     }
   },
   "common": {
