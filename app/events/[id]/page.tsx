@@ -45,16 +45,7 @@ type PlayerTitleData = {
   pointsWL: string;
 };
 
-const TeamCard = ({ player }: { player: PlayerTitleData }) => {
-  if (!player?.player?.id) {
-    return null;
-  }
-  const {
-    player: { id, name },
-    rank,
-    rankChange,
-  } = player;
-  return (
+const TeamCard = ({ name, id, rank, rankChange }: { name: string, id: string, rank: number, rankChange: number }) => (
     <div key={id} className="flex flex-wrap gap-2">
       <h1 className="text-md font-bold">{name}</h1>
       <span
@@ -71,7 +62,6 @@ const TeamCard = ({ player }: { player: PlayerTitleData }) => {
       </span>
     </div>
   );
-};
 
 function getPlayerRankInfo(
   gamePlayerRanks: GamePlayerRank[],
@@ -342,11 +332,10 @@ export default function EventDetailPage({
                               (pid) => (
                                 <TeamCard
                                   key={pid}
-                                  player={
-                                    playersTitleData.find(
-                                      (p) => p.player.id === pid,
-                                    ) as PlayerTitleData
-                                  }
+                                  name={playersMap.get(pid)?.name ?? ""}
+                                  id={pid}
+                                  rank={game.gamePlayerRanks.find(r => r.playerId === pid)?.rank ?? 0}
+                                  rankChange={game.gamePlayerRanks.find(r => r.playerId === pid)?.rankChange ?? 0}
                                 />
                               ),
                             )}
@@ -381,11 +370,10 @@ export default function EventDetailPage({
                               (pid) => (
                                 <TeamCard
                                   key={pid}
-                                  player={
-                                    playersTitleData.find(
-                                      (p) => p.player.id === pid,
-                                    ) as PlayerTitleData
-                                  }
+                                  name={playersMap.get(pid)?.name ?? ""}
+                                  id={pid}
+                                  rank={game.gamePlayerRanks.find(r => r.playerId === pid)?.rank ?? 0}
+                                  rankChange={game.gamePlayerRanks.find(r => r.playerId === pid)?.rankChange ?? 0}
                                 />
                               ),
                             )}
