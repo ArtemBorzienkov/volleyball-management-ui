@@ -34,8 +34,10 @@ export function Navigation() {
   const [isAdmin, setIsAdmin] = useState(false)
   const { t } = useTranslation()
 
-  useEffect(() => {
-    setIsAdmin(process.env.NEXT_PUBLIC_ADMIN_PASSWORD === localStorage.getItem('ADMIN_PASSWORD'))
+  useEffect(() => { 
+    const hasAccess = [process.env.NEXT_PUBLIC_ADMIN_PASSWORD, process.env.NEXT_PUBLIC_MODERATOR_PASSWORD]
+      .includes(localStorage.getItem('ADMIN_PASSWORD') || '')
+    setIsAdmin(hasAccess)
   }, [])
 
   // Filter nav items based on admin status
