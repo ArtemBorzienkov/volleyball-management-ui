@@ -119,6 +119,28 @@
       "rankChange": "Zmiana rankingu"
     }
   },
+  "rating": {
+    "backToPlayers": "Powrót do graczy",
+    "player": "Gracz",
+    "subtitle": "Historia rankingu",
+    "chartTitle": "Ranking w czasie",
+    "ratingAxis": "Ranking",
+    "noPlayerSelected": "Nie wybrano gracza.",
+    "loadingHistory": "Ładowanie historii rankingu…",
+    "noHistory": "Brak historii rankingu dla tego gracza.",
+    "gamesTitle": "Gry",
+    "loadingGames": "Ładowanie gier…",
+    "noGames": "Brak gier dla tego gracza.",
+    "loadingMore": "Ładowanie kolejnych…",
+    "endOfGames": "Koniec gier",
+    "table": {
+      "date": "Data",
+      "team1": "Drużyna 1",
+      "team2": "Drużyna 2",
+      "ratingChange": "Zmiana rankingu",
+      "newRating": "Nowy ranking"
+    }
+  },
   "common": {
     "loading": "Ładowanie...",
     "save": "Zapisz",

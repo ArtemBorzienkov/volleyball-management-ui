@@ -92,6 +92,38 @@ export interface PlayerRanking {
   eventsWon?: number; // Deprecated - use value.gold for eventsWon metric
 }
 
+export interface PlayerRankHistory {
+  gameId: string;
+  date: string;
+  rank: number;
+  rankChange: number;
+}
+
+export interface PlayerGameRowPlayer {
+  id: string;
+  name: string;
+}
+
+export interface PlayerGameRowTeam {
+  player1: PlayerGameRowPlayer;
+  player2: PlayerGameRowPlayer;
+  points: number;
+}
+
+export interface PlayerGameRow {
+  gameId: string;
+  date: string;
+  team1: PlayerGameRowTeam; // page player's team; page player is player1
+  team2: PlayerGameRowTeam;
+  rankChange: number;
+  newRating: number;
+}
+
+export interface PlayerGamesResponse {
+  games: PlayerGameRow[];
+  total: number;
+}
+
 export interface FullPlayer extends Player {
   totalEvents: number;
   medals: MedalCounts;

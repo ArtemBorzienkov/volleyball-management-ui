@@ -135,7 +135,7 @@ export function PlayerCard({
     // If FullPlayer with extended stats, show grid card layout
     if (isFull && !statsContent) {
       return (
-        <Link href={`/players/${player.id}`}>
+        <Link href={`/rating?id=${player.id}`}>
           <div className="flex items-center gap-4 rounded-lg border border-border px-4 py-3 transition-colors hover:bg-secondary/50">
             <Avatar className="h-10 w-10 flex-shrink-0">
               <AvatarFallback className="bg-[#4F403D] text-[#BDBDBD] font-semibold text-sm">
@@ -203,24 +203,26 @@ export function PlayerCard({
 
     // Default borderless layout
     return (
-      <div className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-secondary/50">
-        {renderRankBadge()}
-        <Avatar className="h-10 w-10 flex-shrink-0">
-          <AvatarFallback className="bg-[#4F403D] text-[#BDBDBD] font-semibold text-sm">
-            {player.name.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate font-semibold text-foreground">
-            {player.name}
-          </h3>
-          {showStats && statsContent && (
-            <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
-              {statsContent}
-            </div>
-          )}
+      <Link href={`/rating?id=${player.id}`}>
+        <div className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-secondary/50">
+          {renderRankBadge()}
+          <Avatar className="h-10 w-10 flex-shrink-0">
+            <AvatarFallback className="bg-[#4F403D] text-[#BDBDBD] font-semibold text-sm">
+              {player.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate font-semibold text-foreground">
+              {player.name}
+            </h3>
+            {showStats && statsContent && (
+              <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+                {statsContent}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </Link>
     )
   }
 

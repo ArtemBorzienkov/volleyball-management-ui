@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Suspense } from 'react'
 import { Navigation } from '@/components/navigation'
 import { Card, CardContent } from '@/components/ui/card'
@@ -76,6 +76,7 @@ function PlayersPageContent() {
 
 function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; genderFilter: GenderFilterType }) {
   const { t } = useTranslation()
+  const router = useRouter()
 
   const [sortBy, setSortBy] = useState<SortByOptions['value']>(sortOptions[1].value)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
@@ -191,7 +192,11 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
               </TableHeader>
               <TableBody>
                 {filteredPlayers.map((player, index) => (
-                  <TableRow key={player.id} className="cursor-pointer hover:bg-secondary/50">
+                  <TableRow
+                    key={player.id}
+                    className="cursor-pointer hover:bg-secondary/50"
+                    onClick={() => router.push(`/rating?id=${player.id}`)}
+                  >
                     <TableCell className="pl-4">
                       {index + 1}
                     </TableCell>

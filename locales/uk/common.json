@@ -119,6 +119,28 @@
       "rankChange": "Зміна рейтингу"
     }
   },
+  "rating": {
+    "backToPlayers": "Назад до гравців",
+    "player": "Гравець",
+    "subtitle": "Історія рейтингу",
+    "chartTitle": "Рейтинг у часі",
+    "ratingAxis": "Рейтинг",
+    "noPlayerSelected": "Гравця не вибрано.",
+    "loadingHistory": "Завантаження історії рейтингу…",
+    "noHistory": "Для цього гравця ще немає історії рейтингу.",
+    "gamesTitle": "Ігри",
+    "loadingGames": "Завантаження ігор…",
+    "noGames": "Для цього гравця ще немає ігор.",
+    "loadingMore": "Завантаження ще…",
+    "endOfGames": "Кінець списку ігор",
+    "table": {
+      "date": "Дата",
+      "team1": "Команда 1",
+      "team2": "Команда 2",
+      "ratingChange": "Зміна рейтингу",
+      "newRating": "Новий рейтинг"
+    }
+  },
   "common": {
     "loading": "Завантаження...",
     "save": "Зберегти",

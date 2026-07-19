@@ -20,6 +20,10 @@ const API = {
   GET_TOP_PLAYERS_BY_GAMES_PLAYED: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/games-played`,
   GET_TOP_PLAYERS_BY_RANK: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/top-rank`,
   GET_BEST_TEAM_COMBINATIONS: `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/best-team-combinations`,
+  GET_PLAYER_RANK_HISTORY: (id: string) =>
+    `${process.env.NEXT_PUBLIC_HOST_URL}/rankings/player-rank-history?playerId=${id}`,
+  GET_PLAYER_GAMES: (id: string, skip: number, take: number) =>
+    `${process.env.NEXT_PUBLIC_HOST_URL}/games/player/${id}?skip=${skip}&take=${take}`,
 };
 
 export default API;

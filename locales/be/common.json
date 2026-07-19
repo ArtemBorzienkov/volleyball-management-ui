@@ -119,6 +119,28 @@
       "rankChange": "Зміна рэйтынгу"
     }
   },
+  "rating": {
+    "backToPlayers": "Назад да гульцоў",
+    "player": "Гулец",
+    "subtitle": "Гісторыя рэйтынгу",
+    "chartTitle": "Рэйтынг у часе",
+    "ratingAxis": "Рэйтынг",
+    "noPlayerSelected": "Гулец не выбраны.",
+    "loadingHistory": "Загрузка гісторыі рэйтынгу…",
+    "noHistory": "Для гэтага гульца пакуль няма гісторыі рэйтынгу.",
+    "gamesTitle": "Гульні",
+    "loadingGames": "Загрузка гульняў…",
+    "noGames": "Для гэтага гульца пакуль няма гульняў.",
+    "loadingMore": "Загрузка яшчэ…",
+    "endOfGames": "Канец спісу гульняў",
+    "table": {
+      "date": "Дата",
+      "team1": "Каманда 1",
+      "team2": "Каманда 2",
+      "ratingChange": "Змена рэйтынгу",
+      "newRating": "Новы рэйтынг"
+    }
+  },
   "common": {
     "loading": "Загрузка...",
     "save": "Захаваць",

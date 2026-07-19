@@ -119,6 +119,28 @@
       "rankChange": "Rank Change"
     }
   },
+  "rating": {
+    "backToPlayers": "Back to Players",
+    "player": "Player",
+    "subtitle": "Rating history",
+    "chartTitle": "Rating Over Time",
+    "ratingAxis": "Rating",
+    "noPlayerSelected": "No player selected.",
+    "loadingHistory": "Loading rating history…",
+    "noHistory": "No rating history for this player yet.",
+    "gamesTitle": "Games",
+    "loadingGames": "Loading games…",
+    "noGames": "No games for this player yet.",
+    "loadingMore": "Loading more…",
+    "endOfGames": "End of games",
+    "table": {
+      "date": "Date",
+      "team1": "Team 1",
+      "team2": "Team 2",
+      "ratingChange": "Rating change",
+      "newRating": "New rating"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "save": "Save",
