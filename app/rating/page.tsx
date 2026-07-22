@@ -199,10 +199,20 @@ function RatingContent() {
     enabled: !!playerId,
   })
 
-  const chartData = (Array.isArray(history) ? history : []).map((record) => ({
-    ...record,
-    label: formatDate(record.date, i18n.language),
-  }))
+  // Collapse the per-game rank history into one point per tournament. Games within a
+  // tournament share the same date and the history is ordered ascending, so the last
+  // record for a given date holds the player's rating after that tournament. The chart
+  // then draws a line from one tournament date to the next instead of per-game points.
+  const byTournament = new Map<string, PlayerRankHistory>()
+  for (const record of Array.isArray(history) ? history : []) {
+    byTournament.set(record.date, record)
+  }
+  const chartData = Array.from(byTournament.values())
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map((record) => ({
+      ...record,
+      label: formatDate(record.date, i18n.language),
+    }))
 
   return (
     <>
