@@ -29,6 +29,7 @@ export function PlayerCard({
   hasBorder = false,
   statsContent,
 }: PlayerCardProps) {
+  const { t } = useTranslation()
 
   const renderRankBadge = () => {
     if (!rank) return null
@@ -129,7 +130,6 @@ export function PlayerCard({
   }
 
   if (!hasBorder) {
-    const { t } = useTranslation()
     const isFull = isFullPlayer(player)
 
     // If FullPlayer with extended stats, show grid card layout

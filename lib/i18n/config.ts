@@ -26,14 +26,9 @@ const setCookie = (name: string, value: string, days: number) => {
   }
 }
 
-// Import translation files
-// @ts-ignore - JSON imports are supported in Next.js
 import enTranslations from '@/locales/en/common.json'
-// @ts-ignore
 import ukTranslations from '@/locales/uk/common.json'
-// @ts-ignore
 import plTranslations from '@/locales/pl/common.json'
-// @ts-ignore
 import beTranslations from '@/locales/be/common.json'
 
 const resources = {
