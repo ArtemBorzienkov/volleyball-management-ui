@@ -22,10 +22,11 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { Plus, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import API from '@/lib/api'
 import type { Player } from '@/lib/types'
+import { ONGOING_FINISH_PREFILL_KEY } from '@/lib/ongoing-finish'
 import * as XLSX from 'xlsx'
 
 export default function AddResultsPage() {
@@ -91,6 +92,21 @@ export default function AddResultsPage() {
       ],
     },
   })
+
+  // One-shot prefill from the "Finish tournament" handoff (see lib/ongoing-finish.ts) — reads
+  // sessionStorage, an external store, so this is genuine mount-time sync rather than derivable
+  // render state. The key is removed immediately so a stale value can never reapply on a later
+  // visit, and reset() leaves every field normally editable afterward.
+  useEffect(() => {
+    const raw = sessionStorage.getItem(ONGOING_FINISH_PREFILL_KEY)
+    if (!raw) return
+    sessionStorage.removeItem(ONGOING_FINISH_PREFILL_KEY)
+    try {
+      reset(JSON.parse(raw) as FormData)
+    } catch {
+      // Malformed prefill: fall through to the form's normal empty defaults.
+    }
+  }, [reset])
 
   const { fields: gameFields, append: appendGame, remove: removeGame } = useFieldArray({
     control,

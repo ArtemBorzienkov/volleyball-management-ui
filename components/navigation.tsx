@@ -7,21 +7,29 @@ import {
   Users,
   Trophy,
   Calendar,
+  CalendarDays,
   BarChart3,
   LineChart,
   Menu,
   X,
   Plus,
+  Swords,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import API from '@/lib/api'
+import { isEventToday } from '@/lib/ongoing-date'
+import type { OngoingEventListItem } from '@/lib/types'
 
 const allNavItems = [
   { href: '/', labelKey: 'nav.overview', icon: BarChart3 },
   { href: '/players', labelKey: 'nav.players', icon: Users },
   { href: '/events', labelKey: 'nav.events', icon: Calendar },
+  { href: '/ongoing', labelKey: 'nav.ongoing', icon: Swords },
+  { href: '/calendar', labelKey: 'nav.calendar', icon: CalendarDays },
   { href: '/add-results', labelKey: 'nav.addResults', icon: Plus },
   // { href: '/games', labelKey: 'nav.games', icon: Trophy },
   // { href: '/rankings', labelKey: 'nav.rankings', icon: BarChart3 },
@@ -34,11 +42,24 @@ export function Navigation() {
   const [isAdmin, setIsAdmin] = useState(false)
   const { t } = useTranslation()
 
-  useEffect(() => { 
+  useEffect(() => {
     const hasAccess = [process.env.NEXT_PUBLIC_ADMIN_PASSWORD, process.env.NEXT_PUBLIC_MODERATOR_PASSWORD]
       .includes(localStorage.getItem('ADMIN_PASSWORD') || '')
     setIsAdmin(hasAccess)
   }, [])
+
+  // Non-admins only need this tab on a day a tournament is actually happening; admins always see
+  // it (config/roster work happens well before or after the day itself). Shares its cache with the
+  // /ongoing list page's identical query, so this costs nothing extra there.
+  const { data: ongoingEvents = [] } = useQuery<OngoingEventListItem[]>({
+    queryKey: ['ongoing-events'],
+    queryFn: async () => {
+      const response = await fetch(API.GET_ONGOING_EVENTS)
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+      return response.json()
+    },
+  })
+  const hasTournamentToday = ongoingEvents.some((event) => isEventToday(event.date))
 
   // Filter nav items based on admin status
   const navItems = allNavItems.filter((item) => {
@@ -46,6 +67,8 @@ export function Navigation() {
     if (item.href === '/') return true
     // Show add-results only if admin
     if (item.href === '/add-results') return isAdmin
+    // Ongoing tournaments: admins always, everyone else only on the day one is happening
+    if (item.href === '/ongoing') return isAdmin || hasTournamentToday
     // Show other items (when uncommented)
     return true
   })

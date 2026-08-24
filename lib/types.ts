@@ -132,3 +132,88 @@ export interface FullPlayer extends Player {
   rank: number;
   recentGames: string[]; // Array of 'win' | 'lose'
 }
+
+export interface OngoingEventListItem {
+  id: string;
+  name: string;
+  date: string;
+  startTime: string | null;
+  location: string | null;
+  teamsCount: number;
+  gamesCount: number;
+  playedCount: number;
+}
+
+export interface OngoingEventConfig {
+  gamesPerPair: number;
+  courts: number;
+  maxTeams: number | null;
+  scheme: string;
+  groupCount: number;
+  qualifiersPerGroup: number | null;
+}
+
+export interface OngoingTeamPlayer {
+  id: string;
+  name: string;
+  avatar?: string;
+}
+
+export interface OngoingTeam {
+  id: string;
+  player1: OngoingTeamPlayer;
+  player2: OngoingTeamPlayer;
+  rating: number;
+  groupIndex: number | null;
+}
+
+export interface OngoingGame {
+  id: string;
+  eventId: string;
+  team1Id: string | null;
+  team2Id: string | null;
+  team1Points: number | null;
+  team2Points: number | null;
+  round: number;
+  court: number;
+  order: number;
+  phase: string;
+  bracketRound: number | null;
+  bracketSlot: number | null;
+  thirdPlace: boolean;
+}
+
+export interface OngoingEvent {
+  id: string;
+  name: string;
+  date: string;
+  startTime: string | null;
+  location: string | null;
+  finishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  config: OngoingEventConfig;
+  teams: OngoingTeam[];
+  games: OngoingGame[];
+}
+
+export interface OngoingOpenEvent {
+  id: string;
+  name: string;
+  date: string;
+  startTime: string | null;
+  location: string | null;
+  maxTeams: number | null;
+  teamsCount: number;
+  teams: OngoingTeam[];
+}
+
+export interface OngoingStandingsRow {
+  place: number;
+  team: OngoingTeam;
+  played: number;
+  wins: number;
+  losses: number;
+  pointsFor: number;
+  pointsAgainst: number;
+}
