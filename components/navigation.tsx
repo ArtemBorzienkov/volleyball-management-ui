@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useAuth } from '@/components/providers/auth-provider'
 import { cn } from '@/lib/utils'
 import {
   Users,
@@ -15,9 +16,10 @@ import {
   Plus,
   Swords,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useTranslation } from 'react-i18next'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import API from '@/lib/api'
@@ -39,14 +41,9 @@ const allNavItems = [
 export function Navigation() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
   const { t } = useTranslation()
-
-  useEffect(() => {
-    const hasAccess = [process.env.NEXT_PUBLIC_ADMIN_PASSWORD, process.env.NEXT_PUBLIC_MODERATOR_PASSWORD]
-      .includes(localStorage.getItem('ADMIN_PASSWORD') || '')
-    setIsAdmin(hasAccess)
-  }, [])
+  const router = useRouter()
+  const { user, logout } = useAuth()
 
   // Non-admins only need this tab on a day a tournament is actually happening; admins always see
   // it (config/roster work happens well before or after the day itself). Shares its cache with the
@@ -61,14 +58,19 @@ export function Navigation() {
   })
   const hasTournamentToday = ongoingEvents.some((event) => isEventToday(event.date))
 
+  const handleLogout = async () => {
+    await logout()
+    router.push('/')
+  }
+
   // Filter nav items based on admin status
   const navItems = allNavItems.filter((item) => {
     // Always show overview
     if (item.href === '/') return true
     // Show add-results only if admin
-    if (item.href === '/add-results') return isAdmin
+    if (item.href === '/add-results') return user?.role === 'admin'
     // Ongoing tournaments: admins always, everyone else only on the day one is happening
-    if (item.href === '/ongoing') return isAdmin || hasTournamentToday
+    if (item.href === '/ongoing') return user?.role === 'admin' || hasTournamentToday
     // Show other items (when uncommented)
     return true
   })
@@ -106,6 +108,24 @@ export function Navigation() {
               )
             })}
             <LanguageSwitcher />
+            {user ? (
+              <div className="flex items-center gap-2 pl-2">
+                <Avatar className="h-7 w-7">
+                  <AvatarFallback />
+                </Avatar>
+                <span className="text-sm text-muted-foreground">{user.name}</span>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <span suppressHydrationWarning>{t('nav.logout')}</span>
+                </Button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+              >
+                <span suppressHydrationWarning>{t('nav.login')}</span>
+              </Link>
+            )}
           </nav>
 
           <Button
@@ -148,6 +168,23 @@ export function Navigation() {
               })}
               <div className="px-3 py-2">
                 <LanguageSwitcher />
+              </div>
+              <div className="px-3 py-2">
+                {user ? (
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-7 w-7">
+                      <AvatarFallback />
+                    </Avatar>
+                    <span className="text-sm text-muted-foreground">{user.name}</span>
+                    <Button variant="ghost" size="sm" onClick={handleLogout}>
+                      <span suppressHydrationWarning>{t('nav.logout')}</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                    <span suppressHydrationWarning>{t('nav.login')}</span>
+                  </Link>
+                )}
               </div>
             </div>
           </nav>

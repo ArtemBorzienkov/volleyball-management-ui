@@ -39,6 +39,7 @@ export function OngoingMatchCard({ game, team1, team2, canEdit }: OngoingMatchCa
       const response = await fetch(API.UPDATE_ONGOING_GAME(game.id), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ team1Points: Number(points1), team2Points: Number(points2) }),
       });
       if (!response.ok) {
@@ -55,7 +56,7 @@ export function OngoingMatchCard({ game, team1, team2, canEdit }: OngoingMatchCa
 
   const clearMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(API.CLEAR_ONGOING_GAME_RESULT(game.id), { method: "DELETE" });
+      const response = await fetch(API.CLEAR_ONGOING_GAME_RESULT(game.id), { method: "DELETE", credentials: "include" });
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: "Request failed" }));
         throw new Error(error.message || `HTTP error! status: ${response.status}`);

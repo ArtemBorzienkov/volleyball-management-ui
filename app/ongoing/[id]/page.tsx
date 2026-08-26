@@ -20,7 +20,8 @@ import { OngoingMatchesTab } from "@/components/ongoing/ongoing-matches-tab";
 import { OngoingStandingsTab } from "@/components/ongoing/ongoing-standings-tab";
 import { OngoingBracketTab } from "@/components/ongoing/ongoing-bracket-tab";
 import { OngoingResultsTab } from "@/components/ongoing/ongoing-results-tab";
-import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useAuth } from "@/components/providers/auth-provider";
+import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
 import API from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { isPlayed } from "@/lib/ongoing-standings";
@@ -53,7 +54,7 @@ export default function OngoingEventPage() {
   const id = params.id;
   const router = useRouter();
   const { t } = useTranslation();
-  const isAdmin = useIsAdmin();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<OngoingTab>("matches");
   const [isFinishConfirmOpen, setIsFinishConfirmOpen] = useState(false);
@@ -69,9 +70,10 @@ export default function OngoingEventPage() {
 
   const isNotFound = error instanceof HttpError && error.status === 404;
 
+  const canManage = event ? canManageOngoingEvent(user, event.createdByUserId) : false;
   const hasPlayoffScheme = event?.config?.scheme === "groupsPlayoff";
   const visibleTabs = TABS.filter((item) => {
-    if (item.key === "config") return isAdmin;
+    if (item.key === "config") return canManage;
     if (item.key === "bracket") return hasPlayoffScheme;
     return true;
   });
@@ -90,7 +92,7 @@ export default function OngoingEventPage() {
   // list and the calendar (both queries invalidated below) before the handoff.
   const finishMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(API.FINISH_ONGOING_TOURNAMENT(id), { method: "PATCH" });
+      const response = await fetch(API.FINISH_ONGOING_TOURNAMENT(id), { method: "PATCH", credentials: "include" });
       if (!response.ok) {
         const body = await response.json().catch(() => ({ message: t("ongoing.finish.requestFailed") }));
         throw new Error(body.message || `HTTP error! status: ${response.status}`);
@@ -139,7 +141,7 @@ export default function OngoingEventPage() {
             </div>
             <p className="mt-1 text-sm text-muted-foreground">{eventMeta}</p>
 
-            {isAdmin && finishGate && !event.finishedAt ? (
+            {canManage && finishGate && !event.finishedAt ? (
               <div className="mt-4 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
                 <Button
                   variant="outline"
@@ -177,7 +179,7 @@ export default function OngoingEventPage() {
               {activeTab === "standings" && <OngoingStandingsTab event={event} />}
               {activeTab === "bracket" && <OngoingBracketTab event={event} />}
               {activeTab === "results" && <OngoingResultsTab event={event} />}
-              {activeTab === "config" && isAdmin && <OngoingConfigTab event={event} />}
+              {activeTab === "config" && canManage && <OngoingConfigTab event={event} />}
             </div>
           </>
         )}

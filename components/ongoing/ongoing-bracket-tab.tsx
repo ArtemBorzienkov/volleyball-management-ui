@@ -13,7 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useAuth } from "@/components/providers/auth-provider";
+import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
 import API from "@/lib/api";
 import { roundLabel } from "@/lib/ongoing-bracket";
 import { isPlayed, teamName } from "@/lib/ongoing-standings";
@@ -28,7 +29,7 @@ interface OngoingBracketTabProps {
 // count, a locked group result) arrives as a 409/400 whose body explains exactly why. Losing that
 // text would leave the admin with an unavailable button and no reason.
 async function requestJson(url: string, method: string, fallbackMessage: string): Promise<unknown> {
-  const response = await fetch(url, { method });
+  const response = await fetch(url, { method, credentials: "include" });
   if (!response.ok) {
     const body = await response.json().catch(() => ({ message: fallbackMessage }));
     throw new Error(body.message || `HTTP error! status: ${response.status}`);
@@ -168,6 +169,7 @@ function BracketResultDialog({ game, team1Name, team2Name, onClose }: BracketRes
       const response = await fetch(API.UPDATE_ONGOING_GAME(game.id), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ team1Points: Number(points1), team2Points: Number(points2) }),
       });
       if (!response.ok) {
@@ -270,7 +272,8 @@ function BracketResultDialog({ game, team1Name, team2Name, onClose }: BracketRes
 
 export function OngoingBracketTab({ event }: OngoingBracketTabProps) {
   const { t } = useTranslation();
-  const isAdmin = useIsAdmin();
+  const { user } = useAuth();
+  const canManage = canManageOngoingEvent(user, event.createdByUserId);
   const queryClient = useQueryClient();
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [editingGameId, setEditingGameId] = useState<string | null>(null);
@@ -334,14 +337,14 @@ export function OngoingBracketTab({ event }: OngoingBracketTabProps) {
             {t("ongoing.bracket.bracketTitle")}
           </h2>
 
-          {isAdmin && hasPlayoff ? (
+          {canManage && hasPlayoff ? (
             <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(true)}>
               <Trash2 className="mr-2 h-4 w-4" />
               <span suppressHydrationWarning>{t("ongoing.bracket.delete")}</span>
             </Button>
           ) : null}
 
-          {isAdmin && !hasPlayoff && isGroupStageComplete ? (
+          {canManage && !hasPlayoff && isGroupStageComplete ? (
             <Button disabled={generateMutation.isPending} onClick={() => generateMutation.mutate()}>
               <span suppressHydrationWarning>{t("ongoing.bracket.generate")}</span>
             </Button>
@@ -381,7 +384,7 @@ export function OngoingBracketTab({ event }: OngoingBracketTabProps) {
                             game={game}
                             team1={game.team1Id ? teamsById.get(game.team1Id) : undefined}
                             team2={game.team2Id ? teamsById.get(game.team2Id) : undefined}
-                            canEdit={isAdmin}
+                            canEdit={canManage}
                             onEdit={() => setEditingGameId(game.id)}
                           />
                         ))}
@@ -415,7 +418,7 @@ export function OngoingBracketTab({ event }: OngoingBracketTabProps) {
                       game={thirdPlaceGame}
                       team1={thirdPlaceGame.team1Id ? teamsById.get(thirdPlaceGame.team1Id) : undefined}
                       team2={thirdPlaceGame.team2Id ? teamsById.get(thirdPlaceGame.team2Id) : undefined}
-                      canEdit={isAdmin}
+                      canEdit={canManage}
                       onEdit={() => setEditingGameId(thirdPlaceGame.id)}
                     />
                   </div>

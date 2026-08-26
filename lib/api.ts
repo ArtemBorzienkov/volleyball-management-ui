@@ -4,6 +4,10 @@ const API = {
   GET_PLAYER_BY_ID: (id: string) =>
     `${process.env.NEXT_PUBLIC_HOST_URL}/players/${id}`,
   CREATE_PLAYER: `${process.env.NEXT_PUBLIC_HOST_URL}/players`,
+  REGISTER: `${process.env.NEXT_PUBLIC_HOST_URL}/user`,
+  LOG_IN: `${process.env.NEXT_PUBLIC_HOST_URL}/auth/log-in`,
+  LOG_OUT: `${process.env.NEXT_PUBLIC_HOST_URL}/auth/log-out`,
+  GET_CURRENT_USER: `${process.env.NEXT_PUBLIC_HOST_URL}/user/me`,
   GET_ALL_EVENTS: `${process.env.NEXT_PUBLIC_HOST_URL}/events`,
   GET_EVENT_BY_ID: (id: string) =>
     `${process.env.NEXT_PUBLIC_HOST_URL}/events/${id}`,

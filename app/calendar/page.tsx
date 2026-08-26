@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RegisterTeamDialog } from "@/components/ongoing/register-team-dialog";
 import { CreateTournamentForm } from "@/components/ongoing/create-tournament-form";
-import { useIsAdmin } from "@/hooks/use-is-admin";
 import { teamName } from "@/lib/ongoing-standings";
 import { eventMetaLine } from "@/lib/ongoing-date";
 import API from "@/lib/api";
@@ -31,7 +30,6 @@ async function fetchPlayers(): Promise<Player[]> {
 
 export default function CalendarPage() {
   const { t } = useTranslation();
-  const isAdmin = useIsAdmin();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const { data: events = [], isLoading, isError } = useQuery<OngoingOpenEvent[]>({
@@ -55,22 +53,20 @@ export default function CalendarPage() {
           {t("calendar.subtitle")}
         </p>
 
-        {isAdmin && (
-          <div className="mt-6">
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <Button onClick={() => setIsCreateOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                <span suppressHydrationWarning>{t("calendar.newTournament")}</span>
-              </Button>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle suppressHydrationWarning>{t("calendar.newTournamentTitle")}</DialogTitle>
-                </DialogHeader>
-                <CreateTournamentForm onCreated={() => setIsCreateOpen(false)} />
-              </DialogContent>
-            </Dialog>
-          </div>
-        )}
+        <div className="mt-6">
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              <span suppressHydrationWarning>{t("calendar.newTournament")}</span>
+            </Button>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle suppressHydrationWarning>{t("calendar.newTournamentTitle")}</DialogTitle>
+              </DialogHeader>
+              <CreateTournamentForm onCreated={() => setIsCreateOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
 
         {isLoading && (
           <p className="mt-6 text-sm text-muted-foreground" suppressHydrationWarning>

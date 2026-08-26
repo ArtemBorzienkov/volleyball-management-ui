@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { I18nProvider } from '@/components/providers/i18n-provider'
+import { AuthProvider } from '@/components/providers/auth-provider'
 import { LayoutWrapper } from '@/components/layout-wrapper'
 import './globals.css'
 
@@ -44,7 +45,9 @@ export default function RootLayout({
           <I18nProvider>
             <LayoutWrapper>
               <QueryProvider>
-                {children}
+                <AuthProvider>
+                  {children}
+                </AuthProvider>
               </QueryProvider>
             </LayoutWrapper>
           </I18nProvider>

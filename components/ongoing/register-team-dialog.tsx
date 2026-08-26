@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/components/providers/auth-provider";
 import API from "@/lib/api";
 import type { OngoingOpenEvent, Player } from "@/lib/types";
 
@@ -22,13 +24,13 @@ interface RegisterTeamDialogProps {
   players: Player[];
 }
 
-type PlayerSlot = "player1" | "player2";
+type PlayerSlot = "player2";
 
 export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [player1Id, setPlayer1Id] = useState("");
   const [player2Id, setPlayer2Id] = useState("");
 
   // Players created inline this session, merged in below so the slot that triggered creation
@@ -50,7 +52,8 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
       const response = await fetch(API.ADD_ONGOING_TEAM(event.id), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ player1Id, player2Id }),
+        credentials: "include",
+        body: JSON.stringify({ player1Id: user?.playerId, player2Id: player2Id }),
       });
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: "Request failed" }));
@@ -84,7 +87,7 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: trimmedName,
-          ...(newPlayerGender ? { gender: newPlayerGender } : {}),
+          gender: newPlayerGender,
           active: true,
         }),
       });
@@ -96,9 +99,7 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
     },
     onSuccess: (newPlayer) => {
       // The id comes straight from the response — no need to wait on the invalidation below.
-      if (newPlayerSlot === "player1") {
-        setPlayer1Id(newPlayer.id);
-      } else if (newPlayerSlot === "player2") {
+      if (newPlayerSlot === "player2") {
         setPlayer2Id(newPlayer.id);
       }
       setCreatedPlayers((previous) => [...previous, newPlayer]);
@@ -110,7 +111,6 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
   const resetAndSetOpen = (nextOpen: boolean) => {
     setOpen(nextOpen);
     if (!nextOpen) {
-      setPlayer1Id("");
       setPlayer2Id("");
       setCreatedPlayers([]);
       registerMutation.reset();
@@ -118,7 +118,7 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
     }
   };
 
-  const canRegister = Boolean(player1Id) && Boolean(player2Id) && player1Id !== player2Id;
+  const canRegister = Boolean(user?.playerId) && Boolean(player2Id) && user?.playerId !== player2Id;
 
   const openNewPlayerRow = (slot: PlayerSlot) => {
     setNewPlayerSlot(slot);
@@ -184,7 +184,7 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
           type="button"
           size="sm"
           onClick={() => createPlayerMutation.mutate()}
-          disabled={!newPlayerName.trim() || createPlayerMutation.isPending}
+          disabled={!newPlayerName.trim() || !newPlayerGender || createPlayerMutation.isPending}
         >
           <span suppressHydrationWarning>
             {createPlayerMutation.isPending
@@ -224,6 +224,21 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
     </label>
   );
 
+  if (!user) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span tabIndex={0} className="inline-block">
+            <Button size="sm" disabled>
+              <span suppressHydrationWarning>{t("calendar.register")}</span>
+            </Button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Щоб зареєструватися в турнір, потрібно бути залогіненим</TooltipContent>
+      </Tooltip>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={resetAndSetOpen}>
       <DialogTrigger asChild>
@@ -243,9 +258,16 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
             </p>
           )}
 
-          {renderPlayerField("player1", t("calendar.player1"), player1Id, setPlayer1Id, player2Id)}
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-muted-foreground" suppressHydrationWarning>
+              {t("calendar.player1")}
+            </span>
+            <p className="text-sm font-medium">
+              {players.find((player) => player.id === user?.playerId)?.name ?? user?.name}
+            </p>
+          </label>
 
-          {renderPlayerField("player2", t("calendar.player2"), player2Id, setPlayer2Id, player1Id)}
+          {renderPlayerField("player2", t("calendar.player2"), player2Id, setPlayer2Id, user?.playerId ?? "")}
 
           {registerMutation.isError && (
             <p className="text-sm text-destructive">{(registerMutation.error as Error).message}</p>

@@ -5,7 +5,9 @@
     "events": "Події",
     "addResults": "Додати результати",
     "ongoing": "Турнір",
-    "calendar": "Календар"
+    "calendar": "Календар",
+    "login": "Увійти",
+    "logout": "Вийти"
   },
   "home": {
     "title": "Аналітика пляжного волейболу",
@@ -81,7 +83,8 @@
       "namePlaceholder": "Введіть ім'я гравця",
       "nameRequired": "Ім'я гравця обов'язкове",
       "gender": "Стать",
-      "genderPlaceholder": "Виберіть стать (необов'язково)",
+      "genderPlaceholder": "Виберіть стать",
+      "genderRequired": "Стать обов'язкова",
       "male": "Чоловік",
       "female": "Жінка",
       "avatarUrl": "URL аватара",

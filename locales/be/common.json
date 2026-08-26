@@ -5,7 +5,9 @@
     "events": "Падзеі",
     "addResults": "Дадаць вынікі",
     "ongoing": "Турнір",
-    "calendar": "Каляндар"
+    "calendar": "Каляндар",
+    "login": "Увайсці",
+    "logout": "Выйсці"
   },
   "home": {
     "title": "Аналітыка пляжнага валейбола",
@@ -81,7 +83,8 @@
       "namePlaceholder": "Увядзіце імя гульца",
       "nameRequired": "Імя гульца абавязковае",
       "gender": "Пол",
-      "genderPlaceholder": "Выберыце пол (неабавязкова)",
+      "genderPlaceholder": "Выберыце пол",
+      "genderRequired": "Пол абавязковы",
       "male": "Мужчына",
       "female": "Жанчына",
       "avatarUrl": "URL аватара",

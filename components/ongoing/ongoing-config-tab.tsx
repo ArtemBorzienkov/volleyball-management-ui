@@ -18,6 +18,7 @@ async function putJson(url: string, body: unknown): Promise<unknown> {
   const response = await fetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(body),
   });
   if (!response.ok) {

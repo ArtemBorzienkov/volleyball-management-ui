@@ -1,3 +1,11 @@
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  playerId: string | null;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -139,6 +147,7 @@ export interface OngoingEventListItem {
   date: string;
   startTime: string | null;
   location: string | null;
+  createdByUserId: string | null;
   teamsCount: number;
   gamesCount: number;
   playedCount: number;
@@ -192,6 +201,7 @@ export interface OngoingEvent {
   finishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  createdByUserId: string | null;
   config: OngoingEventConfig;
   teams: OngoingTeam[];
   games: OngoingGame[];

@@ -5,7 +5,9 @@
     "events": "Wydarzenia",
     "addResults": "Dodaj wyniki",
     "ongoing": "Turniej",
-    "calendar": "Kalendarz"
+    "calendar": "Kalendarz",
+    "login": "Zaloguj się",
+    "logout": "Wyloguj się"
   },
   "home": {
     "title": "Analityka siatkówki plażowej",
@@ -81,7 +83,8 @@
       "namePlaceholder": "Wprowadź imię gracza",
       "nameRequired": "Imię gracza jest wymagane",
       "gender": "Płeć",
-      "genderPlaceholder": "Wybierz płeć (opcjonalnie)",
+      "genderPlaceholder": "Wybierz płeć",
+      "genderRequired": "Płeć jest wymagana",
       "male": "Mężczyzna",
       "female": "Kobieta",
       "avatarUrl": "URL awatara",

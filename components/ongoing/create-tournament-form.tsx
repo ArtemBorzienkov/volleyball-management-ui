@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { TeamRosterEditor, type TeamDraft } from "@/components/ongoing/team-roster-editor";
+import { useAuth } from "@/components/providers/auth-provider";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import API from "@/lib/api";
 import type { Player } from "@/lib/types";
 
@@ -25,6 +27,7 @@ interface CreateTournamentFormProps {
 export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const [name, setName] = useState("");
   const [date, setDate] = useState<Date>(() => new Date());
@@ -65,6 +68,7 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
       const response = await fetch(API.CREATE_ONGOING_EVENT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(body),
       });
       if (!response.ok) {
@@ -174,13 +178,26 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
           <p className="text-sm text-destructive">{(createMutation.error as Error).message}</p>
         )}
 
-        <Button
-          className="self-start"
-          onClick={() => createMutation.mutate()}
-          disabled={!name.trim() || hasIncompleteTeam || createMutation.isPending}
-        >
-          <span suppressHydrationWarning>{t("ongoing.create.submit")}</span>
-        </Button>
+        {user ? (
+          <Button
+            className="self-start"
+            onClick={() => createMutation.mutate()}
+            disabled={!name.trim() || hasIncompleteTeam || createMutation.isPending}
+          >
+            <span suppressHydrationWarning>{t("ongoing.create.submit")}</span>
+          </Button>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={0} className="inline-block self-start">
+                <Button disabled>
+                  <span suppressHydrationWarning>{t("ongoing.create.submit")}</span>
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Щоб створити турнір, потрібно бути залогіненим</TooltipContent>
+          </Tooltip>
+        )}
       </CardContent>
     </Card>
   );

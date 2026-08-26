@@ -124,7 +124,7 @@ export default function AddResultsPage() {
   // Form for creating a new player
   type CreatePlayerFormData = {
     name: string
-    gender?: string
+    gender: string
     avatar?: string
   }
 
@@ -232,7 +232,7 @@ export default function AddResultsPage() {
         },
         body: JSON.stringify({
           name: payload.name,
-          gender: payload.gender || undefined,
+          gender: payload.gender,
           avatar: payload.avatar || undefined,
           active: true,
         }),
@@ -854,11 +854,12 @@ export default function AddResultsPage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="playerGender" className="text-sm font-medium">
-                  {t('addResults.addPlayerModal.gender')}
+                  {t('addResults.addPlayerModal.gender')} <span className="text-destructive">*</span>
                 </label>
                 <Controller
                   name="gender"
                   control={controlPlayer}
+                  rules={{ required: t('addResults.addPlayerModal.genderRequired') }}
                   render={({ field }) => (
                     <Select onValueChange={field.onChange} value={field.value || ''}>
                       <SelectTrigger>
@@ -871,6 +872,9 @@ export default function AddResultsPage() {
                     </Select>
                   )}
                 />
+                {playerErrors.gender && (
+                  <p className="text-sm text-destructive">{playerErrors.gender.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label htmlFor="playerAvatar" className="text-sm font-medium">

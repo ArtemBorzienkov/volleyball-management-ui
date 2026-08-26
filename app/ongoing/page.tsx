@@ -8,7 +8,9 @@ import { Navigation } from "@/components/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useAuth } from "@/components/providers/auth-provider";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
 import API from "@/lib/api";
 import { eventMetaLine } from "@/lib/ongoing-date";
 import type { OngoingEventListItem } from "@/lib/types";
@@ -22,7 +24,7 @@ async function fetchOngoingEvents(): Promise<OngoingEventListItem[]> {
 export default function OngoingListPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const isAdmin = useIsAdmin();
+  const { user } = useAuth();
 
   const { data: events = [], isLoading } = useQuery<OngoingEventListItem[]>({
     queryKey: ["ongoing-events"],
@@ -31,7 +33,7 @@ export default function OngoingListPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(API.DELETE_ONGOING_EVENT(id), { method: "DELETE" });
+      const response = await fetch(API.DELETE_ONGOING_EVENT(id), { method: "DELETE", credentials: "include" });
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: "Request failed" }));
         throw new Error(error.message || `HTTP error! status: ${response.status}`);
@@ -57,16 +59,28 @@ export default function OngoingListPage() {
           {t("ongoing.subtitle")}
         </p>
 
-        {isAdmin && (
-          <div className="mt-6">
+        <div className="mt-6">
+          {user ? (
             <Link href="/calendar">
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 <span suppressHydrationWarning>{t("ongoing.newTournament")}</span>
               </Button>
             </Link>
-          </div>
-        )}
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0} className="inline-block">
+                  <Button disabled>
+                    <Plus className="mr-2 h-4 w-4" />
+                    <span suppressHydrationWarning>{t("ongoing.newTournament")}</span>
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Щоб створити турнір, потрібно бути залогіненим</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
 
         {isLoading && (
           <p className="mt-6 text-sm text-muted-foreground" suppressHydrationWarning>
@@ -102,7 +116,7 @@ export default function OngoingListPage() {
                     {t("ongoing.matches")}: {event.gamesCount} · {t("ongoing.played")}: {event.playedCount}
                   </p>
                 </Link>
-                {isAdmin && (
+                {canManageOngoingEvent(user, event.createdByUserId) && (
                   <Button
                     variant="ghost"
                     size="icon"

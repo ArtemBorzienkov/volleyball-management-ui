@@ -2,7 +2,8 @@
 
 import { useTranslation } from "react-i18next";
 import { OngoingMatchCard } from "@/components/ongoing/ongoing-match-card";
-import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useAuth } from "@/components/providers/auth-provider";
+import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
 import { roundLabel } from "@/lib/ongoing-bracket";
 import type { OngoingEvent, OngoingGame } from "@/lib/types";
 
@@ -12,7 +13,8 @@ interface OngoingMatchesTabProps {
 
 export function OngoingMatchesTab({ event }: OngoingMatchesTabProps) {
   const { t } = useTranslation();
-  const isAdmin = useIsAdmin();
+  const { user } = useAuth();
+  const canManage = canManageOngoingEvent(user, event.createdByUserId);
 
   const teamsById = new Map(event.teams.map((team) => [team.id, team]));
 
@@ -57,7 +59,7 @@ export function OngoingMatchesTab({ event }: OngoingMatchesTabProps) {
     const team2 = teamsById.get(game.team2Id);
     if (!team1 || !team2) return null;
 
-    return <OngoingMatchCard key={game.id} game={game} team1={team1} team2={team2} canEdit={isAdmin} />;
+    return <OngoingMatchCard key={game.id} game={game} team1={team1} team2={team2} canEdit={canManage} />;
   };
 
   return (

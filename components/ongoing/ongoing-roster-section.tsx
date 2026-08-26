@@ -35,6 +35,7 @@ async function putJson(url: string, body: unknown): Promise<unknown> {
   const response = await fetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(body),
   });
   if (!response.ok) {
@@ -67,7 +68,7 @@ export function OngoingRosterSection({ event, players }: OngoingRosterSectionPro
 
   const removeTeamMutation = useMutation({
     mutationFn: async (teamId: string) => {
-      const response = await fetch(API.REMOVE_ONGOING_TEAM(teamId), { method: "DELETE" });
+      const response = await fetch(API.REMOVE_ONGOING_TEAM(teamId), { method: "DELETE", credentials: "include" });
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: "Request failed" }));
         throw new Error(error.message || `HTTP error! status: ${response.status}`);
@@ -89,7 +90,7 @@ export function OngoingRosterSection({ event, players }: OngoingRosterSectionPro
 
   const generateMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(API.GENERATE_ONGOING_SCHEDULE(event.id), { method: "POST" });
+      const response = await fetch(API.GENERATE_ONGOING_SCHEDULE(event.id), { method: "POST", credentials: "include" });
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: "Request failed" }));
         throw new Error(error.message || `HTTP error! status: ${response.status}`);

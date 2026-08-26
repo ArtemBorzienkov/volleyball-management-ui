@@ -5,7 +5,9 @@
     "events": "Events",
     "addResults": "Add Results",
     "ongoing": "Ongoing",
-    "calendar": "Calendar"
+    "calendar": "Calendar",
+    "login": "Login",
+    "logout": "Logout"
   },
   "home": {
     "title": "Beach Volleyball Analytics",
@@ -81,7 +83,8 @@
       "namePlaceholder": "Enter player name",
       "nameRequired": "Player name is required",
       "gender": "Gender",
-      "genderPlaceholder": "Select gender (optional)",
+      "genderPlaceholder": "Select gender",
+      "genderRequired": "Gender is required",
       "male": "Male",
       "female": "Female",
       "avatarUrl": "Avatar URL",
