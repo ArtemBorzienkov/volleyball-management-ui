@@ -44,6 +44,10 @@ const API = {
   GET_OPEN_ONGOING_EVENTS: `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/open`,
   ADD_ONGOING_TEAM: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/teams`,
   REMOVE_ONGOING_TEAM: (teamId: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/teams/${teamId}`,
+  ADD_ONGOING_SOLO: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/solo`,
+  REMOVE_ONGOING_SOLO: (soloId: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/solo/${soloId}`,
+  GET_ONGOING_SOLO_PREVIEW: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/solo/preview`,
+  FORM_ONGOING_TEAMS: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/solo/form-teams`,
 };
 
 export default API;

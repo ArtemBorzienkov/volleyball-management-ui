@@ -22,6 +22,7 @@ import { OngoingBracketTab } from "@/components/ongoing/ongoing-bracket-tab";
 import { OngoingResultsTab } from "@/components/ongoing/ongoing-results-tab";
 import { useAuth } from "@/components/providers/auth-provider";
 import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
+import { normalizeOngoingEvent, type OlderOngoingEvent } from "@/lib/ongoing-normalize";
 import API from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { isPlayed } from "@/lib/ongoing-standings";
@@ -64,7 +65,8 @@ export default function OngoingEventPage() {
     queryFn: async () => {
       const response = await fetch(API.GET_ONGOING_EVENT(id));
       if (!response.ok) throw new HttpError(response.status);
-      return response.json();
+      const raw: OlderOngoingEvent = await response.json();
+      return normalizeOngoingEvent(raw);
     },
   });
 

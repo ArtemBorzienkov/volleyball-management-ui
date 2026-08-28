@@ -15,7 +15,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/providers/auth-provider";
+import { canRegisterInOngoingEvent, isOngoingEventFull } from "@/lib/ongoing-permissions";
 import API from "@/lib/api";
 import type { OngoingOpenEvent, Player } from "@/lib/types";
 
@@ -32,6 +34,7 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [player2Id, setPlayer2Id] = useState("");
+  const [mode, setMode] = useState<"partner" | "solo">("partner");
 
   // Players created inline this session, merged in below so the slot that triggered creation
   // can show and select them immediately, without waiting on the ["players"] refetch.
@@ -68,6 +71,29 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
       queryClient.invalidateQueries({ queryKey: ["ongoing-event", event.id] });
       // Not a user-driven dismissal, so onOpenChange never fires — go through the same reset
       // path a manual close uses, or the inline create-player row survives into the next open.
+      resetAndSetOpen(false);
+    },
+  });
+
+  const registerSoloMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(API.ADD_ONGOING_SOLO(event.id), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        // Empty body: the backend takes the caller's own playerId, so the client never asserts who it is.
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: "Request failed" }));
+        throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ongoing-open"] });
+      queryClient.invalidateQueries({ queryKey: ["ongoing-events"] });
+      queryClient.invalidateQueries({ queryKey: ["ongoing-event", event.id] });
       resetAndSetOpen(false);
     },
   });
@@ -112,8 +138,10 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
     setOpen(nextOpen);
     if (!nextOpen) {
       setPlayer2Id("");
+      setMode("partner");
       setCreatedPlayers([]);
       registerMutation.reset();
+      registerSoloMutation.reset();
       clearNewPlayerRow();
     }
   };
@@ -224,6 +252,23 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
     </label>
   );
 
+  // Checked before the !user guard: being full is a fact about the tournament, not the viewer, so
+  // telling a logged-out visitor to log in first would be misleading — logging in changes nothing.
+  if (isOngoingEventFull(event)) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span tabIndex={0} className="inline-block">
+            <Button size="sm" disabled>
+              <span suppressHydrationWarning>{t("calendar.noSpots")}</span>
+            </Button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent suppressHydrationWarning>{t("calendar.noSpotsHint")}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
   if (!user) {
     return (
       <Tooltip>
@@ -239,6 +284,17 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
     );
   }
 
+  // Below the !user guard on purpose: a logged-out visitor still gets the "log in first" tooltip
+  // rather than a bare Private badge.
+  if (!canRegisterInOngoingEvent(user, event)) {
+    return (
+      <Badge variant="secondary" title={t("calendar.privateHint")}>
+        <span suppressHydrationWarning>{t("calendar.privateBadge")}</span>
+      </Badge>
+    );
+  }
+
+
   return (
     <Dialog open={open} onOpenChange={resetAndSetOpen}>
       <DialogTrigger asChild>
@@ -252,7 +308,28 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
-          {availablePlayers.length === 0 && (
+          {event.allowSoloRegistration && (
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={mode === "partner" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMode("partner")}
+              >
+                <span suppressHydrationWarning>{t("calendar.modeWithPartner")}</span>
+              </Button>
+              <Button
+                type="button"
+                variant={mode === "solo" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMode("solo")}
+              >
+                <span suppressHydrationWarning>{t("calendar.modeSolo")}</span>
+              </Button>
+            </div>
+          )}
+
+          {mode === "partner" && availablePlayers.length === 0 && (
             <p className="text-sm text-muted-foreground" suppressHydrationWarning>
               {t("calendar.noPlayersLeft")}
             </p>
@@ -267,17 +344,34 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
             </p>
           </label>
 
-          {renderPlayerField("player2", t("calendar.player2"), player2Id, setPlayer2Id, user?.playerId ?? "")}
+          {mode === "partner" &&
+            renderPlayerField("player2", t("calendar.player2"), player2Id, setPlayer2Id, user?.playerId ?? "")}
 
-          {registerMutation.isError && (
+          {mode === "solo" && (
+            <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+              {t("calendar.soloHint")}
+            </p>
+          )}
+
+          {mode === "partner" && registerMutation.isError && (
             <p className="text-sm text-destructive">{(registerMutation.error as Error).message}</p>
+          )}
+
+          {mode === "solo" && registerSoloMutation.isError && (
+            <p className="text-sm text-destructive">{(registerSoloMutation.error as Error).message}</p>
           )}
         </div>
 
         <DialogFooter>
-          <Button onClick={() => registerMutation.mutate()} disabled={!canRegister || registerMutation.isPending}>
-            <span suppressHydrationWarning>{t("calendar.register")}</span>
-          </Button>
+          {mode === "solo" ? (
+            <Button onClick={() => registerSoloMutation.mutate()} disabled={registerSoloMutation.isPending}>
+              <span suppressHydrationWarning>{t("calendar.register")}</span>
+            </Button>
+          ) : (
+            <Button onClick={() => registerMutation.mutate()} disabled={!canRegister || registerMutation.isPending}>
+              <span suppressHydrationWarning>{t("calendar.register")}</span>
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

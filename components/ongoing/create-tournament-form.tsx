@@ -35,6 +35,8 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
   const [startTime, setStartTime] = useState("");
   const [location, setLocation] = useState("");
   const [maxTeams, setMaxTeams] = useState("");
+  const [visibility, setVisibility] = useState("public");
+  const [allowSoloRegistration, setAllowSoloRegistration] = useState(false);
   const [teams, setTeams] = useState<TeamDraft[]>([]);
 
   const { data: players = [] } = useQuery<Player[]>({
@@ -60,6 +62,9 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
       const pickedUtcMidnight = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
       const body: Record<string, unknown> = { name: name.trim(), date: pickedUtcMidnight.toISOString() };
       if (trimmedMaxTeams) body.maxTeams = Number(trimmedMaxTeams);
+      // Sent unconditionally: flipping a control back to its default must not be silently dropped.
+      body.visibility = visibility;
+      body.allowSoloRegistration = allowSoloRegistration;
       if (completeTeams.length) body.teams = completeTeams;
       // startTime is a venue-local wall-clock string ("HH:MM"), never a timezone-aware instant.
       if (trimmedStartTime) body.startTime = trimmedStartTime;
@@ -160,6 +165,38 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
             {t("ongoing.create.maxTeamsHint")}
           </p>
         </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium" suppressHydrationWarning>
+            {t("ongoing.create.visibilityLabel")}
+          </label>
+          <select
+            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={visibility}
+            onChange={(event) => setVisibility(event.target.value)}
+          >
+            <option value="public">{t("ongoing.create.visibilityPublic")}</option>
+            <option value="private">{t("ongoing.create.visibilityPrivate")}</option>
+          </select>
+        </div>
+
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={allowSoloRegistration}
+            onChange={(event) => setAllowSoloRegistration(event.target.checked)}
+          />
+          <span className="flex flex-col gap-0.5">
+            <span className="font-medium" suppressHydrationWarning>
+              {t("ongoing.create.allowSoloLabel")}
+            </span>
+            <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+              {t("ongoing.create.allowSoloHint")}
+            </span>
+          </span>
+        </label>
+
 
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium" suppressHydrationWarning>

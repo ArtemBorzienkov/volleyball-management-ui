@@ -11,15 +11,19 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RegisterTeamDialog } from "@/components/ongoing/register-team-dialog";
 import { CreateTournamentForm } from "@/components/ongoing/create-tournament-form";
+import { CancelRegistrationButton } from "@/components/ongoing/cancel-registration-button";
 import { teamName } from "@/lib/ongoing-standings";
+import { isOngoingEventFull } from "@/lib/ongoing-permissions";
 import { eventMetaLine } from "@/lib/ongoing-date";
+import { normalizeOngoingOpenEvent, type OlderOngoingOpenEvent } from "@/lib/ongoing-normalize";
 import API from "@/lib/api";
 import type { OngoingOpenEvent, Player } from "@/lib/types";
 
 async function fetchOpenEvents(): Promise<OngoingOpenEvent[]> {
   const response = await fetch(API.GET_OPEN_ONGOING_EVENTS);
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-  return response.json();
+  const raw: OlderOngoingOpenEvent[] = await response.json();
+  return raw.map(normalizeOngoingOpenEvent);
 }
 
 async function fetchPlayers(): Promise<Player[]> {
@@ -101,9 +105,20 @@ export default function CalendarPage() {
                     <p className="mt-1 text-sm text-muted-foreground">
                       <span suppressHydrationWarning>{t("calendar.teams")}</span>: {event.teamsCount}/
                       {event.maxTeams ?? t("calendar.unlimited")}
+                      {isOngoingEventFull(event) && (
+                        <>
+                          {" · "}
+                          <span className="text-destructive" suppressHydrationWarning>
+                            {t("calendar.noSpots")}
+                          </span>
+                        </>
+                      )}
                     </p>
                   </div>
-                  <RegisterTeamDialog event={event} players={players} />
+                  <div className="flex flex-col items-end gap-2">
+                    <RegisterTeamDialog event={event} players={players} />
+                    <CancelRegistrationButton event={event} />
+                  </div>
                 </div>
 
                 {event.teams.length > 0 && (
@@ -116,6 +131,22 @@ export default function CalendarPage() {
                         </li>
                       ))}
                   </ol>
+                )}
+
+                {event.soloPlayers.length > 0 && (
+                  <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                    <span className="text-xs font-medium" suppressHydrationWarning>
+                      {t("calendar.soloPool")}
+                    </span>
+                    {/* Copied before sorting: the array belongs to the query cache. */}
+                    {[...event.soloPlayers]
+                      .sort((a, b) => b.rating - a.rating)
+                      .map((solo) => (
+                        <span key={solo.id}>
+                          {solo.player.name} <span className="text-foreground">{solo.rating}</span>
+                        </span>
+                      ))}
+                  </div>
                 )}
               </CardContent>
             </Card>

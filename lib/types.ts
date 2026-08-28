@@ -141,6 +141,11 @@ export interface FullPlayer extends Player {
   recentGames: string[]; // Array of 'win' | 'lose'
 }
 
+export interface OngoingEventCreator {
+  id: string;
+  name: string;
+}
+
 export interface OngoingEventListItem {
   id: string;
   name: string;
@@ -148,9 +153,13 @@ export interface OngoingEventListItem {
   startTime: string | null;
   location: string | null;
   createdByUserId: string | null;
+  createdBy: OngoingEventCreator | null;
+  visibility: string;
   teamsCount: number;
   gamesCount: number;
   playedCount: number;
+  teams: OngoingTeam[];
+  soloPlayers: OngoingSoloPlayer[];
 }
 
 export interface OngoingEventConfig {
@@ -160,6 +169,8 @@ export interface OngoingEventConfig {
   scheme: string;
   groupCount: number;
   qualifiersPerGroup: number | null;
+  visibility: string;
+  allowSoloRegistration: boolean;
 }
 
 export interface OngoingTeamPlayer {
@@ -174,6 +185,23 @@ export interface OngoingTeam {
   player2: OngoingTeamPlayer;
   rating: number;
   groupIndex: number | null;
+}
+
+export interface OngoingSoloPlayer {
+  id: string;
+  player: OngoingTeamPlayer;
+  rating: number;
+}
+
+export interface OngoingSoloPair {
+  player1: OngoingTeamPlayer;
+  player2: OngoingTeamPlayer;
+  rating: number;
+}
+
+export interface OngoingSoloPairPreview {
+  pairs: OngoingSoloPair[];
+  unpaired: OngoingTeamPlayer[];
 }
 
 export interface OngoingGame {
@@ -204,6 +232,7 @@ export interface OngoingEvent {
   createdByUserId: string | null;
   config: OngoingEventConfig;
   teams: OngoingTeam[];
+  soloPlayers: OngoingSoloPlayer[];
   games: OngoingGame[];
 }
 
@@ -215,7 +244,11 @@ export interface OngoingOpenEvent {
   location: string | null;
   maxTeams: number | null;
   teamsCount: number;
+  createdByUserId: string | null;
   teams: OngoingTeam[];
+  visibility: string;
+  allowSoloRegistration: boolean;
+  soloPlayers: OngoingSoloPlayer[];
 }
 
 export interface OngoingStandingsRow {

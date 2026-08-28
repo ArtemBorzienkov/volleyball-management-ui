@@ -170,7 +170,12 @@
       "maxTeamsLabel": "Max teams",
       "maxTeamsHint": "Leave empty for no limit",
       "teamsLabel": "Initial roster",
-      "submit": "Create tournament"
+      "submit": "Create tournament",
+      "visibilityLabel": "Who can register",
+      "visibilityPublic": "Public — anyone can register",
+      "visibilityPrivate": "Private — only I add teams",
+      "allowSoloLabel": "Allow registration without a partner",
+      "allowSoloHint": "Players without a partner join a pool and are paired by rating before the tournament."
     },
     "empty": "No tournaments yet.",
     "teams": "Teams",
@@ -228,7 +233,21 @@
       "qualifiersPerGroupHint": "How many teams advance from each group. Total qualifiers must be a power of two (2, 4, 8, 16…) — currently {{total}}.",
       "registeredTeamsTitle": "Registered teams",
       "removeRegisteredTeam": "Delete team",
-      "removeTeamConfirm": "This permanently removes the team and its unplayed matches from the tournament. Continue?"
+      "removeTeamConfirm": "This permanently removes the team and its unplayed matches from the tournament. Continue?",
+      "solo": {
+        "title": "Registered without a partner",
+        "empty": "Nobody is waiting without a partner.",
+        "formTeams": "Form teams",
+        "previewTitle": "Suggested teams",
+        "previewHint": "Strongest is paired with weakest. Swap anyone before confirming.",
+        "unpaired": "Left without a partner",
+        "oddWarning": "There is an odd number of players — one will stay in the pool.",
+        "confirm": "Create these teams",
+        "cancel": "Cancel",
+        "remove": "Remove",
+        "addPlayer": "Add player",
+        "addPlayerHint": "This tournament accepts entrants without a partner — add one player instead of a team."
+      }
     },
     "matchesTab": {
       "round": "Round",
@@ -297,7 +316,12 @@
     "newTournament": "New tournament",
     "results": {
       "stillPlaying": "Still playing"
-    }
+    },
+    "createdBy": "Organiser",
+    "withoutPartner": "Without a partner",
+    "publicBadge": "Public",
+    "privateBadge": "Private",
+    "publicHint": "Anyone logged in can register a team"
   },
   "calendar": {
     "title": "Calendar",
@@ -314,6 +338,18 @@
     "loadFailed": "Could not load open tournaments.",
     "newTournament": "New tournament",
     "newTournamentTitle": "Create a tournament",
-    "addNewPlayer": "Add new player"
+    "addNewPlayer": "Add new player",
+    "privateBadge": "Private",
+    "privateHint": "Only the organiser adds teams to this tournament",
+    "modeWithPartner": "With a partner",
+    "modeSolo": "Without a partner",
+    "soloHint": "You will be paired by rating before the tournament starts",
+    "soloPool": "Without a partner",
+    "cancelRegistration": "Cancel registration",
+    "cancelTeamConfirm": "Cancel this registration? The whole team is withdrawn.",
+    "cancelSoloConfirm": "Cancel this registration?",
+    "cancelClosed": "Registration can no longer be cancelled",
+    "noSpots": "No spots left",
+    "noSpotsHint": "This tournament is full — every slot is taken"
   }
 }

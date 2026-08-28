@@ -17,6 +17,7 @@ import API from "@/lib/api";
 import { isPlayed } from "@/lib/ongoing-standings";
 import type { OngoingEvent, Player } from "@/lib/types";
 import { TeamRosterEditor, type TeamDraft } from "@/components/ongoing/team-roster-editor";
+import { SoloPoolSection } from "@/components/ongoing/solo-pool-section";
 
 interface OngoingRosterSectionProps {
   event: OngoingEvent;
@@ -28,7 +29,9 @@ interface OngoingRosterSectionProps {
 // throws away the draft. Losing an in-progress draft is the deliberate trade-off: a stale draft
 // re-submitted through PUT /teams would recreate deleted teams or silently delete new registrations.
 export function rosterSignature(event: OngoingEvent): string {
-  return event.teams.map((team) => team.id).join(",");
+  // Solo ids are included for the same reason team ids are: a solo registration arriving while the
+  // admin has a draft open must remount the editor rather than let a stale draft be re-submitted.
+  return [...event.teams.map((team) => team.id), ...event.soloPlayers.map((solo) => solo.id)].join(",");
 }
 
 async function putJson(url: string, body: unknown): Promise<unknown> {
@@ -116,6 +119,8 @@ export function OngoingRosterSection({ event, players }: OngoingRosterSectionPro
 
   return (
     <>
+      <SoloPoolSection event={event} players={players} disabled={hasStarted} />
+
       <Card>
         <CardContent className="flex flex-col gap-4 p-4">
           <p className="font-medium" suppressHydrationWarning>

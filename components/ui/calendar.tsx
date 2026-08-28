@@ -11,17 +11,21 @@ export function Calendar({ className, classNames, showOutsideDays = true, ...pro
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      // `relative` lives here, not in classNames.root: a classNames key REPLACES the default rdp-*
+      // class, and dropping `rdp-root` would remove the library's own DOM hook.
+      className={cn("relative p-3", className)}
       classNames={{
         months: "flex flex-col sm:flex-row gap-4",
         month: "flex flex-col gap-4",
-        month_caption: "flex justify-center pt-1 relative items-center",
+        month_caption: "flex h-7 items-center justify-center pt-1",
         caption_label: "text-sm font-medium",
-        nav: "flex items-center gap-1",
-        button_previous:
-          "absolute left-1 inline-flex h-7 w-7 items-center justify-center rounded-md opacity-50 hover:opacity-100",
-        button_next:
-          "absolute right-1 inline-flex h-7 w-7 items-center justify-center rounded-md opacity-50 hover:opacity-100",
+        // react-day-picker v9 renders nav as a SIBLING of month, and nothing inside the calendar is
+        // positioned, so absolute arrows resolve against the popover and land on top of the dates.
+        // The nav itself carries the positioning: pinned to the caption row (inset-x-3 matches the
+        // root's p-3), with the buttons in normal flow pushed to either end.
+        nav: "absolute inset-x-3 top-3 z-10 flex h-7 items-center justify-between",
+        button_previous: "inline-flex h-7 w-7 items-center justify-center rounded-md opacity-50 hover:opacity-100",
+        button_next: "inline-flex h-7 w-7 items-center justify-center rounded-md opacity-50 hover:opacity-100",
         month_grid: "w-full border-collapse space-y-1",
         weekdays: "flex",
         weekday: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",

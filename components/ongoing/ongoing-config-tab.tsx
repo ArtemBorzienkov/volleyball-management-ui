@@ -36,6 +36,9 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
   // Kept as a string so the field can be blank (unlimited); seeded once here, never resynced.
   const [maxTeams, setMaxTeams] = useState(event.config.maxTeams != null ? String(event.config.maxTeams) : "");
   const [scheme, setScheme] = useState(event.config.scheme);
+  // Seeded once from the loaded config, never resynced — same as maxTeams/scheme above.
+  const [visibility, setVisibility] = useState(event.config.visibility);
+  const [allowSoloRegistration, setAllowSoloRegistration] = useState(event.config.allowSoloRegistration);
   // Kept as strings so the fields can be blank while typing; seeded once here, never resynced.
   const [groupCount, setGroupCount] = useState(String(event.config.groupCount));
   const [qualifiersPerGroup, setQualifiersPerGroup] = useState(
@@ -73,6 +76,8 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
         courts,
         // Number("") is 0, which the backend would reject or treat as a real cap — blank must stay null.
         maxTeams: maxTeams.trim() === "" ? null : Number(maxTeams),
+        visibility,
+        allowSoloRegistration,
         scheme,
         groupCount: groupCountValue,
         // Meaningless for roundRobin — the server forces null anyway, but send null rather than a stale number.
@@ -129,6 +134,37 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
             />
             <span className="text-xs text-muted-foreground" suppressHydrationWarning>
               {t("ongoing.config.maxTeamsHint")}
+            </span>
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-muted-foreground" suppressHydrationWarning>
+              {t("ongoing.create.visibilityLabel")}
+            </span>
+            <select
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              value={visibility}
+              onChange={(changeEvent) => setVisibility(changeEvent.target.value)}
+            >
+              <option value="public">{t("ongoing.create.visibilityPublic")}</option>
+              <option value="private">{t("ongoing.create.visibilityPrivate")}</option>
+            </select>
+          </label>
+
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={allowSoloRegistration}
+              onChange={(changeEvent) => setAllowSoloRegistration(changeEvent.target.checked)}
+            />
+            <span className="flex flex-col gap-0.5">
+              <span className="font-medium" suppressHydrationWarning>
+                {t("ongoing.create.allowSoloLabel")}
+              </span>
+              <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+                {t("ongoing.create.allowSoloHint")}
+              </span>
             </span>
           </label>
 
@@ -196,6 +232,8 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
             gamesPerPair === event.config.gamesPerPair &&
             courts === event.config.courts &&
             (maxTeams.trim() === "" ? null : Number(maxTeams)) === event.config.maxTeams &&
+            visibility === event.config.visibility &&
+            allowSoloRegistration === event.config.allowSoloRegistration &&
             scheme === event.config.scheme &&
             groupCountValue === event.config.groupCount &&
             (isGroupsPlayoff ? qualifiersPerGroupValue : null) === event.config.qualifiersPerGroup && (

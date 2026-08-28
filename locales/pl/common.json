@@ -170,7 +170,12 @@
       "maxTeamsLabel": "Maksymalna liczba drużyn",
       "maxTeamsHint": "Pozostaw puste, aby nie ograniczać",
       "teamsLabel": "Wstępny skład",
-      "submit": "Utwórz turniej"
+      "submit": "Utwórz turniej",
+      "visibilityLabel": "Kto może się zapisać",
+      "visibilityPublic": "Publiczny — każdy może się zapisać",
+      "visibilityPrivate": "Prywatny — drużyny dodaję tylko ja",
+      "allowSoloLabel": "Zezwól na zapisy bez partnera",
+      "allowSoloHint": "Gracze bez partnera trafiają do puli i przed turniejem są łączeni w pary według rankingu."
     },
     "empty": "Nie ma jeszcze turniejów.",
     "teams": "Drużyny",
@@ -228,7 +233,21 @@
       "qualifiersPerGroupHint": "Ile drużyn awansuje z każdej grupy. Łączna liczba awansujących musi być potęgą dwójki (2, 4, 8, 16…) — obecnie {{total}}.",
       "registeredTeamsTitle": "Zarejestrowane drużyny",
       "removeRegisteredTeam": "Usuń drużynę",
-      "removeTeamConfirm": "To trwale usunie drużynę i jej nierozegrane mecze z turnieju. Kontynuować?"
+      "removeTeamConfirm": "To trwale usunie drużynę i jej nierozegrane mecze z turnieju. Kontynuować?",
+      "solo": {
+        "title": "Zapisani bez partnera",
+        "empty": "Nikt nie czeka bez partnera.",
+        "formTeams": "Utwórz drużyny",
+        "previewTitle": "Proponowane drużyny",
+        "previewHint": "Najsilniejszy trafia w parę z najsłabszym. Przed potwierdzeniem możesz zamienić dowolną osobę.",
+        "unpaired": "Został bez partnera",
+        "oddWarning": "Nieparzysta liczba graczy — jedna osoba zostanie w puli.",
+        "confirm": "Utwórz te drużyny",
+        "cancel": "Anuluj",
+        "remove": "Usuń",
+        "addPlayer": "Dodaj gracza",
+        "addPlayerHint": "Ten turniej przyjmuje zawodników bez partnera — możesz dodać jednego gracza zamiast drużyny."
+      }
     },
     "matchesTab": {
       "round": "Runda",
@@ -297,7 +316,12 @@
     "newTournament": "Nowy turniej",
     "results": {
       "stillPlaying": "Nadal grają"
-    }
+    },
+    "createdBy": "Organizator",
+    "withoutPartner": "Bez partnera",
+    "publicBadge": "Publiczny",
+    "privateBadge": "Prywatny",
+    "publicHint": "Drużynę może zapisać każdy zalogowany"
   },
   "calendar": {
     "title": "Kalendarz",
@@ -314,6 +338,18 @@
     "loadFailed": "Nie udało się wczytać otwartych turniejów.",
     "newTournament": "Nowy turniej",
     "newTournamentTitle": "Utwórz turniej",
-    "addNewPlayer": "Dodaj nowego gracza"
+    "addNewPlayer": "Dodaj nowego gracza",
+    "privateBadge": "Prywatny",
+    "privateHint": "Drużyny do tego turnieju dodaje tylko organizator",
+    "modeWithPartner": "Z partnerem",
+    "modeSolo": "Bez partnera",
+    "soloHint": "Zostaniesz dobrany w parę według rankingu przed startem turnieju",
+    "soloPool": "Bez partnera",
+    "cancelRegistration": "Anuluj rejestrację",
+    "cancelTeamConfirm": "Anulować rejestrację? Cała drużyna zostanie wycofana.",
+    "cancelSoloConfirm": "Anulować rejestrację?",
+    "cancelClosed": "Rejestracji nie można już anulować",
+    "noSpots": "Brak miejsc",
+    "noSpotsHint": "Turniej jest pełny — wszystkie miejsca zajęte"
   }
 }

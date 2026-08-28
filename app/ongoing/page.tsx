@@ -13,12 +13,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
 import API from "@/lib/api";
 import { eventMetaLine } from "@/lib/ongoing-date";
+import { teamName } from "@/lib/ongoing-standings";
+import { normalizeOngoingListItem, type OlderOngoingEventListItem } from "@/lib/ongoing-normalize";
 import type { OngoingEventListItem } from "@/lib/types";
 
 async function fetchOngoingEvents(): Promise<OngoingEventListItem[]> {
   const response = await fetch(API.GET_ONGOING_EVENTS);
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-  return response.json();
+  const raw: OlderOngoingEventListItem[] = await response.json();
+  return raw.map(normalizeOngoingListItem);
 }
 
 export default function OngoingListPage() {
@@ -103,30 +106,80 @@ export default function OngoingListPage() {
             const dateMeta = eventMetaLine(event, "short");
             return (
             <Card key={event.id}>
-              <CardContent className="flex items-center justify-between gap-4 p-4">
-                <Link href={`/ongoing/${event.id}`} className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate font-medium">{event.name}</p>
-                    <Badge variant={event.playedCount === 0 ? "secondary" : "default"} suppressHydrationWarning>
-                      {event.playedCount === 0 ? t("ongoing.badge.planning") : t("ongoing.badge.inProgress")}
-                    </Badge>
+              <CardContent className="flex flex-col gap-3 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  {/* Only the heading is a link: the rosters below would otherwise be one huge click target. */}
+                  <Link href={`/ongoing/${event.id}`} className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate font-medium">{event.name}</p>
+                      <Badge variant={event.playedCount === 0 ? "secondary" : "default"} suppressHydrationWarning>
+                        {event.playedCount === 0 ? t("ongoing.badge.planning") : t("ongoing.badge.inProgress")}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        title={
+                          event.visibility === "private" ? t("calendar.privateHint") : t("ongoing.publicHint")
+                        }
+                        suppressHydrationWarning
+                      >
+                        {event.visibility === "private" ? t("ongoing.privateBadge") : t("ongoing.publicBadge")}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {dateMeta} · {t("ongoing.teams")}: {event.teamsCount} ·{" "}
+                      {t("ongoing.matches")}: {event.gamesCount} · {t("ongoing.played")}: {event.playedCount}
+                    </p>
+                    {event.createdBy && (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        <span suppressHydrationWarning>{t("ongoing.createdBy")}</span>: {event.createdBy.name}
+                      </p>
+                    )}
+                  </Link>
+                  {canManageOngoingEvent(user, event.createdByUserId) && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t("ongoing.delete")}
+                      onClick={() => {
+                        if (window.confirm(t("ongoing.deleteConfirm"))) deleteMutation.mutate(event.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  )}
+                </div>
+
+                {event.teams.length > 0 && (
+                  <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                    <span className="text-xs font-medium" suppressHydrationWarning>
+                      {t("ongoing.teams")}
+                    </span>
+                    {/* Copied before sorting: the array belongs to the query cache. */}
+                    <ol className="flex flex-col gap-1">
+                      {[...event.teams]
+                        .sort((a, b) => b.rating - a.rating)
+                        .map((team, index) => (
+                          <li key={team.id}>
+                            {index + 1}. {teamName(team)} <span className="text-foreground">{team.rating}</span>
+                          </li>
+                        ))}
+                    </ol>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {dateMeta} · {t("ongoing.teams")}: {event.teamsCount} ·{" "}
-                    {t("ongoing.matches")}: {event.gamesCount} · {t("ongoing.played")}: {event.playedCount}
-                  </p>
-                </Link>
-                {canManageOngoingEvent(user, event.createdByUserId) && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={t("ongoing.delete")}
-                    onClick={() => {
-                      if (window.confirm(t("ongoing.deleteConfirm"))) deleteMutation.mutate(event.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-muted-foreground" />
-                  </Button>
+                )}
+
+                {event.soloPlayers.length > 0 && (
+                  <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                    <span className="text-xs font-medium" suppressHydrationWarning>
+                      {t("ongoing.withoutPartner")}
+                    </span>
+                    {[...event.soloPlayers]
+                      .sort((a, b) => b.rating - a.rating)
+                      .map((solo) => (
+                        <span key={solo.id}>
+                          {solo.player.name} <span className="text-foreground">{solo.rating}</span>
+                        </span>
+                      ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
