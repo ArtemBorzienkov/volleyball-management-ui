@@ -11,7 +11,7 @@ import { Navigation } from '@/components/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { SelectInput } from '@/components/ui/select-input'
 import { useAuth } from '@/components/providers/auth-provider'
 import API from '@/lib/api'
 import type { Player } from '@/lib/types'
@@ -148,29 +148,26 @@ export default function RegisterPage() {
                   <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
                 )}
               </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">Your player</label>
-                <Controller
-                  control={control}
-                  name="playerId"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a player" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NEW_PLAYER_VALUE}>＋ Create new player</SelectItem>
-                        {players.map((player) => (
-                          <SelectItem key={player.id} value={player.id}>
-                            {player.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.playerId && <p className="text-sm text-destructive">{errors.playerId.message}</p>}
-              </div>
+              <Controller
+                control={control}
+                name="playerId"
+                render={({ field }) => (
+                  <SelectInput
+                    name="playerId"
+                    label="Your player"
+                    placeholder="Select a player"
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.playerId?.message}
+                    // "Create new" stays a selectable VALUE here, not an addNewOption callback: the
+                    // zod schema and the inline sub-form below both key off playerId === NEW_PLAYER_VALUE.
+                    options={[
+                      { value: NEW_PLAYER_VALUE, label: '＋ Create new player' },
+                      ...players.map((player) => ({ value: player.id, label: player.name })),
+                    ]}
+                  />
+                )}
+              />
               {isCreatingNewPlayer && (
                 <div className="flex flex-col gap-4 rounded-md border border-input p-3">
                   <div className="flex flex-col gap-2">
@@ -182,27 +179,24 @@ export default function RegisterPage() {
                       <p className="text-sm text-destructive">{errors.newPlayerName.message}</p>
                     )}
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium">Gender</label>
-                    <Controller
-                      control={control}
-                      name="newPlayerGender"
-                      render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    {errors.newPlayerGender && (
-                      <p className="text-sm text-destructive">{errors.newPlayerGender.message}</p>
+                  <Controller
+                    control={control}
+                    name="newPlayerGender"
+                    render={({ field }) => (
+                      <SelectInput
+                        name="newPlayerGender"
+                        label="Gender"
+                        placeholder="Select gender"
+                        value={field.value}
+                        onChange={field.onChange}
+                        error={errors.newPlayerGender?.message}
+                        options={[
+                          { value: 'male', label: 'Male' },
+                          { value: 'female', label: 'Female' },
+                        ]}
+                      />
                     )}
-                  </div>
+                  />
                 </div>
               )}
               {formError && <p className="text-sm text-destructive">{formError}</p>}

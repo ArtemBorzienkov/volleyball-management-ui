@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Settings, CalendarDays, ListOrdered, Trophy, FlagTriangleRight, Medal } from "lucide-react";
+import { Settings, CalendarDays, ListOrdered, Trophy, FlagTriangleRight, Medal, Trash2 } from "lucide-react";
 import { Navigation } from "@/components/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -113,6 +113,27 @@ export default function OngoingEventPage() {
     },
   });
 
+  // The creator (or an admin) can delete their own tournament — the backend's assertCanManage has
+  // always allowed it, but until now the only control lived on the /ongoing list page.
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(API.DELETE_ONGOING_EVENT(id), { method: "DELETE", credentials: "include" });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({ message: "Request failed" }));
+        throw new Error(body.message || `HTTP error! status: ${response.status}`);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ongoing-events"] });
+      // /calendar would otherwise keep offering the deleted tournament and link to a dead page.
+      queryClient.invalidateQueries({ queryKey: ["ongoing-open"] });
+      // This page is about to stop existing, so its cache must go before we navigate away.
+      queryClient.removeQueries({ queryKey: ["ongoing-event", id] });
+      // The list page is gone; /calendar is where tournaments are listed now.
+      router.push("/calendar");
+    },
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -161,6 +182,25 @@ export default function OngoingEventPage() {
                 )}
               </div>
             ) : null}
+
+            {canManage && (
+              <div className="mt-4 flex flex-col items-start gap-1">
+                <Button
+                  variant="outline"
+                  className="gap-2 text-destructive"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => {
+                    if (window.confirm(t("ongoing.deleteConfirm"))) deleteMutation.mutate();
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span suppressHydrationWarning>{t("ongoing.delete")}</span>
+                </Button>
+                {deleteMutation.isError && (
+                  <p className="text-sm text-destructive">{(deleteMutation.error as Error).message}</p>
+                )}
+              </div>
+            )}
 
             <div className="mt-6 flex flex-wrap gap-2">
               {visibleTabs.map((item) => (

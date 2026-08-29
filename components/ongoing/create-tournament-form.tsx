@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { TeamRosterEditor, type TeamDraft } from "@/components/ongoing/team-roster-editor";
+import { SelectInput } from "@/components/ui/select-input";
+import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import API from "@/lib/api";
@@ -27,6 +29,7 @@ interface CreateTournamentFormProps {
 export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const { user } = useAuth();
 
   const [name, setName] = useState("");
@@ -86,98 +89,105 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
       queryClient.invalidateQueries({ queryKey: ["ongoing-events"] });
       // A new tournament is open for registration straight away, so /calendar's list is stale too.
       queryClient.invalidateQueries({ queryKey: ["ongoing-open"] });
+      toast({ title: t("toast.tournamentCreated"), description: name.trim(), variant: "success" });
       onCreated?.(created.id);
+    },
+    onError: (error: Error) => {
+      toast({ title: t("toast.tournamentCreateFailed"), description: error.message, variant: "error" });
     },
   });
 
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 p-4">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" suppressHydrationWarning>
-            {t("ongoing.create.nameLabel")}
-          </label>
-          <Input value={name} onChange={(event) => setName(event.target.value)} />
+        {/* Paired into rows so the dialog fits without scrolling; the hint lines were folded into
+            placeholders for the same reason. */}
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="flex flex-1 flex-col gap-1.5">
+            <label className="text-sm font-medium" htmlFor="tournament-name" suppressHydrationWarning>
+              {t("ongoing.create.nameLabel")}
+            </label>
+            <Input id="tournament-name" value={name} onChange={(event) => setName(event.target.value)} />
+          </div>
+
+          <div className="flex flex-col gap-1.5 sm:w-40">
+            <label className="text-sm font-medium" htmlFor="max-teams" suppressHydrationWarning>
+              {t("ongoing.create.maxTeamsLabel")}
+            </label>
+            <Input
+              id="max-teams"
+              type="number"
+              min={2}
+              value={maxTeams}
+              onChange={(event) => setMaxTeams(event.target.value)}
+              placeholder={t("ongoing.create.maxTeamsHint")}
+            />
+          </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" suppressHydrationWarning>
-            {t("ongoing.create.dateLabel")}
-          </label>
-          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-fit justify-start">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(date, "PPP")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(selected) => {
-                  if (!selected) return;
-                  setDate(selected);
-                  setIsCalendarOpen(false);
-                }}
-              />
-            </PopoverContent>
-          </Popover>
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="flex flex-1 flex-col gap-1.5">
+            <label className="text-sm font-medium" htmlFor="location" suppressHydrationWarning>
+              {t("ongoing.create.locationLabel")}
+            </label>
+            <Input
+              id="location"
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+              placeholder={t("ongoing.create.locationHint")}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5 sm:w-40">
+            <label className="text-sm font-medium" htmlFor="start-time" suppressHydrationWarning>
+              {t("ongoing.create.startTimeLabel")}
+            </label>
+            <Input
+              id="start-time"
+              type="time"
+              value={startTime}
+              onChange={(event) => setStartTime(event.target.value)}
+            />
+          </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" suppressHydrationWarning>
-            {t("ongoing.create.startTimeLabel")}
-          </label>
-          <Input
-            type="time"
-            value={startTime}
-            onChange={(event) => setStartTime(event.target.value)}
-            className="w-32"
-          />
-          <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-            {t("ongoing.create.startTimeHint")}
-          </p>
-        </div>
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="flex flex-col gap-1.5 sm:w-56">
+            <label className="text-sm font-medium" suppressHydrationWarning>
+              {t("ongoing.create.dateLabel")}
+            </label>
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="justify-start">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(date, "PPP")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(selected) => {
+                    if (!selected) return;
+                    setDate(selected);
+                    setIsCalendarOpen(false);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" suppressHydrationWarning>
-            {t("ongoing.create.locationLabel")}
-          </label>
-          <Input value={location} onChange={(event) => setLocation(event.target.value)} />
-          <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-            {t("ongoing.create.locationHint")}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" suppressHydrationWarning>
-            {t("ongoing.create.maxTeamsLabel")}
-          </label>
-          <Input
-            type="number"
-            min={2}
-            value={maxTeams}
-            onChange={(event) => setMaxTeams(event.target.value)}
-            className="w-32"
-          />
-          <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-            {t("ongoing.create.maxTeamsHint")}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium" suppressHydrationWarning>
-            {t("ongoing.create.visibilityLabel")}
-          </label>
-          <select
-            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+          <SelectInput
+            className="flex-1"
+            name="visibility"
+            label={t("ongoing.create.visibilityLabel")}
             value={visibility}
-            onChange={(event) => setVisibility(event.target.value)}
-          >
-            <option value="public">{t("ongoing.create.visibilityPublic")}</option>
-            <option value="private">{t("ongoing.create.visibilityPrivate")}</option>
-          </select>
+            onChange={setVisibility}
+            options={[
+              { value: "public", label: t("ongoing.create.visibilityPublic") },
+              { value: "private", label: t("ongoing.create.visibilityPrivate") },
+            ]}
+          />
         </div>
 
         <label className="flex items-start gap-2 text-sm">

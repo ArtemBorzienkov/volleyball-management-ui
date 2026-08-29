@@ -155,7 +155,8 @@
     "delete": "Delete",
     "edit": "Edit",
     "view": "View",
-    "close": "Close"
+    "close": "Close",
+    "noMatches": "No matches"
   },
   "ongoing": {
     "title": "Ongoing tournaments",
@@ -351,5 +352,21 @@
     "cancelClosed": "Registration can no longer be cancelled",
     "noSpots": "No spots left",
     "noSpotsHint": "This tournament is full — every slot is taken"
+  },
+  "toast": {
+    "tournamentCreated": "Tournament created",
+    "tournamentCreateFailed": "Could not create the tournament",
+    "teamRegistered": "Team registered",
+    "soloRegistered": "You are registered without a partner",
+    "registrationFailed": "Registration failed",
+    "registrationCancelled": "Registration cancelled",
+    "cancellationFailed": "Could not cancel the registration",
+    "scheduleGenerated": "Schedule generated",
+    "scheduleFailed": "Could not generate the schedule",
+    "teamsFormed": "Teams created from the pool",
+    "teamsFormFailed": "Could not create the teams",
+    "teamsFormedLeftover": "One player stayed in the pool without a partner",
+    "playerAdded": "Player added",
+    "playerRemoved": "Player removed"
   }
 }

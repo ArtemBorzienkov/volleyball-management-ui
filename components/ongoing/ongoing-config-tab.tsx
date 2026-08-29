@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectInput } from "@/components/ui/select-input";
 import API from "@/lib/api";
 import type { OngoingEvent, Player } from "@/lib/types";
 import { OngoingRosterSection, rosterSignature } from "@/components/ongoing/ongoing-roster-section";
@@ -94,20 +95,13 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
             {t("ongoing.config.title")}
           </p>
 
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground" suppressHydrationWarning>
-              {t("ongoing.config.gamesPerPair")}
-            </span>
-            <select
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-              value={gamesPerPair}
-              onChange={(changeEvent) => setGamesPerPair(Number(changeEvent.target.value))}
-            >
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={3}>3</option>
-            </select>
-          </label>
+          <SelectInput
+            name="games-per-pair"
+            label={t("ongoing.config.gamesPerPair")}
+            value={String(gamesPerPair)}
+            onChange={(next) => setGamesPerPair(Number(next))}
+            options={[1, 2, 3].map((count) => ({ value: String(count), label: String(count) }))}
+          />
 
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-muted-foreground" suppressHydrationWarning>
@@ -137,19 +131,16 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
             </span>
           </label>
 
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground" suppressHydrationWarning>
-              {t("ongoing.create.visibilityLabel")}
-            </span>
-            <select
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-              value={visibility}
-              onChange={(changeEvent) => setVisibility(changeEvent.target.value)}
-            >
-              <option value="public">{t("ongoing.create.visibilityPublic")}</option>
-              <option value="private">{t("ongoing.create.visibilityPrivate")}</option>
-            </select>
-          </label>
+          <SelectInput
+            name="config-visibility"
+            label={t("ongoing.create.visibilityLabel")}
+            value={visibility}
+            onChange={setVisibility}
+            options={[
+              { value: "public", label: t("ongoing.create.visibilityPublic") },
+              { value: "private", label: t("ongoing.create.visibilityPrivate") },
+            ]}
+          />
 
           <label className="flex items-start gap-2 text-sm">
             <input
@@ -168,19 +159,16 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
             </span>
           </label>
 
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground" suppressHydrationWarning>
-              {t("ongoing.config.scheme")}
-            </span>
-            <select
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-              value={scheme}
-              onChange={(changeEvent) => setScheme(changeEvent.target.value)}
-            >
-              <option value="roundRobin">{t("ongoing.config.schemeRoundRobin")}</option>
-              <option value="groupsPlayoff">{t("ongoing.config.schemeGroupsPlayoff")}</option>
-            </select>
-          </label>
+          <SelectInput
+            name="scheme"
+            label={t("ongoing.config.scheme")}
+            value={scheme}
+            onChange={setScheme}
+            options={[
+              { value: "roundRobin", label: t("ongoing.config.schemeRoundRobin") },
+              { value: "groupsPlayoff", label: t("ongoing.config.schemeGroupsPlayoff") },
+            ]}
+          />
 
           {isGroupsPlayoff && (
             <>

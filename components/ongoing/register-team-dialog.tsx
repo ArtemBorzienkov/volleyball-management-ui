@@ -13,9 +13,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { SelectInput } from "@/components/ui/select-input";
+import { NewPlayerInlineForm } from "@/components/ongoing/new-player-inline";
+import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/components/providers/auth-provider";
 import { canRegisterInOngoingEvent, isOngoingEventFull } from "@/lib/ongoing-permissions";
 import API from "@/lib/api";
@@ -26,12 +28,11 @@ interface RegisterTeamDialogProps {
   players: Player[];
 }
 
-type PlayerSlot = "player2";
-
 export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [player2Id, setPlayer2Id] = useState("");
   const [mode, setMode] = useState<"partner" | "solo">("partner");
@@ -39,15 +40,18 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
   // Players created inline this session, merged in below so the slot that triggered creation
   // can show and select them immediately, without waiting on the ["players"] refetch.
   const [createdPlayers, setCreatedPlayers] = useState<Player[]>([]);
-  const [newPlayerSlot, setNewPlayerSlot] = useState<PlayerSlot | null>(null);
-  const [newPlayerName, setNewPlayerName] = useState("");
-  const [newPlayerGender, setNewPlayerGender] = useState("");
+  const [isCreatingPlayer, setIsCreatingPlayer] = useState(false);
 
   const knownPlayerIds = new Set(players.map((player) => player.id));
   const allPlayers = [...players, ...createdPlayers.filter((player) => !knownPlayerIds.has(player.id))];
 
-  // A player already on a roster in this event can't be picked again — the API rejects it anyway.
-  const registeredIds = new Set(event.teams.flatMap((team) => [team.player1.id, team.player2.id]));
+  // Everyone already entered in this event — on a roster OR waiting in the solo pool. The pool half
+  // used to be missing here, so a partnerless entrant could be picked as a partner and the API
+  // answered 409 on submit instead of the name simply not being offered.
+  const registeredIds = new Set([
+    ...event.teams.flatMap((team) => [team.player1.id, team.player2.id]),
+    ...event.soloPlayers.map((solo) => solo.player.id),
+  ]);
   const availablePlayers = allPlayers.filter((player) => !registeredIds.has(player.id));
 
   const registerMutation = useMutation({
@@ -69,9 +73,13 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
       queryClient.invalidateQueries({ queryKey: ["ongoing-events"] });
       // Registering then clicking through to the detail page must not show a roster without the new team.
       queryClient.invalidateQueries({ queryKey: ["ongoing-event", event.id] });
+      toast({ title: t("toast.teamRegistered"), description: event.name, variant: "success" });
       // Not a user-driven dismissal, so onOpenChange never fires — go through the same reset
       // path a manual close uses, or the inline create-player row survives into the next open.
       resetAndSetOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: t("toast.registrationFailed"), description: error.message, variant: "error" });
     },
   });
 
@@ -94,43 +102,11 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
       queryClient.invalidateQueries({ queryKey: ["ongoing-open"] });
       queryClient.invalidateQueries({ queryKey: ["ongoing-events"] });
       queryClient.invalidateQueries({ queryKey: ["ongoing-event", event.id] });
+      toast({ title: t("toast.soloRegistered"), description: event.name, variant: "success" });
       resetAndSetOpen(false);
     },
-  });
-
-  const clearNewPlayerRow = () => {
-    setNewPlayerSlot(null);
-    setNewPlayerName("");
-    setNewPlayerGender("");
-    createPlayerMutation.reset();
-  };
-
-  const createPlayerMutation = useMutation({
-    mutationFn: async (): Promise<Player> => {
-      const trimmedName = newPlayerName.trim();
-      const response = await fetch(API.CREATE_PLAYER, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: trimmedName,
-          gender: newPlayerGender,
-          active: true,
-        }),
-      });
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: "Request failed" }));
-        throw new Error(error.message || `HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    },
-    onSuccess: (newPlayer) => {
-      // The id comes straight from the response — no need to wait on the invalidation below.
-      if (newPlayerSlot === "player2") {
-        setPlayer2Id(newPlayer.id);
-      }
-      setCreatedPlayers((previous) => [...previous, newPlayer]);
-      queryClient.invalidateQueries({ queryKey: ["players"] });
-      clearNewPlayerRow();
+    onError: (error: Error) => {
+      toast({ title: t("toast.registrationFailed"), description: error.message, variant: "error" });
     },
   });
 
@@ -140,120 +116,54 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
       setPlayer2Id("");
       setMode("partner");
       setCreatedPlayers([]);
+      setIsCreatingPlayer(false);
       registerMutation.reset();
       registerSoloMutation.reset();
-      clearNewPlayerRow();
     }
   };
 
   const canRegister = Boolean(user?.playerId) && Boolean(player2Id) && user?.playerId !== player2Id;
 
-  const openNewPlayerRow = (slot: PlayerSlot) => {
-    setNewPlayerSlot(slot);
-    setNewPlayerName("");
-    setNewPlayerGender("");
-    createPlayerMutation.reset();
-  };
-
-  const renderPlayerSelect = (
-    value: string,
-    onChange: (id: string) => void,
-    excludeId: string,
-  ) => (
-    <select
-      className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-      value={value}
-      onChange={(changeEvent) => onChange(changeEvent.target.value)}
-    >
-      <option value="">{t("ongoing.config.selectPlayer")}</option>
-      {availablePlayers
-        .filter((player) => player.id === value || player.id !== excludeId)
-        .map((player) => (
-          <option key={player.id} value={player.id}>
-            {player.name}
-          </option>
-        ))}
-    </select>
-  );
-
-  const renderNewPlayerRow = () => (
-    <div className="flex flex-col gap-2 rounded-md border border-input p-3">
-      <Input
-        autoFocus
-        value={newPlayerName}
-        onChange={(changeEvent) => setNewPlayerName(changeEvent.target.value)}
-        placeholder={t("addResults.addPlayerModal.namePlaceholder")}
-      />
-      <select
-        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-        value={newPlayerGender}
-        onChange={(changeEvent) => setNewPlayerGender(changeEvent.target.value)}
-      >
-        <option value="">{t("addResults.addPlayerModal.genderPlaceholder")}</option>
-        <option value="male">{t("addResults.addPlayerModal.male")}</option>
-        <option value="female">{t("addResults.addPlayerModal.female")}</option>
-      </select>
-
-      {createPlayerMutation.isError && (
-        <p className="text-sm text-destructive">{(createPlayerMutation.error as Error).message}</p>
-      )}
-
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={clearNewPlayerRow}
-          disabled={createPlayerMutation.isPending}
-        >
-          <span suppressHydrationWarning>{t("addResults.addPlayerModal.cancel")}</span>
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          onClick={() => createPlayerMutation.mutate()}
-          disabled={!newPlayerName.trim() || !newPlayerGender || createPlayerMutation.isPending}
-        >
-          <span suppressHydrationWarning>
-            {createPlayerMutation.isPending
-              ? t("addResults.addPlayerModal.creating")
-              : t("addResults.addPlayerModal.create")}
-          </span>
-        </Button>
-      </div>
-    </div>
-  );
-
-  const renderPlayerField = (
-    slot: PlayerSlot,
-    label: string,
-    value: string,
-    onChange: (id: string) => void,
-    excludeId: string,
-  ) => (
-    <label className="flex flex-col gap-1 text-sm">
-      <span className="text-muted-foreground" suppressHydrationWarning>
-        {label}
-      </span>
-      <div className="flex items-center gap-2">
-        <div className="flex-1">{renderPlayerSelect(value, onChange, excludeId)}</div>
+  const renderPartnerField = () => (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-end gap-2">
+        <SelectInput
+          className="flex-1"
+          name="partner"
+          label={t("calendar.player2")}
+          placeholder={t("ongoing.config.selectPlayer")}
+          value={player2Id}
+          onChange={setPlayer2Id}
+          options={availablePlayers
+            .filter((player) => player.id !== user?.playerId)
+            .map((player) => ({ value: player.id, label: player.name }))}
+        />
         <Button
           type="button"
           variant="outline"
           size="icon-sm"
-          onClick={() => openNewPlayerRow(slot)}
-          disabled={newPlayerSlot !== null && newPlayerSlot !== slot}
+          className="mb-0.5"
+          onClick={() => setIsCreatingPlayer(true)}
+          disabled={isCreatingPlayer}
           aria-label={t("calendar.addNewPlayer")}
         >
           <Plus className="size-4" />
         </Button>
       </div>
-      {newPlayerSlot === slot && renderNewPlayerRow()}
-    </label>
+
+      {isCreatingPlayer && (
+        <NewPlayerInlineForm
+          onCreated={(player) => {
+            setCreatedPlayers((previous) => [...previous, player]);
+            setPlayer2Id(player.id);
+            setIsCreatingPlayer(false);
+          }}
+          onCancel={() => setIsCreatingPlayer(false)}
+        />
+      )}
+    </div>
   );
 
-  // Checked before the !user guard: being full is a fact about the tournament, not the viewer, so
-  // telling a logged-out visitor to log in first would be misleading — logging in changes nothing.
   if (isOngoingEventFull(event)) {
     return (
       <Tooltip>
@@ -344,8 +254,7 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
             </p>
           </label>
 
-          {mode === "partner" &&
-            renderPlayerField("player2", t("calendar.player2"), player2Id, setPlayer2Id, user?.playerId ?? "")}
+          {mode === "partner" && renderPartnerField()}
 
           {mode === "solo" && (
             <p className="text-sm text-muted-foreground" suppressHydrationWarning>

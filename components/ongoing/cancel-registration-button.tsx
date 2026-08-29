@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
 import { canCancelOngoingEntry } from "@/lib/ongoing-permissions";
+import { useToast } from "@/components/ui/toast";
 import API from "@/lib/api";
 import type { OngoingOpenEvent } from "@/lib/types";
 
@@ -15,6 +16,7 @@ interface CancelRegistrationButtonProps {
 export function CancelRegistrationButton({ event }: CancelRegistrationButtonProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const playerId = user?.playerId ?? null;
@@ -36,6 +38,10 @@ export function CancelRegistrationButton({ event }: CancelRegistrationButtonProp
       queryClient.invalidateQueries({ queryKey: ["ongoing-open"] });
       queryClient.invalidateQueries({ queryKey: ["ongoing-events"] });
       queryClient.invalidateQueries({ queryKey: ["ongoing-event", event.id] });
+      toast({ title: t("toast.registrationCancelled"), description: event.name, variant: "success" });
+    },
+    onError: (error: Error) => {
+      toast({ title: t("toast.cancellationFailed"), description: error.message, variant: "error" });
     },
   });
 

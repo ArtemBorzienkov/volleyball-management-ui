@@ -4,13 +4,7 @@ import { Navigation } from '@/components/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { SelectInput } from '@/components/ui/select-input'
 import {
   Dialog,
   DialogContent,
@@ -480,18 +474,16 @@ export default function AddResultsPage() {
                           name={`places.${index}.place`}
                           control={control}
                           render={({ field }) => (
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder={t('addResults.selectPlace')} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from({ length: 12 }, (_, i) => i + 1).map((placeNum) => (
-                                  <SelectItem key={placeNum} value={placeNum.toString()}>
-                                    {placeNum}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <SelectInput
+                              name={`places.${index}.place`}
+                              placeholder={t('addResults.selectPlace')}
+                              value={field.value}
+                              onChange={field.onChange}
+                              options={Array.from({ length: 12 }, (_, i) => i + 1).map((placeNum) => ({
+                                value: placeNum.toString(),
+                                label: placeNum.toString(),
+                              }))}
+                            />
                           )}
                         />
                       </div>
@@ -501,34 +493,17 @@ export default function AddResultsPage() {
                           name={`places.${index}.playerId`}
                           control={control}
                           render={({ field }) => (
-                            <Select
-                              onValueChange={(value) => {
-                                if (value === '__add_new__') {
-                                  handleAddNewPlayerForPlace(index)
-                                } else {
-                                  field.onChange(value)
-                                }
-                              }}
+                            <SelectInput
+                              name={`places.${index}.playerId`}
+                              placeholder={t('addResults.selectPlayer')}
                               value={field.value}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder={t('addResults.selectPlayer')} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {players.map((player) => (
-                                  <SelectItem key={player.id} value={player.id}>
-                                    {player.name}
-                                  </SelectItem>
-                                ))}
-                                <SelectItem
-                                  value="__add_new__"
-                                  className="text-primary font-medium"
-                                >
-                                  <Plus className="h-4 w-4 inline mr-2" />
-                                  {t('addResults.addNewPlayer')}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
+                              onChange={field.onChange}
+                              options={players.map((player) => ({ value: player.id, label: player.name }))}
+                              addNewOption={{
+                                label: t('addResults.addNewPlayer'),
+                                onClick: () => handleAddNewPlayerForPlace(index),
+                              }}
+                            />
                           )}
                         />
                       </div>
@@ -582,34 +557,17 @@ export default function AddResultsPage() {
                               control={control}
                               rules={{ required: true }}
                               render={({ field }) => (
-                                <Select
-                                  onValueChange={(value) => {
-                                    if (value === '__add_new__') {
-                                      handleAddNewPlayerClick(index, 'team1Player1')
-                                    } else {
-                                      field.onChange(value)
-                                    }
-                                  }}
+                                <SelectInput
+                                  name={`games.${index}.team1Player1`}
+                                  placeholder={t('addResults.selectPlayer')}
                                   value={field.value}
-                                >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select player" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {players.map((player) => (
-                                      <SelectItem key={player.id} value={player.id}>
-                                        {player.name}
-                                      </SelectItem>
-                                    ))}
-                                    <SelectItem
-                                      value="__add_new__"
-                                      className="text-primary font-medium"
-                                    >
-                                      <Plus className="h-4 w-4 inline mr-2" />
-                                      {t('addResults.addNewPlayer')}
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                  onChange={field.onChange}
+                                  options={players.map((player) => ({ value: player.id, label: player.name }))}
+                                  addNewOption={{
+                                    label: t('addResults.addNewPlayer'),
+                                    onClick: () => handleAddNewPlayerClick(index, 'team1Player1'),
+                                  }}
+                                />
                               )}
                             />
                           </div>
@@ -620,34 +578,17 @@ export default function AddResultsPage() {
                               control={control}
                               rules={{ required: true }}
                               render={({ field }) => (
-                                <Select
-                                  onValueChange={(value) => {
-                                    if (value === '__add_new__') {
-                                      handleAddNewPlayerClick(index, 'team1Player2')
-                                    } else {
-                                      field.onChange(value)
-                                    }
-                                  }}
+                                <SelectInput
+                                  name={`games.${index}.team1Player2`}
+                                  placeholder={t('addResults.selectPlayer')}
                                   value={field.value}
-                                >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select player" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {players.map((player) => (
-                                      <SelectItem key={player.id} value={player.id}>
-                                        {player.name}
-                                      </SelectItem>
-                                    ))}
-                                    <SelectItem
-                                      value="__add_new__"
-                                      className="text-primary font-medium"
-                                    >
-                                      <Plus className="h-4 w-4 inline mr-2" />
-                                      {t('addResults.addNewPlayer')}
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                  onChange={field.onChange}
+                                  options={players.map((player) => ({ value: player.id, label: player.name }))}
+                                  addNewOption={{
+                                    label: t('addResults.addNewPlayer'),
+                                    onClick: () => handleAddNewPlayerClick(index, 'team1Player2'),
+                                  }}
+                                />
                               )}
                             />
                           </div>
@@ -678,34 +619,17 @@ export default function AddResultsPage() {
                               control={control}
                               rules={{ required: true }}
                               render={({ field }) => (
-                                <Select
-                                  onValueChange={(value) => {
-                                    if (value === '__add_new__') {
-                                      handleAddNewPlayerClick(index, 'team2Player1')
-                                    } else {
-                                      field.onChange(value)
-                                    }
-                                  }}
+                                <SelectInput
+                                  name={`games.${index}.team2Player1`}
+                                  placeholder={t('addResults.selectPlayer')}
                                   value={field.value}
-                                >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select player" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {players.map((player) => (
-                                      <SelectItem key={player.id} value={player.id}>
-                                        {player.name}
-                                      </SelectItem>
-                                    ))}
-                                    <SelectItem
-                                      value="__add_new__"
-                                      className="text-primary font-medium"
-                                    >
-                                      <Plus className="h-4 w-4 inline mr-2" />
-                                      {t('addResults.addNewPlayer')}
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                  onChange={field.onChange}
+                                  options={players.map((player) => ({ value: player.id, label: player.name }))}
+                                  addNewOption={{
+                                    label: t('addResults.addNewPlayer'),
+                                    onClick: () => handleAddNewPlayerClick(index, 'team2Player1'),
+                                  }}
+                                />
                               )}
                             />
                           </div>
@@ -716,34 +640,17 @@ export default function AddResultsPage() {
                               control={control}
                               rules={{ required: true }}
                               render={({ field }) => (
-                                <Select
-                                  onValueChange={(value) => {
-                                    if (value === '__add_new__') {
-                                      handleAddNewPlayerClick(index, 'team2Player2')
-                                    } else {
-                                      field.onChange(value)
-                                    }
-                                  }}
+                                <SelectInput
+                                  name={`games.${index}.team2Player2`}
+                                  placeholder={t('addResults.selectPlayer')}
                                   value={field.value}
-                                >
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select player" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {players.map((player) => (
-                                      <SelectItem key={player.id} value={player.id}>
-                                        {player.name}
-                                      </SelectItem>
-                                    ))}
-                                    <SelectItem
-                                      value="__add_new__"
-                                      className="text-primary font-medium"
-                                    >
-                                      <Plus className="h-4 w-4 inline mr-2" />
-                                      {t('addResults.addNewPlayer')}
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                  onChange={field.onChange}
+                                  options={players.map((player) => ({ value: player.id, label: player.name }))}
+                                  addNewOption={{
+                                    label: t('addResults.addNewPlayer'),
+                                    onClick: () => handleAddNewPlayerClick(index, 'team2Player2'),
+                                  }}
+                                />
                               )}
                             />
                           </div>
@@ -861,15 +768,16 @@ export default function AddResultsPage() {
                   control={controlPlayer}
                   rules={{ required: t('addResults.addPlayerModal.genderRequired') }}
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('addResults.addPlayerModal.genderPlaceholder')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">{t('addResults.addPlayerModal.male')}</SelectItem>
-                        <SelectItem value="female">{t('addResults.addPlayerModal.female')}</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <SelectInput
+                      name="gender"
+                      placeholder={t('addResults.addPlayerModal.genderPlaceholder')}
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      options={[
+                        { value: 'male', label: t('addResults.addPlayerModal.male') },
+                        { value: 'female', label: t('addResults.addPlayerModal.female') },
+                      ]}
+                    />
                   )}
                 />
                 {playerErrors.gender && (

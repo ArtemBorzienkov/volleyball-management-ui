@@ -245,6 +245,7 @@ export interface OngoingOpenEvent {
   maxTeams: number | null;
   teamsCount: number;
   createdByUserId: string | null;
+  createdBy: OngoingEventCreator | null;
   teams: OngoingTeam[];
   visibility: string;
   allowSoloRegistration: boolean;

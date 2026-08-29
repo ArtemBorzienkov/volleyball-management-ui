@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { SelectInput } from '@/components/ui/select-input'
 import {
   players,
   games,
@@ -388,39 +382,21 @@ export default function AnalyticsPage() {
               {/* Player Selectors */}
               <div className="flex flex-col sm:flex-row gap-4 items-center">
                 <div className="w-full sm:w-48">
-                  <Select
+                  <SelectInput
+                    name="selectedPlayer1"
                     value={selectedPlayer1}
-                    onValueChange={setSelectedPlayer1}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {players.map((player) => (
-                        <SelectItem key={player.id} value={player.id}>
-                          {player.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={setSelectedPlayer1}
+                    options={players.map((player) => ({ value: player.id, label: player.name }))}
+                  />
                 </div>
                 <span className="text-muted-foreground font-medium">vs</span>
                 <div className="w-full sm:w-48">
-                  <Select
+                  <SelectInput
+                    name="selectedPlayer2"
                     value={selectedPlayer2}
-                    onValueChange={setSelectedPlayer2}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {players.map((player) => (
-                        <SelectItem key={player.id} value={player.id}>
-                          {player.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={setSelectedPlayer2}
+                    options={players.map((player) => ({ value: player.id, label: player.name }))}
+                  />
                 </div>
               </div>
 

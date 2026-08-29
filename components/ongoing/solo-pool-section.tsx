@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NewPlayerInlineForm } from "@/components/ongoing/new-player-inline";
+import { SelectInput } from "@/components/ui/select-input";
+import { useToast } from "@/components/ui/toast";
 import API from "@/lib/api";
 import type { OngoingEvent, OngoingSoloPairPreview, Player } from "@/lib/types";
 
@@ -30,6 +32,7 @@ function toDraft(preview: OngoingSoloPairPreview): DraftPair[] {
 
 export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [draft, setDraft] = useState<DraftPair[]>([]);
@@ -79,9 +82,18 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
       return response.json();
     },
     onSuccess: () => {
+      const leftoverCount = leftoverIds.length;
       setIsPreviewOpen(false);
       setDraft([]);
       invalidate();
+      toast(
+        leftoverCount
+          ? { title: t("toast.teamsFormed"), description: t("toast.teamsFormedLeftover"), variant: "warning" }
+          : { title: t("toast.teamsFormed"), variant: "success" },
+      );
+    },
+    onError: (error: Error) => {
+      toast({ title: t("toast.teamsFormFailed"), description: error.message, variant: "error" });
     },
   });
 
@@ -104,6 +116,10 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
     onSuccess: () => {
       setNewSoloPlayerId("");
       invalidate();
+      toast({ title: t("toast.playerAdded"), variant: "success" });
+    },
+    onError: (error: Error) => {
+      toast({ title: t("toast.registrationFailed"), description: error.message, variant: "error" });
     },
   });
 
@@ -115,7 +131,13 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
         throw new Error(error.message || `HTTP error! status: ${response.status}`);
       }
     },
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      toast({ title: t("toast.playerRemoved"), variant: "success" });
+    },
+    onError: (error: Error) => {
+      toast({ title: t("toast.cancellationFailed"), description: error.message, variant: "error" });
+    },
   });
 
   // One entry per player per tournament, so anyone already on the roster or in the pool is out.
@@ -145,19 +167,15 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
     const otherId = slot === "player1Id" ? pair.player2Id : pair.player1Id;
 
     return (
-      <select
-        className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+      <SelectInput
+        className="flex-1"
+        name={`solo-pair-${index}-${slot}`}
         value={pair[slot]}
-        onChange={(changeEvent) => setSlot(index, slot, changeEvent.target.value)}
-      >
-        {event.soloPlayers
+        onChange={(playerId) => setSlot(index, slot, playerId)}
+        options={event.soloPlayers
           .filter((solo) => solo.player.id !== otherId)
-          .map((solo) => (
-            <option key={solo.id} value={solo.player.id}>
-              {solo.player.name} ({solo.rating})
-            </option>
-          ))}
-      </select>
+          .map((solo) => ({ value: solo.player.id, label: solo.player.name, subtitle: String(solo.rating) }))}
+      />
     );
   };
 
@@ -205,18 +223,14 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
                 {t("ongoing.config.solo.addPlayerHint")}
               </p>
               <div className="flex items-center gap-2">
-                <select
-                  className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+                <SelectInput
+                  className="flex-1"
+                  name="solo-add-player"
+                  placeholder={t("ongoing.config.selectPlayer")}
                   value={newSoloPlayerId}
-                  onChange={(changeEvent) => setNewSoloPlayerId(changeEvent.target.value)}
-                >
-                  <option value="">{t("ongoing.config.selectPlayer")}</option>
-                  {eligiblePlayers.map((player) => (
-                    <option key={player.id} value={player.id}>
-                      {player.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setNewSoloPlayerId}
+                  options={eligiblePlayers.map((player) => ({ value: player.id, label: player.name }))}
+                />
                 <Button
                   type="button"
                   variant="outline"

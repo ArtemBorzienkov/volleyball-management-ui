@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import API from "@/lib/api";
+import { SelectInput } from "@/components/ui/select-input";
+import { NewPlayerInlineForm } from "@/components/ongoing/new-player-inline";
 import type { Player } from "@/lib/types";
 
 export interface TeamDraft {
@@ -25,14 +24,11 @@ const slotKey = (index: number, field: keyof TeamDraft): string => `${index}:${f
 
 export function TeamRosterEditor({ teams, players, onChange, disabled }: TeamRosterEditorProps) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
 
   // Players created inline this session, merged in below so the slot that triggered creation
   // can show and select them immediately, without waiting on the ["players"] refetch.
   const [createdPlayers, setCreatedPlayers] = useState<Player[]>([]);
   const [newPlayerSlot, setNewPlayerSlot] = useState<string | null>(null);
-  const [newPlayerName, setNewPlayerName] = useState("");
-  const [newPlayerGender, setNewPlayerGender] = useState("");
 
   const knownPlayerIds = new Set(players.map((player) => player.id));
   const allPlayers = [...players, ...createdPlayers.filter((player) => !knownPlayerIds.has(player.id))];
@@ -48,116 +44,20 @@ export function TeamRosterEditor({ teams, players, onChange, disabled }: TeamRos
 
   const playerName = (id: string) => allPlayers.find((player) => player.id === id)?.name ?? "";
 
-  const clearNewPlayerRow = () => {
-    setNewPlayerSlot(null);
-    setNewPlayerName("");
-    setNewPlayerGender("");
-    createPlayerMutation.reset();
-  };
-
-  const createPlayerMutation = useMutation({
-    mutationFn: async (): Promise<Player> => {
-      const trimmedName = newPlayerName.trim();
-      const response = await fetch(API.CREATE_PLAYER, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: trimmedName,
-          gender: newPlayerGender,
-          active: true,
-        }),
-      });
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: "Request failed" }));
-        throw new Error(error.message || `HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    },
-    onSuccess: (newPlayer) => {
-      // The slot that triggered creation gets the new player selected immediately.
-      const [indexPart, field] = (newPlayerSlot ?? "").split(":") as [string, keyof TeamDraft];
-      const index = Number(indexPart);
-      if (newPlayerSlot && !Number.isNaN(index) && teams[index]) {
-        updateTeam(index, field, newPlayer.id);
-      }
-      setCreatedPlayers((previous) => [...previous, newPlayer]);
-      queryClient.invalidateQueries({ queryKey: ["players"] });
-      clearNewPlayerRow();
-    },
-  });
-
-  const openNewPlayerRow = (slot: string) => {
-    setNewPlayerSlot(slot);
-    setNewPlayerName("");
-    setNewPlayerGender("");
-    createPlayerMutation.reset();
-  };
-
-  const renderNewPlayerRow = () => (
-    <div className="flex flex-col gap-2 rounded-md border border-input p-3">
-      <Input
-        autoFocus
-        value={newPlayerName}
-        onChange={(changeEvent) => setNewPlayerName(changeEvent.target.value)}
-        placeholder={t("addResults.addPlayerModal.namePlaceholder")}
-      />
-      <select
-        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-        value={newPlayerGender}
-        onChange={(changeEvent) => setNewPlayerGender(changeEvent.target.value)}
-      >
-        <option value="">{t("addResults.addPlayerModal.genderPlaceholder")}</option>
-        <option value="male">{t("addResults.addPlayerModal.male")}</option>
-        <option value="female">{t("addResults.addPlayerModal.female")}</option>
-      </select>
-
-      {createPlayerMutation.isError && (
-        <p className="text-sm text-destructive">{(createPlayerMutation.error as Error).message}</p>
-      )}
-
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={clearNewPlayerRow}
-          disabled={createPlayerMutation.isPending}
-        >
-          <span suppressHydrationWarning>{t("addResults.addPlayerModal.cancel")}</span>
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          onClick={() => createPlayerMutation.mutate()}
-          disabled={!newPlayerName.trim() || !newPlayerGender || createPlayerMutation.isPending}
-        >
-          <span suppressHydrationWarning>
-            {createPlayerMutation.isPending
-              ? t("addResults.addPlayerModal.creating")
-              : t("addResults.addPlayerModal.create")}
-          </span>
-        </Button>
-      </div>
-    </div>
-  );
+  const openNewPlayerRow = (slot: string) => setNewPlayerSlot(slot);
 
   const renderPlayerSelect = (index: number, field: keyof TeamDraft) => {
     const selected = teams[index][field];
     return (
-      <select
-        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+      <SelectInput
+        name={slotKey(index, field)}
+        placeholder={t("ongoing.config.selectPlayer")}
         value={selected}
-        onChange={(changeEvent) => updateTeam(index, field, changeEvent.target.value)}
-      >
-        <option value="">{t("ongoing.config.selectPlayer")}</option>
-        {allPlayers
+        onChange={(playerId) => updateTeam(index, field, playerId)}
+        options={allPlayers
           .filter((player) => player.id === selected || !takenPlayerIds.has(player.id))
-          .map((player) => (
-            <option key={player.id} value={player.id}>
-              {player.name}
-            </option>
-          ))}
-      </select>
+          .map((player) => ({ value: player.id, label: player.name }))}
+      />
     );
   };
 
@@ -178,7 +78,16 @@ export function TeamRosterEditor({ teams, players, onChange, disabled }: TeamRos
             <Plus className="size-4" />
           </Button>
         </div>
-        {newPlayerSlot === key && renderNewPlayerRow()}
+        {newPlayerSlot === key && (
+          <NewPlayerInlineForm
+            onCreated={(player) => {
+              updateTeam(index, field, player.id);
+              setCreatedPlayers((previous) => [...previous, player]);
+              setNewPlayerSlot(null);
+            }}
+            onCancel={() => setNewPlayerSlot(null)}
+          />
+        )}
       </div>
     );
   };

@@ -12,7 +12,7 @@ export type OlderOngoingEventListItem = Older<
 >
 export type OlderOngoingOpenEvent = Older<
   OngoingOpenEvent,
-  'soloPlayers' | 'visibility' | 'allowSoloRegistration' | 'createdByUserId'
+  'soloPlayers' | 'visibility' | 'allowSoloRegistration' | 'createdByUserId' | 'createdBy'
 >
 export type OlderOngoingEvent = Omit<OngoingEvent, 'soloPlayers' | 'config'> &
   Partial<Pick<OngoingEvent, 'soloPlayers'>> & {
@@ -36,6 +36,7 @@ export function normalizeOngoingOpenEvent(raw: OlderOngoingOpenEvent): OngoingOp
     visibility: raw.visibility ?? 'public',
     allowSoloRegistration: raw.allowSoloRegistration ?? false,
     createdByUserId: raw.createdByUserId ?? null,
+    createdBy: raw.createdBy ?? null,
     soloPlayers: raw.soloPlayers ?? [],
   }
 }

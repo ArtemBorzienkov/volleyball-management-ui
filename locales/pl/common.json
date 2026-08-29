@@ -155,7 +155,8 @@
     "delete": "Usuń",
     "edit": "Edytuj",
     "view": "Zobacz",
-    "close": "Zamknij"
+    "close": "Zamknij",
+    "noMatches": "Brak wyników"
   },
   "ongoing": {
     "title": "Trwające turnieje",
@@ -351,5 +352,21 @@
     "cancelClosed": "Rejestracji nie można już anulować",
     "noSpots": "Brak miejsc",
     "noSpotsHint": "Turniej jest pełny — wszystkie miejsca zajęte"
+  },
+  "toast": {
+    "tournamentCreated": "Turniej utworzony",
+    "tournamentCreateFailed": "Nie udało się utworzyć turnieju",
+    "teamRegistered": "Drużyna zapisana",
+    "soloRegistered": "Zapisano Cię bez partnera",
+    "registrationFailed": "Nie udało się zapisać",
+    "registrationCancelled": "Rejestracja anulowana",
+    "cancellationFailed": "Nie udało się anulować rejestracji",
+    "scheduleGenerated": "Terminarz wygenerowany",
+    "scheduleFailed": "Nie udało się wygenerować terminarza",
+    "teamsFormed": "Drużyny utworzone z puli",
+    "teamsFormFailed": "Nie udało się utworzyć drużyn",
+    "teamsFormedLeftover": "Jeden gracz został w puli bez partnera",
+    "playerAdded": "Gracz dodany",
+    "playerRemoved": "Gracz usunięty"
   }
 }

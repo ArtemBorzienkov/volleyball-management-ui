@@ -155,7 +155,8 @@
     "delete": "Видалити",
     "edit": "Редагувати",
     "view": "Переглянути",
-    "close": "Закрити"
+    "close": "Закрити",
+    "noMatches": "Нічого не знайдено"
   },
   "ongoing": {
     "title": "Поточні турніри",
@@ -351,5 +352,21 @@
     "cancelClosed": "Реєстрацію вже не можна скасувати",
     "noSpots": "Немає місць",
     "noSpotsHint": "Турнір заповнений — усі місця зайняті"
+  },
+  "toast": {
+    "tournamentCreated": "Турнір створено",
+    "tournamentCreateFailed": "Не вдалося створити турнір",
+    "teamRegistered": "Команду зареєстровано",
+    "soloRegistered": "Тебе зареєстровано без пари",
+    "registrationFailed": "Не вдалося зареєструватися",
+    "registrationCancelled": "Реєстрацію скасовано",
+    "cancellationFailed": "Не вдалося скасувати реєстрацію",
+    "scheduleGenerated": "Розклад згенеровано",
+    "scheduleFailed": "Не вдалося згенерувати розклад",
+    "teamsFormed": "Команди сформовано з пулу",
+    "teamsFormFailed": "Не вдалося сформувати команди",
+    "teamsFormedLeftover": "Один гравець залишився в пулі без пари",
+    "playerAdded": "Гравця додано",
+    "playerRemoved": "Гравця прибрано"
   }
 }

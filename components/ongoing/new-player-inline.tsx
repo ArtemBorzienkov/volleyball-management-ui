@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectInput } from "@/components/ui/select-input";
 import API from "@/lib/api";
 import type { Player } from "@/lib/types";
 
@@ -50,15 +51,16 @@ export function NewPlayerInlineForm({ onCreated, onCancel }: NewPlayerInlineForm
         onChange={(changeEvent) => setName(changeEvent.target.value)}
         placeholder={t("addResults.addPlayerModal.namePlaceholder")}
       />
-      <select
-        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+      <SelectInput
+        name="new-player-gender"
+        placeholder={t("addResults.addPlayerModal.genderPlaceholder")}
         value={gender}
-        onChange={(changeEvent) => setGender(changeEvent.target.value)}
-      >
-        <option value="">{t("addResults.addPlayerModal.genderPlaceholder")}</option>
-        <option value="male">{t("addResults.addPlayerModal.male")}</option>
-        <option value="female">{t("addResults.addPlayerModal.female")}</option>
-      </select>
+        onChange={setGender}
+        options={[
+          { value: "male", label: t("addResults.addPlayerModal.male") },
+          { value: "female", label: t("addResults.addPlayerModal.female") },
+        ]}
+      />
 
       {createPlayerMutation.isError && (
         <p className="text-sm text-destructive">{(createPlayerMutation.error as Error).message}</p>

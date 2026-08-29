@@ -18,6 +18,7 @@ import { isPlayed } from "@/lib/ongoing-standings";
 import type { OngoingEvent, Player } from "@/lib/types";
 import { TeamRosterEditor, type TeamDraft } from "@/components/ongoing/team-roster-editor";
 import { SoloPoolSection } from "@/components/ongoing/solo-pool-section";
+import { useToast } from "@/components/ui/toast";
 
 interface OngoingRosterSectionProps {
   event: OngoingEvent;
@@ -50,6 +51,7 @@ async function putJson(url: string, body: unknown): Promise<unknown> {
 
 export function OngoingRosterSection({ event, players }: OngoingRosterSectionProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [teams, setTeams] = useState<TeamDraft[]>(
     event.teams.map((team) => ({ player1Id: team.player1.id, player2Id: team.player2.id })),
@@ -103,6 +105,10 @@ export function OngoingRosterSection({ event, players }: OngoingRosterSectionPro
     onSuccess: () => {
       setIsConfirmOpen(false);
       invalidate();
+      toast({ title: t("toast.scheduleGenerated"), variant: "success" });
+    },
+    onError: (error: Error) => {
+      toast({ title: t("toast.scheduleFailed"), description: error.message, variant: "error" });
     },
   });
 

@@ -155,7 +155,8 @@
     "delete": "Выдаліць",
     "edit": "Рэдагаваць",
     "view": "Праглядзець",
-    "close": "Закрыць"
+    "close": "Закрыць",
+    "noMatches": "Нічога не знойдзена"
   },
   "ongoing": {
     "title": "Бягучыя турніры",
@@ -351,5 +352,21 @@
     "cancelClosed": "Рэгістрацыю ўжо нельга скасаваць",
     "noSpots": "Няма месцаў",
     "noSpotsHint": "Турнір запоўнены — усе месцы занятыя"
+  },
+  "toast": {
+    "tournamentCreated": "Турнір створаны",
+    "tournamentCreateFailed": "Не ўдалося стварыць турнір",
+    "teamRegistered": "Каманда зарэгістравана",
+    "soloRegistered": "Цябе зарэгістравана без пары",
+    "registrationFailed": "Не ўдалося зарэгістравацца",
+    "registrationCancelled": "Рэгістрацыя скасавана",
+    "cancellationFailed": "Не ўдалося скасаваць рэгістрацыю",
+    "scheduleGenerated": "Расклад згенераваны",
+    "scheduleFailed": "Не ўдалося згенераваць расклад",
+    "teamsFormed": "Каманды сфармаваны з пула",
+    "teamsFormFailed": "Не ўдалося сфармаваць каманды",
+    "teamsFormedLeftover": "Адзін гулец застаўся ў пуле без пары",
+    "playerAdded": "Гулец дададзены",
+    "playerRemoved": "Гулец прыбраны"
   }
 }

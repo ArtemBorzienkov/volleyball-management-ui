@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { I18nProvider } from '@/components/providers/i18n-provider'
 import { AuthProvider } from '@/components/providers/auth-provider'
+import { ToastProvider } from '@/components/ui/toast'
 import { LayoutWrapper } from '@/components/layout-wrapper'
 import './globals.css'
 
@@ -46,7 +47,7 @@ export default function RootLayout({
             <LayoutWrapper>
               <QueryProvider>
                 <AuthProvider>
-                  {children}
+                  <ToastProvider>{children}</ToastProvider>
                 </AuthProvider>
               </QueryProvider>
             </LayoutWrapper>

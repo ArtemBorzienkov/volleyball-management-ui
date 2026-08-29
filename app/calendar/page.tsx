@@ -8,6 +8,7 @@ import { Plus } from "lucide-react";
 import { Navigation } from "@/components/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RegisterTeamDialog } from "@/components/ongoing/register-team-dialog";
 import { CreateTournamentForm } from "@/components/ongoing/create-tournament-form";
@@ -98,9 +99,20 @@ export default function CalendarPage() {
               <CardContent className="flex flex-col gap-3 p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
-                    <Link href={`/ongoing/${event.id}`} className="min-w-0">
-                      <p className="truncate font-medium hover:underline">{event.name}</p>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link href={`/ongoing/${event.id}`} className="min-w-0">
+                        <p className="truncate font-medium hover:underline">{event.name}</p>
+                      </Link>
+                      <Badge
+                        variant="outline"
+                        title={
+                          event.visibility === "private" ? t("calendar.privateHint") : t("ongoing.publicHint")
+                        }
+                        suppressHydrationWarning
+                      >
+                        {event.visibility === "private" ? t("ongoing.privateBadge") : t("ongoing.publicBadge")}
+                      </Badge>
+                    </div>
                     <p className="mt-1 text-sm text-muted-foreground">{eventMeta}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       <span suppressHydrationWarning>{t("calendar.teams")}</span>: {event.teamsCount}/
@@ -114,6 +126,11 @@ export default function CalendarPage() {
                         </>
                       )}
                     </p>
+                    {event.createdBy && (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        <span suppressHydrationWarning>{t("ongoing.createdBy")}</span>: {event.createdBy.name}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <RegisterTeamDialog event={event} players={players} />
@@ -122,15 +139,20 @@ export default function CalendarPage() {
                 </div>
 
                 {event.teams.length > 0 && (
-                  <ol className="flex flex-col gap-1 text-sm text-muted-foreground">
-                    {[...event.teams]
-                      .sort((a, b) => b.rating - a.rating)
-                      .map((team, index) => (
-                        <li key={team.id}>
-                          {index + 1}. {teamName(team)} <span className="text-foreground">{team.rating}</span>
-                        </li>
-                      ))}
-                  </ol>
+                  <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                    <span className="text-xs font-medium" suppressHydrationWarning>
+                      {t("calendar.teams")}
+                    </span>
+                    <ol className="flex flex-col gap-1">
+                      {[...event.teams]
+                        .sort((a, b) => b.rating - a.rating)
+                        .map((team, index) => (
+                          <li key={team.id}>
+                            {index + 1}. {teamName(team)} <span className="text-foreground">{team.rating}</span>
+                          </li>
+                        ))}
+                    </ol>
+                  </div>
                 )}
 
                 {event.soloPlayers.length > 0 && (
