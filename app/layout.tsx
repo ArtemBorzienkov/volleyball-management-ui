@@ -1,12 +1,14 @@
 import React from "react"
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
+import { AnalyticsGate } from '@/components/analytics-gate'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { I18nProvider } from '@/components/providers/i18n-provider'
 import { AuthProvider } from '@/components/providers/auth-provider'
 import { ToastProvider } from '@/components/ui/toast'
 import { LayoutWrapper } from '@/components/layout-wrapper'
+import { CookieConsentProvider } from '@/components/providers/cookie-consent-provider'
+import { CookieConsentBanner } from '@/components/cookie-consent-banner'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -43,6 +45,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
+        {/* Outermost so nothing below it — analytics included — can run before a choice is on record. */}
+        <CookieConsentProvider>
           <I18nProvider>
             <LayoutWrapper>
               <QueryProvider>
@@ -51,8 +55,10 @@ export default function RootLayout({
                 </AuthProvider>
               </QueryProvider>
             </LayoutWrapper>
+            <CookieConsentBanner />
           </I18nProvider>
-        <Analytics />
+          <AnalyticsGate />
+        </CookieConsentProvider>
       </body>
     </html>
   )
