@@ -1,7 +1,8 @@
 import type { OngoingGame, OngoingStandingsRow, OngoingTeam } from "@/lib/types";
+import { playerDisplayName } from "@/lib/player-name";
 
 export function teamName(team: OngoingTeam): string {
-  return `${team.player1.name} & ${team.player2.name}`;
+  return `${playerDisplayName(team.player1)} & ${playerDisplayName(team.player2)}`;
 }
 
 export function isPlayed(game: OngoingGame): boolean {

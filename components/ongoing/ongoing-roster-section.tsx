@@ -19,6 +19,8 @@ import type { OngoingEvent, Player } from "@/lib/types";
 import { TeamRosterEditor, type TeamDraft } from "@/components/ongoing/team-roster-editor";
 import { SoloPoolSection } from "@/components/ongoing/solo-pool-section";
 import { useToast } from "@/components/ui/toast";
+import { playerDisplayName } from "@/lib/player-name";
+import { ROTATION_GROUP_SIZE } from "@/lib/ongoing-permissions";
 
 interface OngoingRosterSectionProps {
   event: OngoingEvent;
@@ -115,18 +117,26 @@ export function OngoingRosterSection({ event, players }: OngoingRosterSectionPro
   const hasIncompleteTeam = teams.some((team) => !team.player1Id || !team.player2Id);
 
   // The schedule is built from the persisted roster, so both gates below read the server copy, never the draft.
-  const hasEnoughTeams = event.teams.length >= 2;
+  // fullRotation registers players and has no teams at all, so a team count would keep its
+  // generate button disabled forever. Its groups have to fill exactly — see rotation.ts.
+  const isFullRotation = event.config.scheme === "fullRotation";
+  const rotationSeats = event.config.groupCount * ROTATION_GROUP_SIZE;
+  const hasEnoughTeams = isFullRotation
+    ? event.soloPlayers.length === rotationSeats
+    : event.teams.length >= 2;
   const hasUnsavedTeams =
-    teams.length !== event.teams.length ||
+    !isFullRotation &&
+    (teams.length !== event.teams.length ||
     teams.some(
       (team, index) =>
         team.player1Id !== event.teams[index].player1.id || team.player2Id !== event.teams[index].player2.id,
-    );
+    ));
 
   return (
     <>
       <SoloPoolSection event={event} players={players} disabled={hasStarted} />
 
+      {!isFullRotation && (
       <Card>
         <CardContent className="flex flex-col gap-4 p-4">
           <p className="font-medium" suppressHydrationWarning>
@@ -150,7 +160,7 @@ export function OngoingRosterSection({ event, players }: OngoingRosterSectionPro
               {event.teams.map((team) => (
                 <div key={team.id} className="flex items-center justify-between gap-2 text-sm">
                   <span>
-                    {team.player1.name} / {team.player2.name}
+                    {playerDisplayName(team.player1)} / {playerDisplayName(team.player2)}
                   </span>
                   <Button
                     variant="destructive"
@@ -194,12 +204,18 @@ export function OngoingRosterSection({ event, players }: OngoingRosterSectionPro
           )}
         </CardContent>
       </Card>
+      )}
 
       <Card>
         <CardContent className="flex flex-col gap-3 p-4">
           {!hasEnoughTeams && (
             <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-              {t("ongoing.config.needTeams")}
+              {isFullRotation
+                ? t("ongoing.config.needRotationPlayers", {
+                    seats: rotationSeats,
+                    registered: event.soloPlayers.length,
+                  })
+                : t("ongoing.config.needTeams")}
             </p>
           )}
           {hasEnoughTeams && hasUnsavedTeams && (

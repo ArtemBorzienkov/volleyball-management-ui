@@ -19,6 +19,7 @@ import { eventMetaLine } from "@/lib/ongoing-date";
 import { normalizeOngoingOpenEvent, type OlderOngoingOpenEvent } from "@/lib/ongoing-normalize";
 import API from "@/lib/api";
 import type { OngoingOpenEvent, Player } from "@/lib/types";
+import { playerDisplayName } from "@/lib/player-name";
 
 async function fetchOpenEvents(): Promise<OngoingOpenEvent[]> {
   const response = await fetch(API.GET_OPEN_ONGOING_EVENTS);
@@ -112,11 +113,27 @@ export default function CalendarPage() {
                       >
                         {event.visibility === "private" ? t("ongoing.privateBadge") : t("ongoing.publicBadge")}
                       </Badge>
+                      {event.scheme === "fullRotation" && (
+                        <Badge variant="secondary" title={t("calendar.rotationFormat")} suppressHydrationWarning>
+                          {t("calendar.rotationBadge")}
+                        </Badge>
+                      )}
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{eventMeta}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      <span suppressHydrationWarning>{t("calendar.teams")}</span>: {event.teamsCount}/
-                      {event.maxTeams ?? t("calendar.unlimited")}
+                      {/* fullRotation counts players against the seats its groups define; every other
+                          scheme counts pairs against maxTeams. */}
+                      {event.scheme === "fullRotation" ? (
+                        <>
+                          <span suppressHydrationWarning>{t("calendar.players")}</span>:{" "}
+                          {event.soloPlayers.length}/{event.groupCount * 4}
+                        </>
+                      ) : (
+                        <>
+                          <span suppressHydrationWarning>{t("calendar.teams")}</span>: {event.teamsCount}/
+                          {event.maxTeams ?? t("calendar.unlimited")}
+                        </>
+                      )}
                       {isOngoingEventFull(event) && (
                         <>
                           {" · "}
@@ -126,9 +143,14 @@ export default function CalendarPage() {
                         </>
                       )}
                     </p>
+                    {event.scheme === "fullRotation" && (
+                      <p className="mt-1 text-sm text-muted-foreground" suppressHydrationWarning>
+                        {t("calendar.rotationFormat")}
+                      </p>
+                    )}
                     {event.createdBy && (
                       <p className="mt-1 text-sm text-muted-foreground">
-                        <span suppressHydrationWarning>{t("ongoing.createdBy")}</span>: {event.createdBy.name}
+                        <span suppressHydrationWarning>{t("ongoing.createdBy")}</span>: {playerDisplayName(event.createdBy)}
                       </p>
                     )}
                   </div>
@@ -158,14 +180,16 @@ export default function CalendarPage() {
                 {event.soloPlayers.length > 0 && (
                   <div className="flex flex-col gap-1 text-sm text-muted-foreground">
                     <span className="text-xs font-medium" suppressHydrationWarning>
-                      {t("calendar.soloPool")}
+                      {/* In a rotation tournament everyone enters alone, so the pool IS the entry
+                          list — "without a partner" would describe nothing. */}
+                      {event.scheme === "fullRotation" ? t("calendar.participants") : t("calendar.soloPool")}
                     </span>
                     {/* Copied before sorting: the array belongs to the query cache. */}
                     {[...event.soloPlayers]
                       .sort((a, b) => b.rating - a.rating)
                       .map((solo) => (
                         <span key={solo.id}>
-                          {solo.player.name} <span className="text-foreground">{solo.rating}</span>
+                          {playerDisplayName(solo.player)} <span className="text-foreground">{solo.rating}</span>
                         </span>
                       ))}
                   </div>

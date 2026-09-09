@@ -27,6 +27,7 @@ import {
 import { Trophy, TrendingUp, Target, Medal, ArrowUpDown } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { playerDisplayName, playerInitials } from '@/lib/player-name'
 
 type RankingCategory =
   | 'wins'
@@ -34,13 +35,6 @@ type RankingCategory =
   | 'setsWon'
   | 'tournaments'
   | 'pointsDiff'
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-}
 
 export default function RankingsPage() {
   const [activeCategory, setActiveCategory] = useState<RankingCategory>('wins')
@@ -153,11 +147,11 @@ export default function RankingsPage() {
                             : 'bg-primary/10 text-primary'
                         )}
                       >
-                        {getInitials(player.name)}
+                        {playerInitials(player)}
                       </AvatarFallback>
                     </Avatar>
                     <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
-                      {player.name}
+                      {playerDisplayName(player)}
                     </h3>
                     <p className="text-2xl font-bold text-primary mt-2">
                       {getStatValue(player)}
@@ -266,11 +260,11 @@ export default function RankingsPage() {
                         >
                           <Avatar className="h-10 w-10">
                             <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                              {getInitials(player.name)}
+                              {playerInitials(player)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">{player.name}</p>
+                            <p className="font-medium">{playerDisplayName(player)}</p>
                             <div className="flex items-center gap-2">
                               {!player.active && (
                                 <Badge variant="secondary" className="text-xs">

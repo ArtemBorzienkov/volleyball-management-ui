@@ -36,6 +36,8 @@ const API = {
   SET_ONGOING_TEAMS: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/teams`,
   GENERATE_ONGOING_SCHEDULE: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/schedule`,
   GENERATE_ONGOING_PLAYOFF: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/playoff`,
+  ADVANCE_ONGOING_ROTATION: (id: string) =>
+    `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/rotation/next-round`,
   DELETE_ONGOING_PLAYOFF: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/playoff`,
   FINISH_ONGOING_TOURNAMENT: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/finish`,
   UPDATE_ONGOING_GAME: (gameId: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/games/${gameId}`,

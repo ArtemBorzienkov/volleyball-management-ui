@@ -5,16 +5,10 @@ import { Badge } from '@/components/ui/badge'
 import type { Game } from '@/lib/types'
 import { MapPin, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { playerDisplayName, playerInitials } from '@/lib/player-name'
 
 interface GameCardProps {
   game: Game
-}
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
 }
 
 function TeamDisplay({
@@ -44,14 +38,14 @@ function TeamDisplay({
                   : 'bg-secondary text-secondary-foreground'
               )}
             >
-              {getInitials(player.name)}
+              {playerInitials(player)}
             </AvatarFallback>
           </Avatar>
         ))}
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">
-          {players.map((p) => p.name.split(' ')[0]).join(' & ')}
+          {players.map((p) => playerDisplayName(p).split(' ')[0]).join(' & ')}
         </p>
       </div>
       <div
@@ -113,8 +107,8 @@ export function GameCard({ game }: GameCardProps) {
 }
 
 export function GameCardCompact({ game }: GameCardProps) {
-  const team1Names = `${game.team1.player1.name.split(' ')[0]} & ${game.team1.player2.name.split(' ')[0]}`
-  const team2Names = `${game.team2.player1.name.split(' ')[0]} & ${game.team2.player2.name.split(' ')[0]}`
+  const team1Names = `${playerDisplayName(game.team1.player1).split(' ')[0]} & ${playerDisplayName(game.team1.player2).split(' ')[0]}`
+  const team2Names = `${playerDisplayName(game.team2.player1).split(' ')[0]} & ${playerDisplayName(game.team2.player2).split(' ')[0]}`
 
   return (
     <Link

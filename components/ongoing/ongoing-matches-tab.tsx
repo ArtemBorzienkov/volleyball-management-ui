@@ -5,6 +5,7 @@ import { OngoingMatchCard } from "@/components/ongoing/ongoing-match-card";
 import { useAuth } from "@/components/providers/auth-provider";
 import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
 import { roundLabel } from "@/lib/ongoing-bracket";
+import { teamName } from "@/lib/ongoing-standings";
 import type { OngoingEvent, OngoingGame } from "@/lib/types";
 
 interface OngoingMatchesTabProps {
@@ -59,7 +60,15 @@ export function OngoingMatchesTab({ event }: OngoingMatchesTabProps) {
     const team2 = teamsById.get(game.team2Id);
     if (!team1 || !team2) return null;
 
-    return <OngoingMatchCard key={game.id} game={game} team1={team1} team2={team2} canEdit={canManage} />;
+    return (
+      <OngoingMatchCard
+        key={game.id}
+        game={game}
+        side1Label={teamName(team1)}
+        side2Label={teamName(team2)}
+        canEdit={canManage}
+      />
+    );
   };
 
   return (

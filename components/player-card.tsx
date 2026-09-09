@@ -8,6 +8,7 @@ import type { Player, FullPlayer } from '@/lib/types'
 import { Trophy, TrendingUp, CheckCircle2, XCircle } from 'lucide-react'
 import { GoldMedalIcon, SilverMedalIcon, BronzeMedalIcon } from '@/components/medal-icons'
 import { useTranslation } from 'react-i18next'
+import { playerDisplayName, playerInitials } from "@/lib/player-name";
 
 interface PlayerCardProps {
   player: Player | FullPlayer
@@ -139,14 +140,14 @@ export function PlayerCard({
           <div className="flex items-center gap-4 rounded-lg border border-border px-4 py-3 transition-colors hover:bg-secondary/50">
             <Avatar className="h-10 w-10 flex-shrink-0">
               <AvatarFallback className="bg-[#4F403D] text-[#BDBDBD] font-semibold text-sm">
-                {player.name.charAt(0).toUpperCase()}
+                {playerInitials(player)}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate font-semibold text-foreground">
-                    {player.name}
+                    {playerDisplayName(player)}
                   </h3>
                   {showStats && (
                     <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
@@ -208,12 +209,12 @@ export function PlayerCard({
           {renderRankBadge()}
           <Avatar className="h-10 w-10 flex-shrink-0">
             <AvatarFallback className="bg-[#4F403D] text-[#BDBDBD] font-semibold text-sm">
-              {player.name.charAt(0).toUpperCase()}
+              {playerInitials(player)}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
             <h3 className="truncate font-semibold text-foreground">
-              {player.name}
+              {playerDisplayName(player)}
             </h3>
             {showStats && statsContent && (
               <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
@@ -233,13 +234,13 @@ export function PlayerCard({
           {renderRankBadge()}
           <Avatar className="h-12 w-12 border-2 border-border">
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-              {player.name}
+              {playerDisplayName(player)}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h3 className="truncate font-semibold group-hover:text-primary transition-colors">
-                {player.name}
+                {playerDisplayName(player)}
               </h3>
               {!player.active && (
                 <Badge variant="secondary" className="text-xs">
@@ -278,11 +279,11 @@ export function PlayerCardCompact({ player, subtitle }: PlayerCardCompactProps) 
     >
       <Avatar className="h-8 w-8">
         <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-          {player.name}
+          {playerDisplayName(player)}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{player.name}</p>
+        <p className="truncate text-sm font-medium">{playerDisplayName(player)}</p>
         {subtitle && (
           <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
         )}

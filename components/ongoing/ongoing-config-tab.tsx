@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectInput } from "@/components/ui/select-input";
 import API from "@/lib/api";
+import { cn } from "@/lib/utils";
 import type { OngoingEvent, Player } from "@/lib/types";
 import { OngoingRosterSection, rosterSignature } from "@/components/ongoing/ongoing-roster-section";
 
@@ -42,15 +43,18 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
   const [allowSoloRegistration, setAllowSoloRegistration] = useState(event.config.allowSoloRegistration);
   // Kept as strings so the fields can be blank while typing; seeded once here, never resynced.
   const [groupCount, setGroupCount] = useState(String(event.config.groupCount));
+  const [rotationRounds, setRotationRounds] = useState(String(event.config.rotationRounds));
   const [qualifiersPerGroup, setQualifiersPerGroup] = useState(
     event.config.qualifiersPerGroup != null ? String(event.config.qualifiersPerGroup) : "",
   );
 
   const isGroupsPlayoff = scheme === "groupsPlayoff";
+  const isFullRotation = scheme === "fullRotation";
   // Number("") is 0, which would be an invalid group/qualifier count — fall back to the smallest
   // valid value instead of silently sending 0. The server has the final say on validity either way.
   const groupCountValue = groupCount.trim() === "" ? 2 : Number(groupCount);
   const qualifiersPerGroupValue = qualifiersPerGroup.trim() === "" ? 1 : Number(qualifiersPerGroup);
+  const rotationRoundsValue = rotationRounds.trim() === "" ? 3 : Number(rotationRounds);
 
   const { data: players = [] } = useQuery<Player[]>({
     queryKey: ["players"],
@@ -78,11 +82,12 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
         // Number("") is 0, which the backend would reject or treat as a real cap — blank must stay null.
         maxTeams: maxTeams.trim() === "" ? null : Number(maxTeams),
         visibility,
-        allowSoloRegistration,
+        allowSoloRegistration: isFullRotation ? true : allowSoloRegistration,
         scheme,
         groupCount: groupCountValue,
         // Meaningless for roundRobin — the server forces null anyway, but send null rather than a stale number.
         qualifiersPerGroup: isGroupsPlayoff ? qualifiersPerGroupValue : null,
+        rotationRounds: rotationRoundsValue,
       }),
     onSuccess: invalidate,
   });
@@ -143,18 +148,22 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
           />
 
           <label className="flex items-start gap-2 text-sm">
+            {/* Locked on for fullRotation: players are its entry unit, and the API forces the flag
+                regardless of what is sent. Shown checked and disabled rather than hidden, so the
+                reason solo registration is on stays visible. */}
             <input
               type="checkbox"
-              className="mt-1"
-              checked={allowSoloRegistration}
+              className="mt-1 disabled:cursor-not-allowed"
+              checked={isFullRotation ? true : allowSoloRegistration}
+              disabled={isFullRotation}
               onChange={(changeEvent) => setAllowSoloRegistration(changeEvent.target.checked)}
             />
-            <span className="flex flex-col gap-0.5">
+            <span className={cn("flex flex-col gap-0.5", isFullRotation && "opacity-70")}>
               <span className="font-medium" suppressHydrationWarning>
                 {t("ongoing.create.allowSoloLabel")}
               </span>
               <span className="text-xs text-muted-foreground" suppressHydrationWarning>
-                {t("ongoing.create.allowSoloHint")}
+                {isFullRotation ? t("ongoing.config.allowSoloLockedHint") : t("ongoing.create.allowSoloHint")}
               </span>
             </span>
           </label>
@@ -167,8 +176,40 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
             options={[
               { value: "roundRobin", label: t("ongoing.config.schemeRoundRobin") },
               { value: "groupsPlayoff", label: t("ongoing.config.schemeGroupsPlayoff") },
+              { value: "fullRotation", label: t("ongoing.config.schemeFullRotation") },
             ]}
           />
+
+          {isFullRotation && (
+            <>
+              <SelectInput
+                name="rotationGroupCount"
+                label={t("ongoing.config.rotationGroupCount")}
+                value={groupCount}
+                onChange={setGroupCount}
+                info={t("ongoing.config.rotationGroupCountHint", { players: groupCountValue * 4 })}
+                options={[
+                  { value: "2", label: t("ongoing.config.rotationGroups2") },
+                  { value: "3", label: t("ongoing.config.rotationGroups3") },
+                ]}
+              />
+
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="text-muted-foreground" suppressHydrationWarning>
+                  {t("ongoing.config.rotationRounds")}
+                </span>
+                <Input
+                  type="number"
+                  min={1}
+                  value={rotationRounds}
+                  onChange={(changeEvent) => setRotationRounds(changeEvent.target.value)}
+                />
+                <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+                  {t("ongoing.config.rotationRoundsHint")}
+                </span>
+              </label>
+            </>
+          )}
 
           {isGroupsPlayoff && (
             <>
@@ -224,7 +265,8 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
             allowSoloRegistration === event.config.allowSoloRegistration &&
             scheme === event.config.scheme &&
             groupCountValue === event.config.groupCount &&
-            (isGroupsPlayoff ? qualifiersPerGroupValue : null) === event.config.qualifiersPerGroup && (
+            (isGroupsPlayoff ? qualifiersPerGroupValue : null) === event.config.qualifiersPerGroup &&
+            rotationRoundsValue === event.config.rotationRounds && (
               <p className="text-sm text-green-700 dark:text-green-400" suppressHydrationWarning>
                 {t("ongoing.config.saved")}
               </p>

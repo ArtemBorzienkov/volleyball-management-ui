@@ -8,17 +8,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import API from "@/lib/api";
-import { isPlayed, teamName } from "@/lib/ongoing-standings";
-import type { OngoingGame, OngoingTeam } from "@/lib/types";
+import { isPlayed } from "@/lib/ongoing-standings";
+import type { OngoingGame } from "@/lib/types";
 
 interface OngoingMatchCardProps {
   game: OngoingGame;
-  team1: OngoingTeam;
-  team2: OngoingTeam;
+  // Names rather than team rows: a fullRotation fixture has no OngoingTeam behind either side, and
+  // everything else this card does is game-level.
+  side1Label: string;
+  side2Label: string;
   canEdit: boolean;
 }
 
-export function OngoingMatchCard({ game, team1, team2, canEdit }: OngoingMatchCardProps) {
+export function OngoingMatchCard({ game, side1Label, side2Label, canEdit }: OngoingMatchCardProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const played = isPlayed(game);
@@ -115,7 +117,7 @@ export function OngoingMatchCard({ game, team1, team2, canEdit }: OngoingMatchCa
         )}
 
         <div className="flex items-center justify-between gap-3">
-          <span className="flex-1 text-right text-sm font-medium">{teamName(team1)}</span>
+          <span className="flex-1 text-right text-sm font-medium">{side1Label}</span>
 
           {canEdit && isEditing ? (
             <div className="flex items-center gap-2">
@@ -139,7 +141,7 @@ export function OngoingMatchCard({ game, team1, team2, canEdit }: OngoingMatchCa
             </span>
           )}
 
-          <span className="flex-1 text-sm font-medium">{teamName(team2)}</span>
+          <span className="flex-1 text-sm font-medium">{side2Label}</span>
         </div>
 
         {canEdit && isEditing && (

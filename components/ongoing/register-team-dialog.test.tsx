@@ -1,0 +1,103 @@
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
+import type { OngoingOpenEvent } from '@/lib/types'
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}))
+vi.mock('@/components/providers/auth-provider', () => ({
+  useAuth: () => ({ user: { id: 'u1', role: 'player', playerId: 'p1' } }),
+}))
+vi.mock('@/components/ui/toast', () => ({ useToast: () => ({ toast: vi.fn(), dismiss: vi.fn() }) }))
+vi.mock('@tanstack/react-query', () => ({
+  useMutation: () => ({ mutate: vi.fn(), reset: vi.fn(), isPending: false, isError: false, error: null }),
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+}))
+
+import { RegisterTeamDialog } from './register-team-dialog'
+
+const buildEvent = (over: Partial<OngoingOpenEvent> = {}): OngoingOpenEvent =>
+  ({
+    id: 'e1',
+    name: 'Cup',
+    date: '2026-12-20T00:00:00.000Z',
+    startTime: null,
+    location: null,
+    maxTeams: null,
+    teamsCount: 0,
+    createdByUserId: 'u2',
+    createdBy: null,
+    teams: [],
+    visibility: 'public',
+    allowSoloRegistration: true,
+    soloPlayers: [],
+    scheme: 'roundRobin',
+    groupCount: 1,
+    ...over,
+  }) as OngoingOpenEvent
+
+const players = [
+  { id: 'p1', name: 'Me' },
+  { id: 'p2', name: 'Other' },
+] as never[]
+
+// fireEvent, not element.click(): the Radix trigger opens on a React-handled event and its content
+// lands in a portal, so the assertions below await it with findBy*.
+const openDialog = () => fireEvent.click(screen.getByRole('button', { name: /calendar\.register$/ }))
+
+describe('RegisterTeamDialog — pairs-based scheme', () => {
+  it('titles the dialog as a team registration and offers the partner/solo choice', async () => {
+    render(<RegisterTeamDialog event={buildEvent()} players={players} />)
+    openDialog()
+
+    expect(await screen.findByText('calendar.registerTitle')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'calendar.modeWithPartner' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'calendar.modeSolo' })).toBeInTheDocument()
+  })
+})
+
+describe('RegisterTeamDialog — fullRotation', () => {
+  const rotationEvent = () => buildEvent({ scheme: 'fullRotation', groupCount: 2 })
+
+  it('titles the dialog as a player registration, not a team one', async () => {
+    render(<RegisterTeamDialog event={rotationEvent()} players={players} />)
+    openDialog()
+
+    expect(await screen.findByText('calendar.registerSoloTitle')).toBeInTheDocument()
+    expect(screen.queryByText('calendar.registerTitle')).not.toBeInTheDocument()
+  })
+
+  it('offers no partner/solo toggle — there are no pairs to register', async () => {
+    render(<RegisterTeamDialog event={rotationEvent()} players={players} />)
+    openDialog()
+    await screen.findByText('calendar.registerSoloTitle')
+
+    expect(screen.queryByRole('button', { name: 'calendar.modeWithPartner' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'calendar.modeSolo' })).not.toBeInTheDocument()
+  })
+
+  it('opens straight into solo mode and explains the grouping', async () => {
+    render(<RegisterTeamDialog event={rotationEvent()} players={players} />)
+    openDialog()
+
+    expect(await screen.findByText('calendar.rotationSoloHint')).toBeInTheDocument()
+    // The partner picker belongs to the mode this scheme never enters.
+    expect(screen.queryByText('calendar.player2')).not.toBeInTheDocument()
+  })
+
+  it('disables the control once every seat is taken', () => {
+    const full = buildEvent({
+      scheme: 'fullRotation',
+      groupCount: 2,
+      soloPlayers: Array.from({ length: 8 }, (_, index) => ({
+        id: `s${index}`,
+        player: { id: `p${index + 10}`, name: `Player ${index}` },
+        rating: 1000,
+      })) as never[],
+    })
+
+    render(<RegisterTeamDialog event={full} players={players} />)
+
+    expect(screen.getByRole('button', { name: /calendar\.noSpots/ })).toBeDisabled()
+  })
+})

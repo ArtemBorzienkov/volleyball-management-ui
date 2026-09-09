@@ -39,6 +39,9 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
   const [location, setLocation] = useState("");
   const [maxTeams, setMaxTeams] = useState("");
   const [visibility, setVisibility] = useState("public");
+  const [scheme, setScheme] = useState("roundRobin");
+  const [groupCount, setGroupCount] = useState("2");
+  const [rotationRounds, setRotationRounds] = useState("3");
   const [allowSoloRegistration, setAllowSoloRegistration] = useState(false);
   const [teams, setTeams] = useState<TeamDraft[]>([]);
 
@@ -53,6 +56,8 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
 
   // Mirrors ongoing-config-tab.tsx: a row missing either player must not be discarded silently.
   const hasIncompleteTeam = teams.some((team) => !team.player1Id || !team.player2Id);
+  // fullRotation registers players, so the pre-filled team roster and the maxTeams cap do not apply.
+  const isFullRotation = scheme === "fullRotation";
 
   const createMutation = useMutation({
     mutationFn: async (): Promise<CreatedOngoingEvent> => {
@@ -64,11 +69,19 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
       // Y/M/D keeps the calendar day the admin picked agreeing with the backend's UTC-date comparison.
       const pickedUtcMidnight = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
       const body: Record<string, unknown> = { name: name.trim(), date: pickedUtcMidnight.toISOString() };
-      if (trimmedMaxTeams) body.maxTeams = Number(trimmedMaxTeams);
+      if (trimmedMaxTeams && !isFullRotation) body.maxTeams = Number(trimmedMaxTeams);
       // Sent unconditionally: flipping a control back to its default must not be silently dropped.
       body.visibility = visibility;
-      body.allowSoloRegistration = allowSoloRegistration;
-      if (completeTeams.length) body.teams = completeTeams;
+      body.scheme = scheme;
+      if (isFullRotation) {
+        body.groupCount = Number(groupCount);
+        body.rotationRounds = rotationRounds.trim() === "" ? 3 : Number(rotationRounds);
+        // Forced by the API too; sending it keeps the created event's config predictable.
+        body.allowSoloRegistration = true;
+      } else {
+        body.allowSoloRegistration = allowSoloRegistration;
+        if (completeTeams.length) body.teams = completeTeams;
+      }
       // startTime is a venue-local wall-clock string ("HH:MM"), never a timezone-aware instant.
       if (trimmedStartTime) body.startTime = trimmedStartTime;
       if (trimmedLocation) body.location = trimmedLocation;
@@ -190,6 +203,56 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
           />
         </div>
 
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <SelectInput
+            className="flex-1"
+            name="scheme"
+            label={t("ongoing.config.scheme")}
+            value={scheme}
+            onChange={setScheme}
+            options={[
+              { value: "roundRobin", label: t("ongoing.config.schemeRoundRobin") },
+              { value: "groupsPlayoff", label: t("ongoing.config.schemeGroupsPlayoff") },
+              { value: "fullRotation", label: t("ongoing.config.schemeFullRotation") },
+            ]}
+          />
+
+          {isFullRotation && (
+            <>
+              <SelectInput
+                className="sm:w-44"
+                name="rotationGroupCount"
+                label={t("ongoing.config.rotationGroupCount")}
+                value={groupCount}
+                onChange={setGroupCount}
+                options={[
+                  { value: "2", label: t("ongoing.config.rotationGroups2") },
+                  { value: "3", label: t("ongoing.config.rotationGroups3") },
+                ]}
+              />
+              <div className="flex flex-col gap-1.5 sm:w-28">
+                <label className="text-sm font-medium" htmlFor="rotation-rounds" suppressHydrationWarning>
+                  {t("ongoing.config.rotationRounds")}
+                </label>
+                <Input
+                  id="rotation-rounds"
+                  type="number"
+                  min={1}
+                  value={rotationRounds}
+                  onChange={(event) => setRotationRounds(event.target.value)}
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        {isFullRotation && (
+          <p className="text-xs text-muted-foreground" suppressHydrationWarning>
+            {t("ongoing.create.rotationHint", { players: Number(groupCount) * 4 })}
+          </p>
+        )}
+
+        {!isFullRotation && (
         <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"
@@ -206,14 +269,16 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
             </span>
           </span>
         </label>
+        )}
 
-
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium" suppressHydrationWarning>
-            {t("ongoing.create.teamsLabel")}
-          </label>
-          <TeamRosterEditor teams={teams} players={players} onChange={setTeams} />
-        </div>
+        {!isFullRotation && (
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium" suppressHydrationWarning>
+              {t("ongoing.create.teamsLabel")}
+            </label>
+            <TeamRosterEditor teams={teams} players={players} onChange={setTeams} />
+          </div>
+        )}
 
         {hasIncompleteTeam && (
           <p className="text-sm text-destructive" suppressHydrationWarning>
@@ -229,7 +294,7 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
           <Button
             className="self-start"
             onClick={() => createMutation.mutate()}
-            disabled={!name.trim() || hasIncompleteTeam || createMutation.isPending}
+            disabled={!name.trim() || (!isFullRotation && hasIncompleteTeam) || createMutation.isPending}
           >
             <span suppressHydrationWarning>{t("ongoing.create.submit")}</span>
           </Button>

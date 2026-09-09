@@ -46,6 +46,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
+import { playerDisplayName } from '@/lib/player-name'
 
 function getInitials(name: string) {
   return name
@@ -496,13 +497,13 @@ export default function AnalyticsPage() {
                     {getInitials(player1.name)}
                   </AvatarFallback>
                 </Avatar>
-                {player1.name}
+                {playerDisplayName(player1)}
               </Link>
               <Link
                 href={`/players/${player2.id}`}
                 className="flex items-center gap-2 text-primary hover:underline"
               >
-                {player2.name}
+                {playerDisplayName(player2)}
                 <Avatar className="h-6 w-6">
                   <AvatarFallback className="bg-primary/50 text-primary-foreground text-xs">
                     {getInitials(player2.name)}

@@ -13,7 +13,8 @@ nothing is wired up until you have read the file.
 ## Commands
 
 ```bash
-npm run dev -- -p 3001   # Dev server. Use a non-3000 port: the API hard-codes 3000
+npm run dev -- -p 3001   # Dev server. Must not collide with the API's port — the API listens on
+                         # $PORT (default 3000) and `.env` there may set it, so check both first
 npm run build            # Production build
 npm start                # Serve the production build
 npm run lint             # ESLint (flat config, eslint-config-next)
@@ -161,6 +162,18 @@ PlayerCard({ player, rank }: PlayerCardProps)`). Props interfaces are declared a
   three times in this repo; do not add a fourth. Reach for `useEffect` only for genuine external
   synchronisation.
 
+### Never render `player.name` directly
+
+A player whose account set `isAnonymous` must be shown masked. Use
+`playerDisplayName(player)` / `playerInitials(player)` from `lib/player-name.ts` anywhere a name is
+**content** — tables, cards, standings, rosters. The API returns the real name plus the flag; the
+masking lives only here, so a direct `{player.name}` silently un-masks that player.
+
+The exception is a control that picks a specific person (`/add-results`, the roster editors, the
+partner and player selects) and the viewer's own name — an organiser must be able to tell two
+players apart, and `/add-results` keys a lookup on the name. `teamName()` in `lib/ongoing-standings.ts`
+already masks both halves of a pair.
+
 ### Comments
 
 Short and essential only. Explain the _why_ the code cannot state — a constraint, a non-obvious
@@ -174,10 +187,19 @@ touch into `components/` rather than growing the file further.
 
 ## Testing
 
-**There is no test framework installed** — no Jest, no Vitest, no test script, no test files. Do not
-claim a change is "tested" here. Verify with `npx tsc --noEmit`, `npm run lint`, `npm run build`, and
-by exercising the affected route in the browser. If a change genuinely needs automated tests,
-introducing a runner is a decision to raise first, not to make silently.
+**Vitest + Testing Library**, configured in `vitest.config.mts` (`jsdom`, the `@/*` alias from
+`tsconfig.json`, setup in `test/setup.ts`). Run with `npm test`; tests live beside their subject as
+`*.test.ts(x)`.
+
+Coverage is deliberately narrow: the pure modules under `lib/` and components rendered through
+jsdom with their providers stubbed via `vi.mock` (see `components/ongoing/ongoing-rotation-tab.test.tsx`).
+**The routes under `app/` have no tests** — verify those in the browser against a running backend.
+
+`test/setup.ts` registers `afterEach(cleanup)` by hand: Testing Library only auto-cleans when Vitest
+runs with `globals: true`, which this config does not, and without it the DOM accumulates across
+tests in a file and `getBy*` starts matching an earlier render.
+
+`npx tsc --noEmit`, `npm run lint` and `npm run build` remain part of verifying any change.
 
 ## Unfinished scaffold
 

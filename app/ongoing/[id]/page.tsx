@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Settings, CalendarDays, ListOrdered, Trophy, FlagTriangleRight, Medal, Trash2 } from "lucide-react";
+import { Settings, CalendarDays, ListOrdered, Trophy, FlagTriangleRight, Medal, Trash2, Repeat } from "lucide-react";
 import { Navigation } from "@/components/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import { OngoingConfigTab } from "@/components/ongoing/ongoing-config-tab";
 import { OngoingMatchesTab } from "@/components/ongoing/ongoing-matches-tab";
 import { OngoingStandingsTab } from "@/components/ongoing/ongoing-standings-tab";
 import { OngoingBracketTab } from "@/components/ongoing/ongoing-bracket-tab";
+import { OngoingRotationTab } from "@/components/ongoing/ongoing-rotation-tab";
 import { OngoingResultsTab } from "@/components/ongoing/ongoing-results-tab";
 import { useAuth } from "@/components/providers/auth-provider";
 import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
@@ -34,7 +35,7 @@ import {
 } from "@/lib/ongoing-finish";
 import type { OngoingEvent } from "@/lib/types";
 
-type OngoingTab = "config" | "matches" | "standings" | "bracket" | "results";
+type OngoingTab = "config" | "matches" | "standings" | "bracket" | "rotation" | "results";
 
 class HttpError extends Error {
   constructor(public readonly status: number) {
@@ -43,6 +44,7 @@ class HttpError extends Error {
 }
 
 const TABS: { key: OngoingTab; labelKey: string; icon: typeof Settings }[] = [
+  { key: "rotation", labelKey: "ongoing.tabs.rotation", icon: Repeat },
   { key: "matches", labelKey: "ongoing.tabs.matches", icon: CalendarDays },
   { key: "standings", labelKey: "ongoing.tabs.standings", icon: ListOrdered },
   { key: "bracket", labelKey: "ongoing.tabs.bracket", icon: Trophy },
@@ -74,16 +76,26 @@ export default function OngoingEventPage() {
 
   const canManage = event ? canManageOngoingEvent(user, event.createdByUserId) : false;
   const hasPlayoffScheme = event?.config?.scheme === "groupsPlayoff";
+  const isFullRotation = event?.config?.scheme === "fullRotation";
   const visibleTabs = TABS.filter((item) => {
     if (item.key === "config") return canManage;
     if (item.key === "bracket") return hasPlayoffScheme;
+    // The rotation tab carries this scheme's fixtures AND its tables, so the flat match list and the
+    // team-based standings table would only show the same games a second time, keyed on teams that
+    // do not exist here.
+    if (item.key === "rotation") return isFullRotation;
+    if (item.key === "matches" || item.key === "standings") return !isFullRotation;
     return true;
   });
 
   // An admin can switch the scheme away from groupsPlayoff while Bracket is selected, and the
   // config tab disappears the moment the admin gate flips. Derive the tab actually rendered
   // rather than syncing the selection back with an effect.
-  const activeTab: OngoingTab = visibleTabs.some((item) => item.key === tab) ? tab : "matches";
+  // Falls back to whatever is actually visible rather than to a fixed key: fullRotation hides the
+  // match list, and a hard-coded "matches" fallback would render an empty page there.
+  const activeTab: OngoingTab = visibleTabs.some((item) => item.key === tab)
+    ? tab
+    : visibleTabs[0]?.key ?? "results";
   const isInProgress = event ? event.games.some(isPlayed) : false;
   const eventMeta = event ? eventMetaLine(event, "short") : "";
   const finishGate = event ? getFinishTournamentGate(event) : null;
@@ -217,6 +229,7 @@ export default function OngoingEventPage() {
             </div>
 
             <div className="mt-6">
+              {activeTab === "rotation" && <OngoingRotationTab event={event} />}
               {activeTab === "matches" && <OngoingMatchesTab event={event} />}
               {activeTab === "standings" && <OngoingStandingsTab event={event} />}
               {activeTab === "bracket" && <OngoingBracketTab event={event} />}

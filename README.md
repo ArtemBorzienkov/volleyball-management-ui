@@ -24,10 +24,12 @@ repository is purely the UI.
 - [Domain model](#domain-model)
 - [Rating system](#rating-system)
 - [Access control](#access-control)
+- [Player anonymity & privacy](#player-anonymity--privacy)
 - [Internationalization](#internationalization)
 - [Project structure](#project-structure)
 - [Backend API](#backend-api)
 - [Getting started (development)](#getting-started-development)
+- [Testing](#testing)
 - [Environment variables](#environment-variables)
 - [Build & deployment](#build--deployment)
 - [Notes & known quirks](#notes--known-quirks)
@@ -81,6 +83,8 @@ The design system, fonts (Geist / Geist Mono) and global tokens live in
 | `/` | **Overview / dashboard** |
 | `/players` | **Players leaderboard** |
 | `/events` | **Events list** |
+| `/calendar` | **Tournaments open for registration** — enter, cancel, create |
+| `/ongoing/[id]` | **Run a live tournament** — fixtures, standings, bracket or rotation |
 | `/add-results` | **Record results** (admin/moderator only) |
 
 #### `/` — Overview
@@ -109,6 +113,40 @@ or winless). Data is assembled client‑side by combining `/events`, `/games` an
 Aggregate standings for one event: a per‑player table (games W‑L, cumulative rank
 change, points W‑L) followed by every individual game, each rendered as
 `Team 1 | score | Team 2` with per‑player rating and rank‑change badges.
+
+#### `/calendar` — Open tournaments
+Every tournament still accepting entrants (`GET /ongoing/open`). Each card names
+the organiser, whether it is **public** or **private**, the entrants so far, and
+the players waiting without a partner. Registering opens a dialog; a logged-out
+visitor gets a login prompt first and is returned to the dialog afterwards. A full
+tournament stays listed with its control disabled and a "no spots left" note, and
+an entrant can cancel their own registration up to the day before.
+
+"New tournament" creates one: name, capacity, place, time, date, who may register,
+and the **tournament type** — which is where a full-rotation event is set up.
+
+#### `/ongoing/[id]` — Live tournament
+Tabs over one event. Which tabs appear depends on the scheme, so a tab never shows
+the same games twice under a different model:
+
+| Tab | Shown for | Contents |
+|-----|-----------|----------|
+| **Rotation** | `fullRotation` | Every round's groups, their three fixtures with score entry, the per-player table, and "generate next round". |
+| **Matches** | the other schemes | The flat fixture list, grouped by round, with score entry. |
+| **Standings** | the other schemes | The team table. |
+| **Bracket** | `groupsPlayoff` | The knockout tree. |
+| **Results** | all | Final places, and the hand-off into `/add-results`. |
+| **Config** | organiser/admin | Courts, caps, visibility, scheme and its fields. |
+
+**Full rotation** is the individual format: players register alone, are seeded by
+rating into groups of four, and every player partners every other player in their
+group once — three games, from which each player takes a place in the group table.
+When every result of a round is in, the organiser generates the next one: the top
+two of each group go up, the bottom two go down, and the ends of the ladder stay
+put. After the configured last round the strongest group's table is the result. The
+promote/relegate arrows next to each place come from
+[`lib/ongoing-rotation.ts`](lib/ongoing-rotation.ts); the tables themselves are
+computed by the API, so a corrected score reshuffles them on the next refetch.
 
 #### `/add-results` — Record results *(admin/moderator)*
 The write path of the app. A `react-hook-form` workflow to create an event with
@@ -193,6 +231,54 @@ Access control is **client‑side only** and lightweight:
 This only hides the link in the UI — the `/add-results` route itself is not
 guarded, and the real authority is the backend. Treat this as a convenience gate,
 not a security boundary.
+
+---
+
+## Player anonymity & privacy
+
+### Masking
+
+A player whose account has `isAnonymous` set is rendered with their name masked —
+`Artem Borzienkov` becomes `Ar*** Bo***`. The API still returns the real name; the
+masking happens **here**, in [`lib/player-name.ts`](lib/player-name.ts):
+
+- `playerDisplayName(player)` — the name a viewer should see. A payload without the
+  flag renders as before, so an older backend degrades gracefully.
+- `playerInitials(player)` — the avatar initial, `*` for a masked player, because a
+  single real letter is still identifying.
+- `maskPlayerName(name)` — the masking itself: first two characters of each word,
+  counted as characters (so an accented or Cyrillic name is not cut mid-glyph).
+
+**Where it is applied:** everywhere a name is *content* — the players leaderboard,
+rankings, rating history, event standings and highlights, game cards, the calendar's
+solo pool, tournament rosters and the rotation tables. `teamName()` in
+`lib/ongoing-standings.ts` masks both halves of a pair, which covers every team
+label at once.
+
+**Where it is deliberately not applied:** the controls that pick a specific person —
+`/add-results`, the sign-up player select, the roster editors and the partner
+picker. An organiser has to be able to tell two players apart to record a result,
+and `/add-results` keys a lookup on the player name. The viewer's own name in the
+registration dialog is also left in full.
+
+That means masking is a display reduction, not anonymisation — the real name is
+still in the public API response. `/privacy` states this plainly rather than
+implying more protection than exists.
+
+### The two notices
+
+| Route | Covers |
+|-------|--------|
+| `/privacy` | What player data is collected, what is published, the anonymity option and its limits, legal bases, retention, rights. Linked from the required sign-up checkbox and the footer. |
+| `/cookies` | Cookies and browser storage, the consent categories, and the current stored choice. |
+
+Sign-up requires ticking consent to the processing (never pre-ticked); the API
+refuses `POST /user` without `acceptDataProcessing: true` and records the instant it
+was given.
+
+**There is no UI for the anonymity flag.** Sign-up does not offer it, so it is set
+out of band; `/privacy` tells players to ask the controller instead of implying a
+toggle they cannot reach. Add the control and that wording changes with it.
 
 ---
 
@@ -289,6 +375,8 @@ Then open the app in the browser. Other scripts:
 npm run build   # production build (next build)
 npm run start   # serve the production build (next start)
 npm run lint    # eslint
+npm test        # vitest, once
+npm run test:watch
 ```
 
 > **Local vs remote backend:** `.env` ships pointing `NEXT_PUBLIC_HOST_URL` at a
@@ -297,6 +385,36 @@ npm run lint    # eslint
 > clash, and set `NEXT_PUBLIC_HOST_URL=http://localhost:3000`. A locally‑changed
 > backend endpoint won't be reflected until the UI's `NEXT_PUBLIC_HOST_URL`
 > points at that local instance.
+
+---
+
+## Testing
+
+```bash
+npm test            # vitest run
+npm run test:watch  # vitest
+```
+
+**Vitest + Testing Library**, configured in
+[`vitest.config.mts`](vitest.config.mts) with `jsdom` and the same `@/*` alias
+`tsconfig.json` defines. Tests sit next to what they cover as `*.test.ts(x)`.
+
+What is covered:
+
+- **Pure modules under `lib/`** — the promote/relegate direction and group naming
+  in `ongoing-rotation.ts`, the capacity rules in `ongoing-permissions.ts`
+  (including the fullRotation seat count, which ignores `maxTeams`), and the
+  fetch-boundary defaults in `ongoing-normalize.ts`.
+- **Components through jsdom** — `ongoing-rotation-tab.test.tsx` renders the tab
+  against a fixture and asserts which rounds and groups appear, that each fixture
+  lands in its own group card, and when "generate next round" is offered. The
+  providers it sits inside (i18n, React Query, toast, auth) are stubbed with
+  `vi.mock`, so a test needs no query client or live locale bundle.
+
+Not covered by tests: the routes under `app/` and anything that depends on a real
+API response. Verify those against a running backend in the browser — `tsc
+--noEmit` and `npm run lint` are still part of checking any change, since
+`next build` does not typecheck.
 
 ---
 

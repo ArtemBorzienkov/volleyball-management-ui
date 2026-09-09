@@ -12,6 +12,7 @@ import { SelectInput } from "@/components/ui/select-input";
 import { useToast } from "@/components/ui/toast";
 import API from "@/lib/api";
 import type { OngoingEvent, OngoingSoloPairPreview, Player } from "@/lib/types";
+import { playerDisplayName } from "@/lib/player-name";
 
 interface SoloPoolSectionProps {
   event: OngoingEvent;
@@ -180,6 +181,8 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
   };
 
   // Nothing to say when the tournament does not take partnerless entrants and none are waiting.
+  const isFullRotation = event.config.scheme === "fullRotation";
+
   if (!event.config.allowSoloRegistration && !event.soloPlayers.length) return null;
 
   return (
@@ -187,19 +190,19 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
       <Card>
         <CardContent className="flex flex-col gap-3 p-4">
           <p className="font-medium" suppressHydrationWarning>
-            {t("ongoing.config.solo.title")}
+            {isFullRotation ? t("calendar.participants") : t("ongoing.config.solo.title")}
           </p>
 
           {event.soloPlayers.length === 0 && (
             <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-              {t("ongoing.config.solo.empty")}
+              {isFullRotation ? t("ongoing.config.solo.emptyRotation") : t("ongoing.config.solo.empty")}
             </p>
           )}
 
           {event.soloPlayers.map((solo) => (
             <div key={solo.id} className="flex items-center justify-between gap-2 text-sm">
               <span>
-                {solo.player.name} <span className="text-muted-foreground">{solo.rating}</span>
+                {playerDisplayName(solo.player)} <span className="text-muted-foreground">{solo.rating}</span>
               </span>
               <Button
                 variant="destructive"
@@ -270,7 +273,9 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
             </div>
           )}
 
-          {event.soloPlayers.length >= 2 && (
+          {/* Not offered for fullRotation: pairing the pool into fixed teams is the opposite of a
+              format whose whole point is a different partner every game. */}
+          {!isFullRotation && event.soloPlayers.length >= 2 && (
             <Button
               className="self-start"
               disabled={disabled || previewMutation.isPending}

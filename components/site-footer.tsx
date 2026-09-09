@@ -15,6 +15,9 @@ export function SiteFooter() {
   return (
     <footer className="border-t px-4 py-4">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <Link href="/privacy" className="hover:text-foreground">
+          <span suppressHydrationWarning>{t("cookies.privacyLink")}</span>
+        </Link>
         <Link href="/cookies" className="hover:text-foreground">
           <span suppressHydrationWarning>{t("cookies.policy.title")}</span>
         </Link>

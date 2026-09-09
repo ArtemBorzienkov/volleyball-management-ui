@@ -18,6 +18,7 @@ import type { Player } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import API from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { playerDisplayName } from "@/lib/player-name";
 
 type GamePlayerRank = { playerId: string; rank: number; rankChange: number };
 type BackendGame = {
@@ -293,7 +294,7 @@ export default function EventDetailPage({
                     key={player.player.id}
                     className="flex items-center justify-between gap-2 mt-2"
                   >
-                    <span className="w-[50%]">{player.player.name}</span>
+                    <span className="w-[50%]">{playerDisplayName(player.player)}</span>
                     <span className="w-[80px] text-center">{player.gamesWL}</span>
                     {
                       <span className="flex items-center gap-1 w-[80px] text-center">

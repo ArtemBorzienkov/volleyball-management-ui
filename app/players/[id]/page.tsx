@@ -41,6 +41,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
+import { playerDisplayName } from '@/lib/player-name'
 
 export default function PlayerProfilePage({
   params,
@@ -94,7 +95,7 @@ export default function PlayerProfilePage({
               </Avatar>
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-3xl font-bold">{player.name}</h1>
+                  <h1 className="text-3xl font-bold">{playerDisplayName(player)}</h1>
                   {player.active ? (
                     <Badge className="bg-green-500/20 text-green-500">Active</Badge>
                   ) : (

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { getGameById, getEventById } from '@/lib/data'
 import { ArrowLeft, MapPin, Calendar, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { playerDisplayName } from '@/lib/player-name'
 
 function getInitials(name: string) {
   return name
@@ -124,13 +125,13 @@ export default function GameDetailPage({
                     href={`/players/${game.team1.player1.id}`}
                     className="block font-semibold hover:text-primary transition-colors"
                   >
-                    {game.team1.player1.name}
+                    {playerDisplayName(game.team1.player1)}
                   </Link>
                   <Link
                     href={`/players/${game.team1.player2.id}`}
                     className="block font-semibold hover:text-primary transition-colors"
                   >
-                    {game.team1.player2.name}
+                    {playerDisplayName(game.team1.player2)}
                   </Link>
                 </div>
                 {team1Won && (
@@ -194,13 +195,13 @@ export default function GameDetailPage({
                     href={`/players/${game.team2.player1.id}`}
                     className="block font-semibold hover:text-primary transition-colors"
                   >
-                    {game.team2.player1.name}
+                    {playerDisplayName(game.team2.player1)}
                   </Link>
                   <Link
                     href={`/players/${game.team2.player2.id}`}
                     className="block font-semibold hover:text-primary transition-colors"
                   >
-                    {game.team2.player2.name}
+                    {playerDisplayName(game.team2.player2)}
                   </Link>
                 </div>
                 {team2Won && (

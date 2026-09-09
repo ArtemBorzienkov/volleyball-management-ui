@@ -176,7 +176,8 @@
       "visibilityPublic": "Public — anyone can register",
       "visibilityPrivate": "Private — only I add teams",
       "allowSoloLabel": "Allow registration without a partner",
-      "allowSoloHint": "Players without a partner join a pool and are paired by rating before the tournament."
+      "allowSoloHint": "Players without a partner join a pool and are paired by rating before the tournament.",
+      "rotationHint": "Players register alone; exactly {{players}} are needed, seeded into groups of four by rating"
     },
     "empty": "No tournaments yet.",
     "teams": "Teams",
@@ -197,7 +198,8 @@
       "matches": "Matches",
       "standings": "Standings",
       "bracket": "Bracket",
-      "results": "Results"
+      "results": "Results",
+      "rotation": "Rotation"
     },
     "config": {
       "title": "Format",
@@ -247,8 +249,18 @@
         "cancel": "Cancel",
         "remove": "Remove",
         "addPlayer": "Add player",
-        "addPlayerHint": "This tournament accepts entrants without a partner — add one player instead of a team."
-      }
+        "addPlayerHint": "This tournament accepts entrants without a partner — add one player instead of a team.",
+        "emptyRotation": "No players registered yet"
+      },
+      "schemeFullRotation": "Full rotation",
+      "rotationGroupCount": "Groups",
+      "rotationGroups2": "2 groups (8 players)",
+      "rotationGroups3": "3 groups (12 players)",
+      "rotationGroupCountHint": "Needs exactly {{players}} registered players",
+      "rotationRounds": "Rounds",
+      "rotationRoundsHint": "After each round the top two of a group go up and the bottom two go down",
+      "allowSoloLockedHint": "Full rotation registers players, not pairs — this cannot be turned off.",
+      "needRotationPlayers": "Register {{seats}} players to generate the first round — {{registered}} so far."
     },
     "matchesTab": {
       "round": "Round",
@@ -322,7 +334,25 @@
     "withoutPartner": "Without a partner",
     "publicBadge": "Public",
     "privateBadge": "Private",
-    "publicHint": "Anyone logged in can register a team"
+    "publicHint": "Anyone logged in can register a team",
+    "rotation": {
+      "notStarted": "No round generated yet. Register {{players}} players, then generate the schedule.",
+      "round": "Round {{round}}",
+      "roundOf": "Round {{round}} of {{total}}",
+      "inProgress": "In progress",
+      "finished": "Finished",
+      "nextRound": "Generate next round",
+      "finishRoundFirst": "Record every result of this round first",
+      "finalStandings": "Final standings",
+      "movementHint": "Top {{count}} go up, bottom {{count}} go down",
+      "player": "Player",
+      "wins": "W",
+      "diff": "Diff",
+      "groupPlain": "Group {{number}}",
+      "groupStrongest": "Group {{number}} — strongest",
+      "groupMiddle": "Group {{number}}",
+      "groupWeakest": "Group {{number}} — weakest"
+    }
   },
   "calendar": {
     "title": "Calendar",
@@ -351,7 +381,13 @@
     "cancelSoloConfirm": "Cancel this registration?",
     "cancelClosed": "Registration can no longer be cancelled",
     "noSpots": "No spots left",
-    "noSpotsHint": "This tournament is full — every slot is taken"
+    "noSpotsHint": "This tournament is full — every slot is taken",
+    "players": "Players",
+    "rotationSoloHint": "You will be placed in a group of four by rating",
+    "rotationBadge": "Full rotation",
+    "rotationFormat": "Solo registration: you enter without a partner and change partner every game — you can end up on a team with anyone in your group.",
+    "registerSoloTitle": "Register as a player",
+    "participants": "Participants"
   },
   "toast": {
     "tournamentCreated": "Tournament created",
@@ -367,7 +403,9 @@
     "teamsFormFailed": "Could not create the teams",
     "teamsFormedLeftover": "One player stayed in the pool without a partner",
     "playerAdded": "Player added",
-    "playerRemoved": "Player removed"
+    "playerRemoved": "Player removed",
+    "rotationRoundGenerated": "Next round generated",
+    "rotationRoundFailed": "Could not generate the next round"
   },
   "cookies": {
     "settingsLink": "Cookie settings",
@@ -433,6 +471,59 @@
       "stateAllowed": "allowed",
       "stateDenied": "refused",
       "noChoice": "You have not made a choice yet — nothing optional is running."
-    }
+    },
+    "privacyLink": "Player data"
+  },
+  "auth": {
+    "logIn": "Log in",
+    "email": "Email",
+    "password": "Password",
+    "loggingIn": "Logging in...",
+    "emailInvalid": "Enter a valid email",
+    "passwordRequired": "Password is required",
+    "somethingWrong": "Something went wrong",
+    "noAccount": "No account?",
+    "signUp": "Sign up",
+    "loginRequiredTitle": "Log in to continue",
+    "loginRequiredSubtitle": "Registration is tied to your player, so we need to know who you are.",
+    "loginToJoin": "Please log in or sign up — after that you can join the tournament.",
+    "telegramLabel": "Telegram nickname",
+    "telegramHint": "Optional — so the organiser can reach you about the tournament.",
+    "consentLabel": "I agree to how my personal data is processed and my results published —",
+    "consentLink": "read the notice"
+  },
+  "privacy": {
+    "title": "How player data is processed",
+    "intro": "SandStats records who played, against whom, and with what result, and publishes that as ratings and standings. This notice says what is collected, what is public, and what you can decide. It is written to meet the EU General Data Protection Regulation (GDPR).",
+    "controllerTitle": "Who is responsible",
+    "controllerBody": "The controller is the operator of SandStats. For any question about your data, or to exercise the rights below, write to {{contact}}.",
+    "collectedTitle": "What is collected",
+    "providedTitle": "What you give us at sign-up",
+    "providedBody": "Your email address, a password (stored only as a bcrypt hash — never in readable form), optionally your Telegram nickname, and the player you are: either an existing player you pick, or a new one you create with a name and a gender.",
+    "recordedTitle": "What is recorded as you play",
+    "recordedBody": "Every game you appear in: who your partner was, who you played against, the points, the date and the place. Which events you took part in and where you finished. Your registrations for tournaments, whether with a partner or alone — and, in a full-rotation tournament, which group you were in each round.",
+    "derivedTitle": "What is calculated from that",
+    "derivedBody": "Your rating (an ELO-like number starting at 1000), the rating change and resulting rating after each individual game, your totals of games, wins and losses, your win rate, and your tournament medals.",
+    "publishedTitle": "What is published",
+    "publishedBody": "SandStats is a public results site. Everything below is visible to anyone who opens it, without logging in, and is served by an API that requires no authentication:",
+    "publishedName": "Your player name, or its masked form if you chose that (see below).",
+    "publishedRating": "Your rating, its full history game by game, and your totals and win rate.",
+    "publishedResults": "Every game you played, naming your partner and opponents, with the score.",
+    "publishedRegistrations": "Which tournaments you are registered for, including while they are still open.",
+    "publishedWarning": "This is the point of the site, and it is what you consent to when you register. Your email address and password are never published.",
+    "anonymityTitle": "Choosing not to be named",
+    "anonymityBody": "You can ask us not to have your name shown in full — write to the address below. Every page of the site then renders it masked: \"Artem Borzienkov\" appears as \"{{example}}\", in leaderboards, results, standings and tournament rosters alike. You can ask us to turn this off again at any time.",
+    "anonymityLimitTitle": "What this does not do",
+    "anonymityLimitBody": "Masking is applied when a name is displayed. Your real name stays in the database, is still returned by the public API, and is still visible to a tournament organiser who needs to tell players apart in order to record results. So it reduces how visibly your name is published — it is not technical anonymisation, and it does not make you unidentifiable. If you want your name removed rather than masked, use the erasure right below.",
+    "basisTitle": "Legal basis",
+    "basisConsent": "Publishing your name and your results rests on your consent (art. 6(1)(a) GDPR), given by ticking the box at sign-up; the moment you gave it is recorded. You can withdraw it at any time (art. 7(3)), which means asking us to remove your published data.",
+    "basisContract": "Running your account and the tournaments you enter rests on the agreement between us (art. 6(1)(b)) and on legitimate interest in keeping a coherent competition record (art. 6(1)(f)) — a rating chain with games removed from the middle of it no longer describes anyone accurately.",
+    "recipientsTitle": "Who else sees the data",
+    "recipientsBody": "The site is hosted by a hosting provider acting as a processor, and anonymous usage measurement is provided by Vercel Inc. — only if you allowed it in the cookie banner. No data is sold, no advertising network is used, and no profiling beyond the sporting rating takes place. Where data is transferred outside the EEA it relies on the European Commission's standard contractual clauses.",
+    "retentionTitle": "How long it is kept",
+    "retentionBody": "Your account is kept while it exists. Games and results are kept as part of the competition record, because removing one game changes every rating that followed it; on an erasure request we remove or de-identify your personal data and tell you what that means for the results you appear in.",
+    "exerciseTitle": "Exercising your rights",
+    "exerciseBody": "Write to {{contact}}. Tell us which player you are and what you want — a copy of your data, a correction, masking turned on or off, or erasure. You can also complain to your national data protection authority.",
+    "cookieLink": "Cookie and storage notice"
   }
 }

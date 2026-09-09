@@ -176,7 +176,8 @@
       "visibilityPublic": "Publiczny — każdy może się zapisać",
       "visibilityPrivate": "Prywatny — drużyny dodaję tylko ja",
       "allowSoloLabel": "Zezwól na zapisy bez partnera",
-      "allowSoloHint": "Gracze bez partnera trafiają do puli i przed turniejem są łączeni w pary według rankingu."
+      "allowSoloHint": "Gracze bez partnera trafiają do puli i przed turniejem są łączeni w pary według rankingu.",
+      "rotationHint": "Zawodnicy zapisują się pojedynczo; potrzeba dokładnie {{players}}, rozstawionych w czwórki według rankingu"
     },
     "empty": "Nie ma jeszcze turniejów.",
     "teams": "Drużyny",
@@ -197,7 +198,8 @@
       "matches": "Mecze",
       "standings": "Tabela",
       "bracket": "Drabinka",
-      "results": "Wyniki"
+      "results": "Wyniki",
+      "rotation": "Rotacja"
     },
     "config": {
       "title": "Format",
@@ -247,8 +249,18 @@
         "cancel": "Anuluj",
         "remove": "Usuń",
         "addPlayer": "Dodaj gracza",
-        "addPlayerHint": "Ten turniej przyjmuje zawodników bez partnera — możesz dodać jednego gracza zamiast drużyny."
-      }
+        "addPlayerHint": "Ten turniej przyjmuje zawodników bez partnera — możesz dodać jednego gracza zamiast drużyny.",
+        "emptyRotation": "Brak zapisanych zawodników"
+      },
+      "schemeFullRotation": "Pełna rotacja",
+      "rotationGroupCount": "Grupy",
+      "rotationGroups2": "2 grupy (8 zawodników)",
+      "rotationGroups3": "3 grupy (12 zawodników)",
+      "rotationGroupCountHint": "Wymaga dokładnie {{players}} zapisanych zawodników",
+      "rotationRounds": "Rundy",
+      "rotationRoundsHint": "Po każdej rundzie dwóch pierwszych z grupy awansuje, dwóch ostatnich spada",
+      "allowSoloLockedHint": "Pełna rotacja zapisuje zawodników, nie pary — nie można tego wyłączyć.",
+      "needRotationPlayers": "Zapisz {{seats}} zawodników, aby wygenerować pierwszą rundę — obecnie {{registered}}."
     },
     "matchesTab": {
       "round": "Runda",
@@ -322,7 +334,25 @@
     "withoutPartner": "Bez partnera",
     "publicBadge": "Publiczny",
     "privateBadge": "Prywatny",
-    "publicHint": "Drużynę może zapisać każdy zalogowany"
+    "publicHint": "Drużynę może zapisać każdy zalogowany",
+    "rotation": {
+      "notStarted": "Nie wygenerowano jeszcze rundy. Zapisz {{players}} zawodników i wygeneruj terminarz.",
+      "round": "Runda {{round}}",
+      "roundOf": "Runda {{round}} z {{total}}",
+      "inProgress": "W toku",
+      "finished": "Zakończone",
+      "nextRound": "Wygeneruj następną rundę",
+      "finishRoundFirst": "Najpierw wpisz wszystkie wyniki tej rundy",
+      "finalStandings": "Klasyfikacja końcowa",
+      "movementHint": "Pierwszych {{count}} awansuje, ostatnich {{count}} spada",
+      "player": "Zawodnik",
+      "wins": "Z",
+      "diff": "Różnica",
+      "groupPlain": "Grupa {{number}}",
+      "groupStrongest": "Grupa {{number}} — najsilniejsza",
+      "groupMiddle": "Grupa {{number}}",
+      "groupWeakest": "Grupa {{number}} — najsłabsza"
+    }
   },
   "calendar": {
     "title": "Kalendarz",
@@ -351,7 +381,13 @@
     "cancelSoloConfirm": "Anulować rejestrację?",
     "cancelClosed": "Rejestracji nie można już anulować",
     "noSpots": "Brak miejsc",
-    "noSpotsHint": "Turniej jest pełny — wszystkie miejsca zajęte"
+    "noSpotsHint": "Turniej jest pełny — wszystkie miejsca zajęte",
+    "players": "Zawodnicy",
+    "rotationSoloHint": "Zostaniesz przydzielony do czwórki według rankingu",
+    "rotationBadge": "Pełna rotacja",
+    "rotationFormat": "Zapisy solo: wchodzisz bez partnera i w każdym meczu grasz z innym — możesz trafić w parę z każdym ze swojej grupy.",
+    "registerSoloTitle": "Zapisz się jako zawodnik",
+    "participants": "Zawodnicy"
   },
   "toast": {
     "tournamentCreated": "Turniej utworzony",
@@ -367,7 +403,9 @@
     "teamsFormFailed": "Nie udało się utworzyć drużyn",
     "teamsFormedLeftover": "Jeden gracz został w puli bez partnera",
     "playerAdded": "Gracz dodany",
-    "playerRemoved": "Gracz usunięty"
+    "playerRemoved": "Gracz usunięty",
+    "rotationRoundGenerated": "Wygenerowano następną rundę",
+    "rotationRoundFailed": "Nie udało się wygenerować następnej rundy"
   },
   "cookies": {
     "settingsLink": "Ustawienia cookie",
@@ -433,6 +471,59 @@
       "stateAllowed": "dozwolona",
       "stateDenied": "odrzucona",
       "noChoice": "Nie dokonano jeszcze wyboru — nic opcjonalnego nie działa."
-    }
+    },
+    "privacyLink": "Dane zawodników"
+  },
+  "auth": {
+    "logIn": "Zaloguj się",
+    "email": "Email",
+    "password": "Hasło",
+    "loggingIn": "Logowanie...",
+    "emailInvalid": "Podaj prawidłowy email",
+    "passwordRequired": "Podaj hasło",
+    "somethingWrong": "Coś poszło nie tak",
+    "noAccount": "Nie masz konta?",
+    "signUp": "Zarejestruj się",
+    "loginRequiredTitle": "Zaloguj się, aby kontynuować",
+    "loginRequiredSubtitle": "Zapis jest powiązany z Twoim zawodnikiem, więc musimy wiedzieć, kim jesteś.",
+    "loginToJoin": "Zaloguj się lub zarejestruj — potem będziesz mógł dołączyć do turnieju.",
+    "telegramLabel": "Nick na Telegramie",
+    "telegramHint": "Opcjonalnie — aby organizator mógł się z Tobą skontaktować w sprawie turnieju.",
+    "consentLabel": "Zgadzam się na przetwarzanie moich danych osobowych i publikację moich wyników —",
+    "consentLink": "przeczytaj informację"
+  },
+  "privacy": {
+    "title": "Jak przetwarzane są dane zawodników",
+    "intro": "SandStats zapisuje, kto grał, z kim i z jakim wynikiem, i publikuje to jako rankingi i tabele. Ta strona wyjaśnia, co jest zbierane, co jest publiczne i o czym możesz zdecydować. Została napisana zgodnie z RODO.",
+    "controllerTitle": "Kto odpowiada za przetwarzanie",
+    "controllerBody": "Administratorem jest operator SandStats. W sprawie danych lub aby skorzystać z praw poniżej, napisz na {{contact}}.",
+    "collectedTitle": "Co jest zbierane",
+    "providedTitle": "Co podajesz przy zapisie",
+    "providedBody": "Twój email, hasło (przechowywane wyłącznie jako hash bcrypt — nigdy w czytelnej formie), opcjonalnie nick na Telegramie oraz to, którym zawodnikiem jesteś: istniejącym, którego wybierasz, albo nowym, którego tworzysz podając imię i płeć.",
+    "recordedTitle": "Co jest zapisywane w trakcie gry",
+    "recordedBody": "Każdy mecz, w którym występujesz: kto był Twoim partnerem, z kim grałeś, punkty, data i miejsce. W jakich wydarzeniach brałeś udział i na którym miejscu skończyłeś. Twoje zapisy na turnieje, z partnerem lub bez — a w turnieju z pełną rotacją także to, w której grupie byłeś w każdej rundzie.",
+    "derivedTitle": "Co jest z tego wyliczane",
+    "derivedBody": "Twój ranking (liczba w stylu ELO, startująca od 1000), zmiana rankingu i ranking po każdym pojedynczym meczu, sumy meczów, zwycięstw i porażek, procent zwycięstw oraz medale turniejowe.",
+    "publishedTitle": "Co jest publikowane",
+    "publishedBody": "SandStats to publiczny serwis wyników. Wszystko poniżej widzi każdy, kto go otworzy, bez logowania, i jest udostępniane przez API, które nie wymaga uwierzytelnienia:",
+    "publishedName": "Twoje imię zawodnika albo jego zamaskowana forma, jeśli tak wybrałeś (patrz niżej).",
+    "publishedRating": "Twój ranking, jego pełna historia mecz po meczu, Twoje sumy i procent zwycięstw.",
+    "publishedResults": "Każdy Twój mecz, z imionami partnera i przeciwników oraz wynikiem.",
+    "publishedRegistrations": "Na jakie turnieje jesteś zapisany, również gdy zapisy są jeszcze otwarte.",
+    "publishedWarning": "W tym właśnie rzecz tego serwisu i na to wyrażasz zgodę przy zapisie. Twój email i hasło nie są publikowane nigdy.",
+    "anonymityTitle": "Wybór nieujawniania imienia",
+    "anonymityBody": "Możesz poprosić nas, aby Twoje imię nie było pokazywane w całości — napisz na adres poniżej. Każda strona serwisu pokaże je wtedy zamaskowane: „Artem Borzienkov” jako „{{example}}”, w rankingach, wynikach, tabelach i składach turniejowych. Możesz poprosić o wyłączenie tego w każdej chwili.",
+    "anonymityLimitTitle": "Czego to nie robi",
+    "anonymityLimitBody": "Maskowanie jest stosowane w momencie wyświetlania imienia. Twoje prawdziwe imię pozostaje w bazie danych, jest nadal zwracane przez publiczne API i nadal widoczne dla organizatora turnieju, który musi rozróżniać zawodników, aby wpisywać wyniki. Zmniejsza to więc widoczność publikacji Twojego imienia — nie jest to techniczna anonimizacja i nie sprawia, że stajesz się nierozpoznawalny. Jeśli chcesz, aby imię zostało usunięte, a nie zamaskowane, skorzystaj z prawa do usunięcia poniżej.",
+    "basisTitle": "Podstawa prawna",
+    "basisConsent": "Publikacja Twojego imienia i wyników opiera się na Twojej zgodzie (art. 6 ust. 1 lit. a RODO), udzielonej przez zaznaczenie pola przy zapisie; moment jej udzielenia jest zapisywany. Możesz ją wycofać w każdej chwili (art. 7 ust. 3), co oznacza poproszenie nas o usunięcie opublikowanych danych.",
+    "basisContract": "Prowadzenie Twojego konta i turniejów, w których startujesz, opiera się na umowie między nami (art. 6 ust. 1 lit. b) oraz na prawnie uzasadnionym interesie w utrzymaniu spójnego archiwum rozgrywek (art. 6 ust. 1 lit. f) — łańcuch rankingowy z usuniętymi ze środka meczami nie opisuje już nikogo dokładnie.",
+    "recipientsTitle": "Kto jeszcze widzi dane",
+    "recipientsBody": "Serwis jest hostowany u dostawcy działającego jako podmiot przetwarzający, a anonimowy pomiar korzystania zapewnia Vercel Inc. — tylko jeśli wyraziłeś na to zgodę w banerze cookie. Dane nie są sprzedawane, nie korzystamy z sieci reklamowych i nie prowadzimy profilowania poza rankingiem sportowym. Jeśli dane trafiają poza EOG, odbywa się to na podstawie standardowych klauzul umownych Komisji Europejskiej.",
+    "retentionTitle": "Jak długo są przechowywane",
+    "retentionBody": "Twoje konto jest przechowywane tak długo, jak istnieje. Mecze i wyniki są przechowywane jako część archiwum rozgrywek, ponieważ usunięcie jednego meczu zmienia każdy ranking po nim; na żądanie usunięcia usuwamy lub deidentyfikujemy Twoje dane osobowe i informujemy, co to oznacza dla wyników, w których występujesz.",
+    "exerciseTitle": "Jak skorzystać z praw",
+    "exerciseBody": "Napisz na {{contact}}. Podaj, którym zawodnikiem jesteś i czego chcesz — kopii danych, sprostowania, włączenia lub wyłączenia maskowania albo usunięcia. Możesz też złożyć skargę do krajowego organu ochrony danych.",
+    "cookieLink": "Polityka cookie i pamięci przeglądarki"
   }
 }

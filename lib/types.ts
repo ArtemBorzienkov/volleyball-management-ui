@@ -1,7 +1,9 @@
 export interface AuthUser {
   id: string;
   email: string;
+  /** Resolved server-side from the linked player — sign-up no longer asks for a name. */
   name: string;
+  telegramNickname: string | null;
   role: string;
   playerId: string | null;
 }
@@ -9,6 +11,8 @@ export interface AuthUser {
 export interface Player {
   id: string;
   name: string;
+  /** The player asked not to be named publicly — render playerDisplayName(), not `name`. */
+  isAnonymous?: boolean;
   avatar?: string;
   gender?: "male" | "female";
   active: boolean;
@@ -110,6 +114,8 @@ export interface PlayerRankHistory {
 export interface PlayerGameRowPlayer {
   id: string;
   name: string;
+  /** The player asked not to be named publicly — render playerDisplayName(), not `name`. */
+  isAnonymous?: boolean;
 }
 
 export interface PlayerGameRowTeam {
@@ -144,6 +150,8 @@ export interface FullPlayer extends Player {
 export interface OngoingEventCreator {
   id: string;
   name: string;
+  /** The organiser is an account too — render playerDisplayName(), not `name`. */
+  isAnonymous?: boolean;
 }
 
 export interface OngoingEventListItem {
@@ -169,6 +177,7 @@ export interface OngoingEventConfig {
   scheme: string;
   groupCount: number;
   qualifiersPerGroup: number | null;
+  rotationRounds: number;
   visibility: string;
   allowSoloRegistration: boolean;
 }
@@ -176,6 +185,8 @@ export interface OngoingEventConfig {
 export interface OngoingTeamPlayer {
   id: string;
   name: string;
+  /** The player asked not to be named publicly — render playerDisplayName(), not `name`. */
+  isAnonymous?: boolean;
   avatar?: string;
 }
 
@@ -218,6 +229,42 @@ export interface OngoingGame {
   bracketRound: number | null;
   bracketSlot: number | null;
   thirdPlace: boolean;
+  /** fullRotation only: the group this fixture belongs to, and who played each side. */
+  groupIndex: number | null;
+  side1Players: OngoingTeamPlayer[];
+  side2Players: OngoingTeamPlayer[];
+}
+
+export interface OngoingRotationStanding {
+  place: number;
+  player: OngoingTeamPlayer;
+  rating: number;
+  played: number;
+  wins: number;
+  losses: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  pointsDiff: number;
+}
+
+export interface OngoingRotationGroup {
+  groupIndex: number;
+  standings: OngoingRotationStanding[];
+}
+
+export interface OngoingRotationRound {
+  round: number;
+  isComplete: boolean;
+  groups: OngoingRotationGroup[];
+}
+
+export interface OngoingRotationState {
+  totalRounds: number;
+  /** 0 until the first round is generated. */
+  currentRound: number;
+  isFinished: boolean;
+  rounds: OngoingRotationRound[];
+  finalStandings: OngoingRotationStanding[];
 }
 
 export interface OngoingEvent {
@@ -234,6 +281,8 @@ export interface OngoingEvent {
   teams: OngoingTeam[];
   soloPlayers: OngoingSoloPlayer[];
   games: OngoingGame[];
+  /** Null for every scheme but fullRotation. */
+  rotation: OngoingRotationState | null;
 }
 
 export interface OngoingOpenEvent {
@@ -250,6 +299,8 @@ export interface OngoingOpenEvent {
   visibility: string;
   allowSoloRegistration: boolean;
   soloPlayers: OngoingSoloPlayer[];
+  scheme: string;
+  groupCount: number;
 }
 
 export interface OngoingStandingsRow {

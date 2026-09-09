@@ -37,6 +37,7 @@ import type {
   PlayerGameRow,
   PlayerGamesResponse,
 } from '@/lib/types'
+import { playerDisplayName } from '@/lib/player-name'
 
 const Loading = () => null
 
@@ -139,9 +140,9 @@ function GamesTable({ playerId }: { playerId: string }) {
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-3">
                   <span className="font-semibold text-primary">
-                    {game.team1.player1.name}
+                    {playerDisplayName(game.team1.player1)}
                   </span>
-                  <span className="text-muted-foreground">{game.team1.player2.name}</span>
+                  <span className="text-muted-foreground">{playerDisplayName(game.team1.player2)}</span>
                   <span className="w-6 text-right font-semibold tabular-nums">
                     {game.team1.points}
                   </span>
@@ -152,8 +153,8 @@ function GamesTable({ playerId }: { playerId: string }) {
                   <span className="w-6 text-left font-semibold tabular-nums">
                     {game.team2.points}
                   </span>
-                  <span className="text-muted-foreground">{game.team2.player1.name}</span>
-                  <span className="text-muted-foreground">{game.team2.player2.name}</span>
+                  <span className="text-muted-foreground">{playerDisplayName(game.team2.player1)}</span>
+                  <span className="text-muted-foreground">{playerDisplayName(game.team2.player2)}</span>
                 </div>
               </TableCell>
               <TableCell className="text-center">
@@ -225,7 +226,7 @@ function RatingContent() {
 
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">
-          {player ? player.name : t('rating.player')}
+          {player ? playerDisplayName(player) : t('rating.player')}
         </h1>
         <p className="mt-1 text-muted-foreground">{t('rating.subtitle')}</p>
       </div>

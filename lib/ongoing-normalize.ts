@@ -12,11 +12,18 @@ export type OlderOngoingEventListItem = Older<
 >
 export type OlderOngoingOpenEvent = Older<
   OngoingOpenEvent,
-  'soloPlayers' | 'visibility' | 'allowSoloRegistration' | 'createdByUserId' | 'createdBy'
+  | 'soloPlayers'
+  | 'visibility'
+  | 'allowSoloRegistration'
+  | 'createdByUserId'
+  | 'createdBy'
+  | 'scheme'
+  | 'groupCount'
 >
-export type OlderOngoingEvent = Omit<OngoingEvent, 'soloPlayers' | 'config'> &
-  Partial<Pick<OngoingEvent, 'soloPlayers'>> & {
-    config: Older<OngoingEvent['config'], 'visibility' | 'allowSoloRegistration'>
+export type OlderOngoingEvent = Omit<OngoingEvent, 'soloPlayers' | 'config' | 'games' | 'rotation'> &
+  Partial<Pick<OngoingEvent, 'soloPlayers' | 'rotation'>> & {
+    games: Array<Older<OngoingEvent['games'][number], 'groupIndex' | 'side1Players' | 'side2Players'>>
+    config: Older<OngoingEvent['config'], 'visibility' | 'allowSoloRegistration' | 'rotationRounds'>
   }
 
 export function normalizeOngoingListItem(raw: OlderOngoingEventListItem): OngoingEventListItem {
@@ -38,6 +45,8 @@ export function normalizeOngoingOpenEvent(raw: OlderOngoingOpenEvent): OngoingOp
     createdByUserId: raw.createdByUserId ?? null,
     createdBy: raw.createdBy ?? null,
     soloPlayers: raw.soloPlayers ?? [],
+    scheme: raw.scheme ?? 'roundRobin',
+    groupCount: raw.groupCount ?? 1,
   }
 }
 
@@ -48,7 +57,17 @@ export function normalizeOngoingEvent(raw: OlderOngoingEvent): OngoingEvent {
       ...raw.config,
       visibility: raw.config.visibility ?? 'public',
       allowSoloRegistration: raw.config.allowSoloRegistration ?? false,
+      rotationRounds: raw.config.rotationRounds ?? 3,
     },
     soloPlayers: raw.soloPlayers ?? [],
+    // A backend without the rotation scheme sends neither the participants nor the ladder; the
+    // rotation tab is unreachable in that case, but the match list still maps over every game.
+    games: (raw.games ?? []).map((game) => ({
+      ...game,
+      groupIndex: game.groupIndex ?? null,
+      side1Players: game.side1Players ?? [],
+      side2Players: game.side2Players ?? [],
+    })),
+    rotation: raw.rotation ?? null,
   }
 }

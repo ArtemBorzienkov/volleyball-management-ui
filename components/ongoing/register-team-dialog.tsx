@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Badge } from "@/components/ui/badge";
 import { SelectInput } from "@/components/ui/select-input";
 import { NewPlayerInlineForm } from "@/components/ongoing/new-player-inline";
+import { LoginRequiredDialog } from "@/components/auth/login-required-dialog";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/components/providers/auth-provider";
 import { canRegisterInOngoingEvent, isOngoingEventFull } from "@/lib/ongoing-permissions";
@@ -34,8 +35,11 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
   const { user } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [player2Id, setPlayer2Id] = useState("");
-  const [mode, setMode] = useState<"partner" | "solo">("partner");
+  // fullRotation has no pairs to register: everyone enters alone and is grouped by rating.
+  const isFullRotation = event.scheme === "fullRotation";
+  const [mode, setMode] = useState<"partner" | "solo">(isFullRotation ? "solo" : "partner");
 
   // Players created inline this session, merged in below so the slot that triggered creation
   // can show and select them immediately, without waiting on the ["players"] refetch.
@@ -114,7 +118,7 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
     setOpen(nextOpen);
     if (!nextOpen) {
       setPlayer2Id("");
-      setMode("partner");
+      setMode(isFullRotation ? "solo" : "partner");
       setCreatedPlayers([]);
       setIsCreatingPlayer(false);
       registerMutation.reset();
@@ -181,16 +185,21 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
 
   if (!user) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span tabIndex={0} className="inline-block">
-            <Button size="sm" disabled>
-              <span suppressHydrationWarning>{t("calendar.register")}</span>
-            </Button>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>Щоб зареєструватися в турнір, потрібно бути залогіненим</TooltipContent>
-      </Tooltip>
+      <>
+        {/* Enabled on purpose: a disabled button with a tooltip left a logged-out visitor to work
+            out what to do next. Clicking asks for the login it needs and then carries on. */}
+        <Button size="sm" onClick={() => setIsLoginPromptOpen(true)}>
+          <span suppressHydrationWarning>{t("calendar.register")}</span>
+        </Button>
+        <LoginRequiredDialog
+          open={isLoginPromptOpen}
+          onOpenChange={setIsLoginPromptOpen}
+          notice={t("auth.loginToJoin")}
+          // The registration dialog only exists past this guard, so opening it here relies on `open`
+          // surviving the re-render that the fresh ["me"] query triggers.
+          onAuthenticated={() => setOpen(true)}
+        />
+      </>
     );
   }
 
@@ -214,11 +223,13 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle suppressHydrationWarning>{t("calendar.registerTitle")}</DialogTitle>
+          <DialogTitle suppressHydrationWarning>
+            {isFullRotation ? t("calendar.registerSoloTitle") : t("calendar.registerTitle")}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
-          {event.allowSoloRegistration && (
+          {event.allowSoloRegistration && !isFullRotation && (
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -258,7 +269,7 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
 
           {mode === "solo" && (
             <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-              {t("calendar.soloHint")}
+              {isFullRotation ? t("calendar.rotationSoloHint") : t("calendar.soloHint")}
             </p>
           )}
 

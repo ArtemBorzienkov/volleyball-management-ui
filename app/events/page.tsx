@@ -28,6 +28,7 @@ import {
 } from "@/components/medal-icons";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { playerDisplayName } from "@/lib/player-name";
 
 // Backend EventResponseDto interface
 interface BackendEventResponseDto {
@@ -788,7 +789,7 @@ function EventCard({ event }: { event: EventWithPlaces }) {
                               </span>
                             )}
                             <span className="text-sm font-medium flex-1 min-w-0 truncate">
-                              {row.player.name}
+                              {playerDisplayName(row.player)}
                             </span>
                             <span className="text-sm text-muted-foreground flex-1 border-border pl-2 text-center min-w-[80px]">
                               {row.wins}-{row.losses}
@@ -847,7 +848,7 @@ function EventCard({ event }: { event: EventWithPlaces }) {
                               </span>
                             )}
                             <span className="text-sm font-medium flex-1 min-w-0 truncate">
-                              {row.player.name}
+                              {playerDisplayName(row.player)}
                             </span>
                             <span className="text-sm text-muted-foreground flex-1 border-border pl-2 text-center">
                               {row.wins}-{row.losses}
@@ -889,7 +890,7 @@ function EventCard({ event }: { event: EventWithPlaces }) {
                             <TrendingUp className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
                             <span className="truncate" suppressHydrationWarning>
                               {t("events.highlightsText.winsInRow", {
-                                player: highlight.player.name.split(" ")[0],
+                                player: playerDisplayName(highlight.player).split(" ")[0],
                                 value: highlight.value,
                               })}
                             </span>
@@ -900,7 +901,7 @@ function EventCard({ event }: { event: EventWithPlaces }) {
                             <AlertCircle className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
                             <span className="truncate" suppressHydrationWarning>
                               {t("events.highlightsText.noWins", {
-                                player: highlight.player.name.split(" ")[0],
+                                player: playerDisplayName(highlight.player).split(" ")[0],
                                 value: highlight.value,
                               })}
                             </span>
@@ -911,7 +912,7 @@ function EventCard({ event }: { event: EventWithPlaces }) {
                             <Trophy className="h-2.5 w-2.5 mr-1.5 flex-shrink-0" />
                             <span className="truncate" suppressHydrationWarning>
                               {t("events.highlightsText.perfect", {
-                                player: highlight.player.name.split(" ")[0],
+                                player: playerDisplayName(highlight.player).split(" ")[0],
                                 value: highlight.value,
                               })}
                             </span>

@@ -23,6 +23,7 @@ import type { FullPlayer } from '@/lib/types'
 import { GoldMedalIcon, SilverMedalIcon, BronzeMedalIcon } from '@/components/medal-icons'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { GenderFilter, type GenderFilter as GenderFilterType } from '@/components/gender-filter'
+import { playerDisplayName, playerInitials } from '@/lib/player-name'
 
 const Loading = () => null
 
@@ -203,12 +204,12 @@ function PlayersContent({ searchQuery, genderFilter }: { searchQuery: string; ge
                     <TableCell className="pl-4">
                         <Avatar className="h-10 w-10">
                           <AvatarFallback className="bg-[#4F403D] text-[#BDBDBD] font-semibold text-sm">
-                            {player.name.charAt(0).toUpperCase()}
+                            {playerInitials(player)}
                           </AvatarFallback>
                         </Avatar>
                     </TableCell>
                     <TableCell>
-                        {player.name}
+                        {playerDisplayName(player)}
                     </TableCell>
                     <TableCell className="text-center">
                       <span className="text-muted-foreground">

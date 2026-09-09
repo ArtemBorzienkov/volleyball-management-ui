@@ -1,3 +1,6 @@
+// Four players per group is what makes the three-fixture rotation work; mirrored from the API.
+export const ROTATION_GROUP_SIZE = 4
+
 export function canManageOngoingEvent(
   user: { id: string; role: string } | null,
   createdByUserId: string | null,
@@ -63,7 +66,14 @@ export function isOngoingEventFull(event: {
   maxTeams: number | null
   teamsCount: number
   soloPlayers: unknown[]
+  scheme?: string
+  groupCount?: number
 }): boolean {
+  // fullRotation seats a fixed number of players — groups of four that have to fill exactly — and
+  // ignores maxTeams, which counts pairs.
+  if (event.scheme === 'fullRotation') {
+    return event.soloPlayers.length >= (event.groupCount ?? 0) * ROTATION_GROUP_SIZE
+  }
   if (event.maxTeams === null) return false
   return event.teamsCount + Math.ceil(event.soloPlayers.length / 2) >= event.maxTeams
 }
