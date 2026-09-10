@@ -3,7 +3,7 @@
 import { useTranslation } from "react-i18next";
 import { OngoingMatchCard } from "@/components/ongoing/ongoing-match-card";
 import { useAuth } from "@/components/providers/auth-provider";
-import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
+import { canRecordOngoingResult } from "@/lib/ongoing-permissions";
 import { roundLabel } from "@/lib/ongoing-bracket";
 import { teamName } from "@/lib/ongoing-standings";
 import type { OngoingEvent, OngoingGame } from "@/lib/types";
@@ -15,7 +15,8 @@ interface OngoingMatchesTabProps {
 export function OngoingMatchesTab({ event }: OngoingMatchesTabProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const canManage = canManageOngoingEvent(user, event.createdByUserId);
+  // Entrants may enter and correct results too, not just the organiser.
+  const canRecord = canRecordOngoingResult(user, event);
 
   const teamsById = new Map(event.teams.map((team) => [team.id, team]));
 
@@ -66,7 +67,7 @@ export function OngoingMatchesTab({ event }: OngoingMatchesTabProps) {
         game={game}
         side1Label={teamName(team1)}
         side2Label={teamName(team2)}
-        canEdit={canManage}
+        canEdit={canRecord}
       />
     );
   };

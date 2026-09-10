@@ -9,6 +9,41 @@ export function canManageOngoingEvent(
   return user.role === 'admin' || user.id === createdByUserId
 }
 
+/** Everyone entered in a tournament: on a pair, waiting in the pool, or in a rotation group. */
+export function ongoingEntrantPlayerIds(event: {
+  teams: Array<{ player1: { id: string }; player2: { id: string } }>
+  soloPlayers: Array<{ player: { id: string } }>
+  rotation?: { rounds: Array<{ groups: Array<{ standings: Array<{ player: { id: string } }> }> }> } | null
+}): Set<string> {
+  return new Set<string>([
+    ...event.teams.flatMap((team) => [team.player1.id, team.player2.id]),
+    ...event.soloPlayers.map((solo) => solo.player.id),
+    ...(event.rotation?.rounds ?? []).flatMap((round) =>
+      round.groups.flatMap((group) => group.standings.map((row) => row.player.id)),
+    ),
+  ])
+}
+
+/**
+ * Recording a result is open to the tournament's own entrants as well as its organiser — mirrors the
+ * API's assertCanRecordResult. Deliberately per-event, not per-game: at a real event whoever is free
+ * enters the score, and a rotation player changes partner every fixture.
+ */
+export function canRecordOngoingResult(
+  user: { id: string; role: string; playerId?: string | null } | null,
+  event: {
+    createdByUserId: string | null
+    teams: Array<{ player1: { id: string }; player2: { id: string } }>
+    soloPlayers: Array<{ player: { id: string } }>
+    rotation?: { rounds: Array<{ groups: Array<{ standings: Array<{ player: { id: string } }> }> }> } | null
+  },
+): boolean {
+  if (!user) return false
+  if (canManageOngoingEvent(user, event.createdByUserId)) return true
+  if (!user.playerId) return false
+  return ongoingEntrantPlayerIds(event).has(user.playerId)
+}
+
 interface OngoingAccessUser {
   id: string
   role: string

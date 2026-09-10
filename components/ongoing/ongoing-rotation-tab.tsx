@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { OngoingMatchCard } from "@/components/ongoing/ongoing-match-card";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/components/providers/auth-provider";
-import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
+import { canManageOngoingEvent, canRecordOngoingResult } from "@/lib/ongoing-permissions";
 import { ROTATION_MOVERS, groupLabelKey, rotationMovement } from "@/lib/ongoing-rotation";
 import API from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,8 @@ export function OngoingRotationTab({ event }: OngoingRotationTabProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const canManage = canManageOngoingEvent(user, event.createdByUserId);
+  // Entrants may enter and correct results too; managing the tournament stays narrower.
+  const canRecord = canRecordOngoingResult(user, event);
   const rotation = event.rotation;
 
   const advanceMutation = useMutation({
@@ -124,7 +126,7 @@ export function OngoingRotationTab({ event }: OngoingRotationTabProps) {
             round={round}
             isCurrent={round.round === rotation.currentRound}
             isLastRound={round.round >= rotation.totalRounds}
-            canEdit={canManage}
+            canEdit={canRecord}
           />
         ))}
     </div>

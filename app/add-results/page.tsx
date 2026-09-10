@@ -16,17 +16,21 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { Plus, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import API from '@/lib/api'
 import type { Player } from '@/lib/types'
-import { ONGOING_FINISH_PREFILL_KEY } from '@/lib/ongoing-finish'
+import { ONGOING_FINISH_EVENT_ID_KEY, ONGOING_FINISH_PREFILL_KEY } from '@/lib/ongoing-finish'
 import * as XLSX from 'xlsx'
 
 export default function AddResultsPage() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false)
+  // Which tournament this page was reached from, if any. A ref rather than state: nothing renders it,
+  // it is read once when the upload succeeds, and setting state from the mount effect below would be
+  // a cascading render for no visible change.
+  const ongoingEventIdToClear = useRef<string | null>(null)
   const [fieldToUpdate, setFieldToUpdate] = useState<{
     gameIndex?: number
     placeIndex?: number
@@ -92,6 +96,14 @@ export default function AddResultsPage() {
   // render state. The key is removed immediately so a stale value can never reapply on a later
   // visit, and reset() leaves every field normally editable afterward.
   useEffect(() => {
+    // Read before the early return below: the id must be picked up even if the prefill is missing,
+    // or a tournament could be uploaded and never cleaned up.
+    const finishedOngoingId = sessionStorage.getItem(ONGOING_FINISH_EVENT_ID_KEY)
+    if (finishedOngoingId) {
+      sessionStorage.removeItem(ONGOING_FINISH_EVENT_ID_KEY)
+      ongoingEventIdToClear.current = finishedOngoingId
+    }
+
     const raw = sessionStorage.getItem(ONGOING_FINISH_PREFILL_KEY)
     if (!raw) return
     sessionStorage.removeItem(ONGOING_FINISH_PREFILL_KEY)
@@ -324,10 +336,32 @@ export default function AddResultsPage() {
 
       return response.json()
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       setSubmitSuccess(true)
       setSubmitError(null)
       reset()
+
+      // The event, its games and their rank rows now exist, so the ongoing_* copy is redundant.
+      // Deleted only after a 2xx above, and only for the tournament this hand-off came from; a
+      // failure here is not surfaced as a submit error because the results themselves are saved.
+      const idToClear = ongoingEventIdToClear.current
+      if (idToClear) {
+        ongoingEventIdToClear.current = null
+        try {
+          const response = await fetch(API.DELETE_ONGOING_EVENT(idToClear), {
+            method: 'DELETE',
+            credentials: 'include',
+          })
+          if (!response.ok) {
+            console.error(`Could not clear ongoing tournament ${idToClear}: HTTP ${response.status}`)
+          }
+        } catch (error) {
+          console.error(`Could not clear ongoing tournament ${idToClear}:`, error)
+        }
+        queryClient.invalidateQueries({ queryKey: ['ongoing-events'] })
+        queryClient.invalidateQueries({ queryKey: ['ongoing-open'] })
+      }
+
       // Clear success message after 3 seconds
       setTimeout(() => setSubmitSuccess(false), 3000)
     },

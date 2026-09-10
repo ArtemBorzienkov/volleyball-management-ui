@@ -162,6 +162,12 @@ PlayerCard({ player, rank }: PlayerCardProps)`). Props interfaces are declared a
   three times in this repo; do not add a fourth. Reach for `useEffect` only for genuine external
   synchronisation.
 
+### Score editing is not manage-only
+
+`canRecordOngoingResult` (entrants + organiser + admins) gates entering and clearing results;
+`canManageOngoingEvent` (organiser + admins) gates everything else on an ongoing tournament. Reaching
+for `canManage` on a score control silently locks out the players who are standing at the court.
+
 ### Never render `player.name` directly
 
 A player whose account set `isAnonymous` must be shown masked. Use

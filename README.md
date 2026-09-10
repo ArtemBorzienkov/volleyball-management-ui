@@ -114,8 +114,10 @@ Aggregate standings for one event: a per‑player table (games W‑L, cumulative
 change, points W‑L) followed by every individual game, each rendered as
 `Team 1 | score | Team 2` with per‑player rating and rank‑change badges.
 
-#### `/calendar` — Open tournaments
-Every tournament still accepting entrants (`GET /ongoing/open`). Each card names
+#### `/calendar` — Tournaments
+Every **unfinished** tournament (`GET /ongoing/open`), whether or not it has started. A started one
+shows an "In progress" badge instead of a register control, and one whose deadline has passed shows
+"Registration closed" — the card is still there so anyone can open it and follow the results. Each card names
 the organiser, whether it is **public** or **private**, the entrants so far, and
 the players waiting without a partner. Registering opens a dialog; a logged-out
 visitor gets a login prompt first and is returned to the dialog afterwards. A full
@@ -147,6 +149,18 @@ put. After the configured last round the strongest group's table is the result. 
 promote/relegate arrows next to each place come from
 [`lib/ongoing-rotation.ts`](lib/ongoing-rotation.ts); the tables themselves are
 computed by the API, so a corrected score reshuffles them on the next refetch.
+
+**Recording scores** is open to the tournament's entrants, not only its organiser — see
+`canRecordOngoingResult` in [`lib/ongoing-permissions.ts`](lib/ongoing-permissions.ts), which mirrors
+the API's own rule. Generating the schedule, editing the config and finishing the tournament remain
+manage-only.
+
+**Finishing** hands over to `/add-results`: the prefill goes into `sessionStorage` under
+`ongoing-finish-prefill`, and the tournament's id under `ongoing-finish-event-id` (a separate key,
+because the prefill is fed straight into the form's `reset()` and an extra field there would be
+submitted). Once `POST /events/with-games` returns 2xx, `/add-results` deletes the ongoing event and
+the cascade clears every `ongoing_*` table. A failure to delete is logged, not surfaced — the results
+themselves are already saved.
 
 #### `/add-results` — Record results *(admin/moderator)*
 The write path of the app. A `react-hook-form` workflow to create an event with

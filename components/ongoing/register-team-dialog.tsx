@@ -168,6 +168,25 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
     </div>
   );
 
+  // Both of these come before every other branch: nobody can register, logged in or not, and saying
+  // why is more use than a disabled button. The calendar lists these tournaments so people can
+  // follow them — see findOpen.
+  if (event.hasStarted) {
+    return (
+      <Badge variant="secondary" title={t("calendar.inProgressHint")}>
+        <span suppressHydrationWarning>{t("calendar.inProgressBadge")}</span>
+      </Badge>
+    );
+  }
+
+  if (event.registrationOpen === false) {
+    return (
+      <Badge variant="outline" title={t("calendar.registrationClosedHint")}>
+        <span suppressHydrationWarning>{t("calendar.registrationClosedBadge")}</span>
+      </Badge>
+    );
+  }
+
   if (isOngoingEventFull(event)) {
     return (
       <Tooltip>

@@ -31,6 +31,7 @@ import { eventMetaLine } from "@/lib/ongoing-date";
 import {
   buildFinishTournamentPrefill,
   getFinishTournamentGate,
+  ONGOING_FINISH_EVENT_ID_KEY,
   ONGOING_FINISH_PREFILL_KEY,
 } from "@/lib/ongoing-finish";
 import type { OngoingEvent } from "@/lib/types";
@@ -120,6 +121,8 @@ export default function OngoingEventPage() {
       queryClient.invalidateQueries({ queryKey: ["ongoing-open"] });
       const prefill = buildFinishTournamentPrefill(event);
       sessionStorage.setItem(ONGOING_FINISH_PREFILL_KEY, JSON.stringify(prefill));
+      // /add-results clears the ongoing_* rows once the upload it is about to do succeeds.
+      sessionStorage.setItem(ONGOING_FINISH_EVENT_ID_KEY, id);
       setIsFinishConfirmOpen(false);
       router.push("/add-results");
     },

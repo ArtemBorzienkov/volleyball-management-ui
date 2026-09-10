@@ -301,6 +301,10 @@ export interface OngoingOpenEvent {
   soloPlayers: OngoingSoloPlayer[];
   scheme: string;
   groupCount: number;
+  /** A result has been recorded, so the roster is locked — the tournament is still listed. */
+  hasStarted?: boolean;
+  /** The registration deadline has not passed yet. */
+  registrationOpen?: boolean;
 }
 
 export interface OngoingStandingsRow {

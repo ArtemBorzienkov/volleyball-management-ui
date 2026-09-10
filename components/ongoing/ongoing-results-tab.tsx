@@ -3,7 +3,8 @@
 import { useTranslation } from "react-i18next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
-import { computeTeamPlacements } from "@/lib/ongoing-placements";
+import { computeRotationPlacements, computeTeamPlacements } from "@/lib/ongoing-placements";
+import { playerDisplayName } from "@/lib/player-name";
 import { teamName } from "@/lib/ongoing-standings";
 import type { OngoingEvent } from "@/lib/types";
 
@@ -16,6 +17,45 @@ interface OngoingResultsTabProps {
 // yet (the teams still alive in the bracket) simply has no place, and is listed separately below.
 export function OngoingResultsTab({ event }: OngoingResultsTabProps) {
   const { t } = useTranslation();
+
+  // fullRotation places players, not teams, and has no team rows at all — so the team-based path
+  // below would bail on the empty-roster guard and show nothing.
+  if (event.config.scheme === "fullRotation") {
+    const rotationPlacements = computeRotationPlacements(event);
+
+    if (!rotationPlacements.length) {
+      return (
+        <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+          {t("ongoing.standings.empty")}
+        </p>
+      );
+    }
+
+    return (
+      <Card>
+        <CardContent className="overflow-x-auto p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12" suppressHydrationWarning>
+                  {t("ongoing.standings.place")}
+                </TableHead>
+                <TableHead suppressHydrationWarning>{t("ongoing.rotation.player")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rotationPlacements.map((row) => (
+                <TableRow key={row.player.id}>
+                  <TableCell className="text-muted-foreground">{row.place}</TableCell>
+                  <TableCell className="font-medium">{playerDisplayName(row.player)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!event.teams.length) {
     return (

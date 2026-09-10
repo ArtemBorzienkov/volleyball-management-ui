@@ -56,6 +56,60 @@ describe('RegisterTeamDialog — pairs-based scheme', () => {
   })
 })
 
+describe('RegisterTeamDialog — tournament state', () => {
+  it('says the tournament is in progress instead of offering registration', () => {
+    render(<RegisterTeamDialog event={buildEvent({ hasStarted: true })} players={players} />)
+
+    expect(screen.getByText('calendar.inProgressBadge')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /calendar\.register$/ })).not.toBeInTheDocument()
+  })
+
+  it('says registration is closed once the deadline has passed', () => {
+    render(<RegisterTeamDialog event={buildEvent({ registrationOpen: false })} players={players} />)
+
+    expect(screen.getByText('calendar.registrationClosedBadge')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /calendar\.register$/ })).not.toBeInTheDocument()
+  })
+
+  it('prefers the in-progress wording when both apply — it is the more specific fact', () => {
+    render(
+      <RegisterTeamDialog event={buildEvent({ hasStarted: true, registrationOpen: false })} players={players} />,
+    )
+
+    expect(screen.getByText('calendar.inProgressBadge')).toBeInTheDocument()
+    expect(screen.queryByText('calendar.registrationClosedBadge')).not.toBeInTheDocument()
+  })
+
+  it('reports being in progress rather than being full — having started is the reason that matters', () => {
+    const startedAndFull = buildEvent({
+      hasStarted: true,
+      maxTeams: 1,
+      teamsCount: 1,
+    })
+
+    render(<RegisterTeamDialog event={startedAndFull} players={players} />)
+
+    expect(screen.getByText('calendar.inProgressBadge')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /calendar\.noSpots/ })).not.toBeInTheDocument()
+  })
+
+  it('still offers registration on an open, unstarted tournament', () => {
+    render(<RegisterTeamDialog event={buildEvent()} players={players} />)
+
+    expect(screen.getByRole('button', { name: /calendar\.register$/ })).toBeInTheDocument()
+    expect(screen.queryByText('calendar.inProgressBadge')).not.toBeInTheDocument()
+  })
+
+  it('treats an absent registrationOpen flag as open, for an older payload', () => {
+    const older = buildEvent()
+    delete (older as { registrationOpen?: boolean }).registrationOpen
+
+    render(<RegisterTeamDialog event={older} players={players} />)
+
+    expect(screen.getByRole('button', { name: /calendar\.register$/ })).toBeInTheDocument()
+  })
+})
+
 describe('RegisterTeamDialog — fullRotation', () => {
   const rotationEvent = () => buildEvent({ scheme: 'fullRotation', groupCount: 2 })
 

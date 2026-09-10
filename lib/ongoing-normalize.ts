@@ -19,6 +19,8 @@ export type OlderOngoingOpenEvent = Older<
   | 'createdBy'
   | 'scheme'
   | 'groupCount'
+  | 'hasStarted'
+  | 'registrationOpen'
 >
 export type OlderOngoingEvent = Omit<OngoingEvent, 'soloPlayers' | 'config' | 'games' | 'rotation'> &
   Partial<Pick<OngoingEvent, 'soloPlayers' | 'rotation'>> & {
@@ -47,6 +49,10 @@ export function normalizeOngoingOpenEvent(raw: OlderOngoingOpenEvent): OngoingOp
     soloPlayers: raw.soloPlayers ?? [],
     scheme: raw.scheme ?? 'roundRobin',
     groupCount: raw.groupCount ?? 1,
+    // A backend that predates these only ever listed tournaments that were open and unstarted, so
+    // that is what its payloads mean.
+    hasStarted: raw.hasStarted ?? false,
+    registrationOpen: raw.registrationOpen ?? true,
   }
 }
 

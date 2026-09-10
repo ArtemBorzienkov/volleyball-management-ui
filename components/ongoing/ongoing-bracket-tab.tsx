@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/components/providers/auth-provider";
-import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
+import { canManageOngoingEvent, canRecordOngoingResult } from "@/lib/ongoing-permissions";
 import API from "@/lib/api";
 import { roundLabel } from "@/lib/ongoing-bracket";
 import { isPlayed, teamName } from "@/lib/ongoing-standings";
@@ -274,6 +274,8 @@ export function OngoingBracketTab({ event }: OngoingBracketTabProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const canManage = canManageOngoingEvent(user, event.createdByUserId);
+  // Entrants may enter and correct results too; managing the tournament stays narrower.
+  const canRecord = canRecordOngoingResult(user, event);
   const queryClient = useQueryClient();
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [editingGameId, setEditingGameId] = useState<string | null>(null);
@@ -384,7 +386,7 @@ export function OngoingBracketTab({ event }: OngoingBracketTabProps) {
                             game={game}
                             team1={game.team1Id ? teamsById.get(game.team1Id) : undefined}
                             team2={game.team2Id ? teamsById.get(game.team2Id) : undefined}
-                            canEdit={canManage}
+                            canEdit={canRecord}
                             onEdit={() => setEditingGameId(game.id)}
                           />
                         ))}
@@ -418,7 +420,7 @@ export function OngoingBracketTab({ event }: OngoingBracketTabProps) {
                       game={thirdPlaceGame}
                       team1={thirdPlaceGame.team1Id ? teamsById.get(thirdPlaceGame.team1Id) : undefined}
                       team2={thirdPlaceGame.team2Id ? teamsById.get(thirdPlaceGame.team2Id) : undefined}
-                      canEdit={canManage}
+                      canEdit={canRecord}
                       onEdit={() => setEditingGameId(thirdPlaceGame.id)}
                     />
                   </div>

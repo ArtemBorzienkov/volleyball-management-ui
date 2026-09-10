@@ -1,8 +1,13 @@
 import { computeStandings } from "@/lib/ongoing-standings";
-import type { OngoingEvent, OngoingGame, OngoingTeam } from "@/lib/types";
+import type { OngoingEvent, OngoingGame, OngoingTeam, OngoingTeamPlayer } from "@/lib/types";
 
 export interface TeamPlacement {
   team: OngoingTeam;
+  place: number;
+}
+
+export interface PlayerPlacement {
+  player: OngoingTeamPlayer;
   place: number;
 }
 
@@ -100,15 +105,56 @@ export function computeTeamPlacements(event: OngoingEvent): TeamPlacement[] {
   return placements.slice().sort((a, b) => a.place - b.place || a.team.id.localeCompare(b.team.id));
 }
 
+/**
+ * fullRotation places players individually — it has no teams at all, and its ladder already produces
+ * a total order: the strongest group first, each group in its own finishing order.
+ *
+ * `rotation.finalStandings` is that order once the last round is complete. Before then it is empty,
+ * so this falls back to deriving it from the newest round's group tables the same way the server
+ * does, which keeps the Results tab meaningful mid-event.
+ */
+export function computeRotationPlacements(event: OngoingEvent): PlayerPlacement[] {
+  const rotation = event.rotation;
+  if (!rotation) return [];
+
+  if (rotation.finalStandings.length) {
+    return rotation.finalStandings.map((row) => ({ player: row.player, place: row.place }));
+  }
+
+  const latest = rotation.rounds.reduce<(typeof rotation.rounds)[number] | null>(
+    (newest, round) => (!newest || round.round > newest.round ? round : newest),
+    null,
+  );
+  if (!latest) return [];
+
+  return latest.groups
+    .slice()
+    .sort((one, two) => one.groupIndex - two.groupIndex)
+    .flatMap((group) => group.standings)
+    .map((row, index) => ({ player: row.player, place: index + 1 }));
+}
+
 // Final placements for a completed OngoingEvent, keyed by place (as a string) to the player ids of
 // every team tied at that place — the exact shape CreateEventWithGamesDto.places expects.
 export function computeOngoingPlacements(event: OngoingEvent): Record<string, string[]> {
   const result: Record<string, string[]> = {};
 
-  for (const { team, place } of computeTeamPlacements(event)) {
+  const push = (place: number, ...playerIds: string[]) => {
     const key = String(place);
     const players = result[key] ?? (result[key] = []);
-    players.push(team.player1.id, team.player2.id);
+    players.push(...playerIds);
+  };
+
+  // A rotation event has no teams, so the team-based path below would silently produce nothing.
+  if (event.config.scheme === "fullRotation") {
+    for (const { player, place } of computeRotationPlacements(event)) {
+      push(place, player.id);
+    }
+    return result;
+  }
+
+  for (const { team, place } of computeTeamPlacements(event)) {
+    push(place, team.player1.id, team.player2.id);
   }
 
   return result;
