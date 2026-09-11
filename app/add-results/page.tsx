@@ -18,6 +18,8 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/ui/toast'
 import API from '@/lib/api'
 import type { Player } from '@/lib/types'
 import { ONGOING_FINISH_EVENT_ID_KEY, ONGOING_FINISH_PREFILL_KEY } from '@/lib/ongoing-finish'
@@ -25,6 +27,8 @@ import * as XLSX from 'xlsx'
 
 export default function AddResultsPage() {
   const { t } = useTranslation()
+  const router = useRouter()
+  const { toast } = useToast()
   const queryClient = useQueryClient()
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false)
   // Which tournament this page was reached from, if any. A ref rather than state: nothing renders it,
@@ -67,28 +71,31 @@ export default function AddResultsPage() {
     games: GameResult[]
   }
 
+  /**
+   * The blank form. Named, because `reset()` with no argument restores react-hook-form's *current*
+   * defaults — and arriving from a finished tournament calls `reset(prefill)`, which makes that
+   * prefill the defaults. A bare `reset()` then re-filled the form with the tournament just
+   * submitted, which is why the page looked like it had never reset.
+   */
+  const EMPTY_FORM: FormData = {
+    eventName: '',
+    eventDate: '',
+    eventLocation: '',
+    places: [{ place: '', playerId: '' }],
+    games: [
+      {
+        team1Player1: '',
+        team1Player2: '',
+        team2Player1: '',
+        team2Player2: '',
+        team1Points: 0,
+        team2Points: 0,
+      },
+    ],
+  }
+
   const { register, handleSubmit, control, reset, setValue, watch } = useForm<FormData>({
-    defaultValues: {
-      eventName: '',
-      eventDate: '',
-      eventLocation: '',
-      places: [
-        {
-          place: '',
-          playerId: '',
-        },
-      ],
-      games: [
-        {
-          team1Player1: '',
-          team1Player2: '',
-          team2Player1: '',
-          team2Player2: '',
-          team1Points: 0,
-          team2Points: 0,
-        },
-      ],
-    },
+    defaultValues: EMPTY_FORM,
   })
 
   // One-shot prefill from the "Finish tournament" handoff (see lib/ongoing-finish.ts) — reads
@@ -125,7 +132,6 @@ export default function AddResultsPage() {
   })
 
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
 
   // Form for creating a new player
   type CreatePlayerFormData = {
@@ -337,9 +343,12 @@ export default function AddResultsPage() {
       return response.json()
     },
     onSuccess: async () => {
-      setSubmitSuccess(true)
       setSubmitError(null)
-      reset()
+      // A toast rather than an inline banner: ToastProvider is mounted above the route in the
+      // layout, so the confirmation survives the redirect below and is still on screen when the
+      // dashboard loads. An in-page banner would vanish with the page.
+      toast({ title: t('addResults.success'), variant: 'success' })
+      reset(EMPTY_FORM)
 
       // The event, its games and their rank rows now exist, so the ongoing_* copy is redundant.
       // Deleted only after a 2xx above, and only for the tournament this hand-off came from; a
@@ -362,18 +371,17 @@ export default function AddResultsPage() {
         queryClient.invalidateQueries({ queryKey: ['ongoing-open'] })
       }
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSubmitSuccess(false), 3000)
+      // Navigated last, and only after the cleanup above has been awaited: leaving the page while
+      // that DELETE is still in flight gets it aborted by the browser.
+      router.push('/')
     },
     onError: (error: Error) => {
       setSubmitError(error.message || 'Failed to submit results. Please try again.')
-      setSubmitSuccess(false)
     },
   })
 
   const onSubmit = (data: FormData) => {
     setSubmitError(null)
-    setSubmitSuccess(false)
 
     // Transform places array to JSON object (place number -> array of player IDs)
     const placesObject: Record<string, string[]> = {}
@@ -735,23 +743,13 @@ export default function AddResultsPage() {
                 </div>
               )}
 
-              {/* Success Message */}
-              {submitSuccess && (
-                <div className="rounded-lg border border-green-500 bg-green-500/10 p-4">
-                  <p className="text-sm text-green-700 dark:text-green-400">
-                    {t('addResults.success')}
-                  </p>
-                </div>
-              )}
-
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    reset()
+                    reset(EMPTY_FORM)
                     setSubmitError(null)
-                    setSubmitSuccess(false)
                   }}
                   disabled={createEventWithGamesMutation.isPending}
                 >
