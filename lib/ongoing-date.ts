@@ -28,6 +28,18 @@ export function isEventToday(dateString: string): boolean {
   );
 }
 
+/**
+ * When an entry was made. Unlike a tournament's `date` — a calendar day stored as UTC midnight and
+ * pinned by eventCalendarDay — this is a real instant, so it is shown in the viewer's own timezone.
+ * Returns null for a payload from a backend that predates the field.
+ */
+export function formatRegisteredAt(iso: string | undefined): string | null {
+  if (!iso) return null;
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return null;
+  return format(at, "d MMM, HH:mm");
+}
+
 // startTime is a venue-local wall-clock string ("HH:MM"), never an instant — appended verbatim,
 // never reparsed as a Date. Every page's event meta line must go through here.
 export function eventMetaLine(

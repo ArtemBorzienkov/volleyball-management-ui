@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { TeamRosterEditor, type TeamDraft } from "@/components/ongoing/team-roster-editor";
+import { SoloPlayerDraftEditor } from "@/components/ongoing/solo-player-draft-editor";
 import { SelectInput } from "@/components/ui/select-input";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -41,9 +42,11 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
   const [visibility, setVisibility] = useState("public");
   const [scheme, setScheme] = useState("roundRobin");
   const [groupCount, setGroupCount] = useState("2");
+  const [qualifiersPerGroup, setQualifiersPerGroup] = useState("2");
   const [rotationRounds, setRotationRounds] = useState("3");
   const [allowSoloRegistration, setAllowSoloRegistration] = useState(false);
   const [teams, setTeams] = useState<TeamDraft[]>([]);
+  const [soloPlayerIds, setSoloPlayerIds] = useState<string[]>([]);
 
   const { data: players = [] } = useQuery<Player[]>({
     queryKey: ["players"],
@@ -58,6 +61,12 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
   const hasIncompleteTeam = teams.some((team) => !team.player1Id || !team.player2Id);
   // fullRotation registers players, so the pre-filled team roster and the maxTeams cap do not apply.
   const isFullRotation = scheme === "fullRotation";
+  const isGroupsPlayoff = scheme === "groupsPlayoff";
+  // The pool is offered wherever the tournament accepts partnerless entrants — always for
+  // fullRotation, and for the other schemes once the organiser ticks the box.
+  const acceptsSoloPlayers = isFullRotation || allowSoloRegistration;
+  const filledSoloPlayerIds = soloPlayerIds.filter(Boolean);
+  const hasEmptySoloRow = acceptsSoloPlayers && soloPlayerIds.some((playerId) => !playerId);
 
   const createMutation = useMutation({
     mutationFn: async (): Promise<CreatedOngoingEvent> => {
@@ -81,6 +90,15 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
       } else {
         body.allowSoloRegistration = allowSoloRegistration;
         if (completeTeams.length) body.teams = completeTeams;
+      }
+      if (isGroupsPlayoff) {
+        // Sent explicitly so the bracket is the shape the organiser chose. The API defaults both
+        // when they are omitted, which is what an older client relies on.
+        body.groupCount = Number(groupCount);
+        body.qualifiersPerGroup = Number(qualifiersPerGroup);
+      }
+      if (acceptsSoloPlayers && filledSoloPlayerIds.length) {
+        body.soloPlayers = filledSoloPlayerIds;
       }
       // startTime is a venue-local wall-clock string ("HH:MM"), never a timezone-aware instant.
       if (trimmedStartTime) body.startTime = trimmedStartTime;
@@ -217,6 +235,35 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
             ]}
           />
 
+          {isGroupsPlayoff && (
+            <>
+              <div className="flex flex-col gap-1.5 sm:w-28">
+                <label className="text-sm font-medium" htmlFor="playoff-groups" suppressHydrationWarning>
+                  {t("ongoing.config.groupCount")}
+                </label>
+                <Input
+                  id="playoff-groups"
+                  type="number"
+                  min={1}
+                  value={groupCount}
+                  onChange={(event) => setGroupCount(event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 sm:w-32">
+                <label className="text-sm font-medium" htmlFor="playoff-qualifiers" suppressHydrationWarning>
+                  {t("ongoing.config.qualifiersPerGroup")}
+                </label>
+                <Input
+                  id="playoff-qualifiers"
+                  type="number"
+                  min={1}
+                  value={qualifiersPerGroup}
+                  onChange={(event) => setQualifiersPerGroup(event.target.value)}
+                />
+              </div>
+            </>
+          )}
+
           {isFullRotation && (
             <>
               <SelectInput
@@ -252,13 +299,25 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
           </p>
         )}
 
+        {isGroupsPlayoff && (
+          <p className="text-xs text-muted-foreground" suppressHydrationWarning>
+            {t("ongoing.config.qualifiersPerGroupHint", {
+              total: Number(groupCount) * Number(qualifiersPerGroup),
+            })}
+          </p>
+        )}
+
         {!isFullRotation && (
         <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"
             className="mt-1"
             checked={allowSoloRegistration}
-            onChange={(event) => setAllowSoloRegistration(event.target.checked)}
+            onChange={(event) => {
+              setAllowSoloRegistration(event.target.checked);
+              // Clearing on the way off: a row left behind would be invisible but still submitted.
+              if (!event.target.checked) setSoloPlayerIds([]);
+            }}
           />
           <span className="flex flex-col gap-0.5">
             <span className="font-medium" suppressHydrationWarning>
@@ -280,6 +339,26 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
           </div>
         )}
 
+        {acceptsSoloPlayers && (
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium" suppressHydrationWarning>
+              {t("ongoing.create.soloPlayersLabel")}
+            </label>
+            <SoloPlayerDraftEditor
+              playerIds={soloPlayerIds}
+              players={players}
+              unavailablePlayerIds={teams.flatMap((team) => [team.player1Id, team.player2Id]).filter(Boolean)}
+              onChange={setSoloPlayerIds}
+            />
+          </div>
+        )}
+
+        {hasEmptySoloRow && (
+          <p className="text-sm text-destructive" suppressHydrationWarning>
+            {t("ongoing.create.incompleteSoloPlayer")}
+          </p>
+        )}
+
         {hasIncompleteTeam && (
           <p className="text-sm text-destructive" suppressHydrationWarning>
             {t("ongoing.config.incompleteTeam")}
@@ -294,7 +373,12 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
           <Button
             className="self-start"
             onClick={() => createMutation.mutate()}
-            disabled={!name.trim() || (!isFullRotation && hasIncompleteTeam) || createMutation.isPending}
+            disabled={
+              !name.trim() ||
+              (!isFullRotation && hasIncompleteTeam) ||
+              hasEmptySoloRow ||
+              createMutation.isPending
+            }
           >
             <span suppressHydrationWarning>{t("ongoing.create.submit")}</span>
           </Button>

@@ -177,7 +177,11 @@
       "visibilityPrivate": "Prywatny — drużyny dodaję tylko ja",
       "allowSoloLabel": "Zezwól na zapisy bez partnera",
       "allowSoloHint": "Gracze bez partnera trafiają do puli i przed turniejem są łączeni w pary według rankingu.",
-      "rotationHint": "Zawodnicy zapisują się pojedynczo; potrzeba dokładnie {{players}}, rozstawionych w czwórki według rankingu"
+      "rotationHint": "Zawodnicy zapisują się pojedynczo; potrzeba dokładnie {{players}}, rozstawionych w czwórki według rankingu",
+      "soloPlayersLabel": "Zawodnicy bez partnera",
+      "addSoloPlayer": "Dodaj zawodnika",
+      "removeSoloPlayer": "Usuń zawodnika",
+      "incompleteSoloPlayer": "Wybierz zawodnika albo usuń pusty wiersz przed zapisem."
     },
     "empty": "Nie ma jeszcze turniejów.",
     "teams": "Drużyny",
@@ -199,7 +203,9 @@
       "standings": "Tabela",
       "bracket": "Drabinka",
       "results": "Wyniki",
-      "rotation": "Rotacja"
+      "rotation": "Rotacja",
+      "entrants": "Zapisani",
+      "rules": "Zasady"
     },
     "config": {
       "title": "Format",
@@ -353,6 +359,40 @@
       "groupStrongest": "Grupa {{number}} — najsilniejsza",
       "groupMiddle": "Grupa {{number}}",
       "groupWeakest": "Grupa {{number}} — najsłabsza"
+    },
+    "entrants": {
+      "empty": "Nikt się jeszcze nie zapisał."
+    },
+    "rules": {
+      "tiebreakTitle": "Jak ustalane są miejsca",
+      "tiebreakTeams": "Drużyny są ustawiane według zwycięstw, potem różnicy punktów, potem punktów zdobytych. Nierozegrany mecz nie liczy się nikomu.",
+      "tiebreakRotation": "Zawodnicy są ustawiani według zwycięstw, potem różnicy punktów. Jeśli dwóch nadal jest równych, wyższe miejsce zajmuje niżej notowany — ta sama różnica to lepszy wynik dla tego, od kogo oczekiwano mniej.",
+      "roundRobin": {
+        "title": "Każdy z każdym",
+        "summary": "Jedna tabela. Każda drużyna gra z każdą, a zwycięzcę wyłania tabela — nie ma fazy pucharowej.",
+        "step1": "Drużyny zapisują się parami. Kto wchodzi bez partnera, czeka w puli, aż organizator dobierze pary.",
+        "step2": "Organizator generuje terminarz: każda para drużyn spotyka się {{gamesPerPair}} raz(y) na {{courts}} boisku/boiskach.",
+        "step3": "Wyniki są wpisywane na bieżąco. Gdy wszystkie mecze mają wynik, wygrywa pierwsza drużyna w tabeli."
+      },
+      "groupsPlayoff": {
+        "title": "Grupy + faza pucharowa",
+        "summary": "Faza grupowa, potem puchar. Grup: {{groups}}, z każdej awansuje najlepszych {{qualifiers}} — razem drabinka na {{bracketTeams}} drużyn.",
+        "step1": "Drużyny zapisują się parami, potem organizator generuje terminarz i zostają rozdzielone na {{groups}} grup(y).",
+        "step2": "W grupie każda drużyna gra z każdą {{gamesPerPair}} raz(y), na {{courts}} boisku/boiskach.",
+        "step3": "Gdy wszystkie mecze grupowe mają wynik, awansuje po {{qualifiers}} najlepszych z każdej grupy — razem {{bracketTeams}} — rozstawionych tak, by zwycięzcy grup trafiali najpierw na najsłabszych awansujących.",
+        "step4": "Drabinka jest pucharowa: jedna porażka i koniec. Finał rozstrzyga 1. i 2. miejsce, a mecz o trzecie miejsce, jeśli jest, rozstrzyga 3."
+      },
+      "fullRotation": {
+        "title": "Pełna rotacja",
+        "summary": "Format indywidualny. Zapisujesz się sam, w każdym meczu masz innego partnera i przechodzisz między grupami — po {{groupSize}} zawodników w każdej grupie, a liczba grup zależy od liczby uczestników.",
+        "step1": "Zawodnicy zapisują się pojedynczo — nie ma drużyn. Do wypełnienia grup potrzeba dokładnie {{players}}.",
+        "step2": "Do pierwszej rundy zawodnicy są rozstawiani według rankingu: najsilniejszych {{groupSize}} tworzy grupę 1, kolejnych {{groupSize}} grupę 2, i tak dalej.",
+        "step3": "W grupie każdy gra w parze z każdym dokładnie raz — {{fixtures}} mecze, po których każdy ma własne miejsce w tabeli grupy.",
+        "step4": "Gdy wszystkie mecze rundy mają wynik, pierwszych {{movers}} z każdej grupy awansuje wyżej, a ostatnich {{movers}} spada niżej. Najsilniejsza grupa zatrzymuje swoich pierwszych {{movers}}, a najsłabsza swoich ostatnich {{movers}} — dalej nie ma dokąd.",
+        "step5": "Po rundzie {{rounds}} wynikiem jest tabela najsilniejszej grupy: jej zwycięzca wygrywa turniej, a pozostałe grupy zajmują miejsca poniżej."
+      },
+      "servingTitle": "Zagrywka",
+      "serving": "Zagrywkę kieruje się do tego samego zawodnika nie więcej niż raz; zagrywka środkiem, między zawodników, nie liczy się."
     }
   },
   "calendar": {

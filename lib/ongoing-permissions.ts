@@ -71,6 +71,15 @@ export function isOngoingCancellationOpen(dateIso: string): boolean {
   return today < eventDay
 }
 
+/**
+ * Mirrors the backend's isRegistrationDateOpen: entries close at the end of the day before the
+ * tournament. Same UTC-day rule as isOngoingCancellationOpen — named separately because the two
+ * answer different questions and could diverge.
+ */
+export function isOngoingRegistrationDateOpen(dateIso: string): boolean {
+  return isOngoingCancellationOpen(dateIso)
+}
+
 export function canRegisterInOngoingEvent(user: OngoingAccessUser | null, event: OngoingAccessEvent): boolean {
   if (!user) return false
   if (canManageOngoingEvent(user, event.createdByUserId)) return true

@@ -56,6 +56,71 @@ describe('RegisterTeamDialog — pairs-based scheme', () => {
   })
 })
 
+describe('RegisterTeamDialog — already entered', () => {
+  // The mocked useAuth below is player p1; these fixtures put that player on the roster.
+  const entrant = (playerId: string) => ({
+    id: `s-${playerId}`,
+    player: { id: playerId, name: playerId },
+    rating: 1000,
+  })
+  const pair = (a: string, b: string) => ({
+    id: `t-${a}`,
+    player1: { id: a, name: a },
+    player2: { id: b, name: b },
+    rating: 2000,
+    groupIndex: null,
+  })
+
+  const registerControl = () => screen.queryByRole('button', { name: /calendar\.register$/ })
+
+  it('offers registration to someone who has not entered', () => {
+    render(<RegisterTeamDialog event={buildEvent()} players={players} />)
+
+    expect(registerControl()).toBeInTheDocument()
+  })
+
+  it('offers nothing to a player already in the solo pool', () => {
+    render(
+      <RegisterTeamDialog event={buildEvent({ soloPlayers: [entrant('p1')] as never[] })} players={players} />,
+    )
+
+    expect(registerControl()).not.toBeInTheDocument()
+  })
+
+  it('offers nothing to a player already on a team', () => {
+    render(<RegisterTeamDialog event={buildEvent({ teams: [pair('p1', 'p9')] as never[] })} players={players} />)
+
+    expect(registerControl()).not.toBeInTheDocument()
+  })
+
+  it('recognises the player as the second half of a pair too', () => {
+    render(<RegisterTeamDialog event={buildEvent({ teams: [pair('p9', 'p1')] as never[] })} players={players} />)
+
+    expect(registerControl()).not.toBeInTheDocument()
+  })
+
+  it('still offers registration when somebody else is entered', () => {
+    render(
+      <RegisterTeamDialog event={buildEvent({ soloPlayers: [entrant('p9')] as never[] })} players={players} />,
+    )
+
+    expect(registerControl()).toBeInTheDocument()
+  })
+
+  it('says nothing at all once entered, not even that the tournament has started', () => {
+    // Being in settles the question — the cancel control beside this one is the remaining action.
+    render(
+      <RegisterTeamDialog
+        event={buildEvent({ hasStarted: true, soloPlayers: [entrant('p1')] as never[] })}
+        players={players}
+      />,
+    )
+
+    expect(screen.queryByText('calendar.inProgressBadge')).not.toBeInTheDocument()
+    expect(registerControl()).not.toBeInTheDocument()
+  })
+})
+
 describe('RegisterTeamDialog — tournament state', () => {
   it('says the tournament is in progress instead of offering registration', () => {
     render(<RegisterTeamDialog event={buildEvent({ hasStarted: true })} players={players} />)

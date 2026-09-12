@@ -196,12 +196,16 @@ export interface OngoingTeam {
   player2: OngoingTeamPlayer;
   rating: number;
   groupIndex: number | null;
+  /** When the entry was made — a real instant, unlike the tournament's date-only `date`. */
+  registeredAt?: string;
 }
 
 export interface OngoingSoloPlayer {
   id: string;
   player: OngoingTeamPlayer;
   rating: number;
+  /** When the entry was made — a real instant, unlike the tournament's date-only `date`. */
+  registeredAt?: string;
 }
 
 export interface OngoingSoloPair {

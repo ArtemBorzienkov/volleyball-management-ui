@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { RegisterTeamDialog } from "@/components/ongoing/register-team-dialog";
 import { CreateTournamentForm } from "@/components/ongoing/create-tournament-form";
 import { CancelRegistrationButton } from "@/components/ongoing/cancel-registration-button";
-import { teamName } from "@/lib/ongoing-standings";
+import { OngoingEntrantsList } from "@/components/ongoing/ongoing-entrants-list";
 import { isOngoingEventFull } from "@/lib/ongoing-permissions";
 import { eventMetaLine } from "@/lib/ongoing-date";
 import { normalizeOngoingOpenEvent, type OlderOngoingOpenEvent } from "@/lib/ongoing-normalize";
@@ -160,40 +160,11 @@ export default function CalendarPage() {
                   </div>
                 </div>
 
-                {event.teams.length > 0 && (
-                  <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-                    <span className="text-xs font-medium" suppressHydrationWarning>
-                      {t("calendar.teams")}
-                    </span>
-                    <ol className="flex flex-col gap-1">
-                      {[...event.teams]
-                        .sort((a, b) => b.rating - a.rating)
-                        .map((team, index) => (
-                          <li key={team.id}>
-                            {index + 1}. {teamName(team)} <span className="text-foreground">{team.rating}</span>
-                          </li>
-                        ))}
-                    </ol>
-                  </div>
-                )}
-
-                {event.soloPlayers.length > 0 && (
-                  <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-                    <span className="text-xs font-medium" suppressHydrationWarning>
-                      {/* In a rotation tournament everyone enters alone, so the pool IS the entry
-                          list — "without a partner" would describe nothing. */}
-                      {event.scheme === "fullRotation" ? t("calendar.participants") : t("calendar.soloPool")}
-                    </span>
-                    {/* Copied before sorting: the array belongs to the query cache. */}
-                    {[...event.soloPlayers]
-                      .sort((a, b) => b.rating - a.rating)
-                      .map((solo) => (
-                        <span key={solo.id}>
-                          {playerDisplayName(solo.player)} <span className="text-foreground">{solo.rating}</span>
-                        </span>
-                      ))}
-                  </div>
-                )}
+                <OngoingEntrantsList
+                  teams={event.teams}
+                  soloPlayers={event.soloPlayers}
+                  scheme={event.scheme}
+                />
               </CardContent>
             </Card>
             );

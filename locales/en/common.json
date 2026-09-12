@@ -177,7 +177,11 @@
       "visibilityPrivate": "Private — only I add teams",
       "allowSoloLabel": "Allow registration without a partner",
       "allowSoloHint": "Players without a partner join a pool and are paired by rating before the tournament.",
-      "rotationHint": "Players register alone; exactly {{players}} are needed, seeded into groups of four by rating"
+      "rotationHint": "Players register alone; exactly {{players}} are needed, seeded into groups of four by rating",
+      "soloPlayersLabel": "Players without a partner",
+      "addSoloPlayer": "Add player",
+      "removeSoloPlayer": "Remove player",
+      "incompleteSoloPlayer": "Pick a player or remove the empty row before saving."
     },
     "empty": "No tournaments yet.",
     "teams": "Teams",
@@ -199,7 +203,9 @@
       "standings": "Standings",
       "bracket": "Bracket",
       "results": "Results",
-      "rotation": "Rotation"
+      "rotation": "Rotation",
+      "entrants": "Entrants",
+      "rules": "Rules"
     },
     "config": {
       "title": "Format",
@@ -353,6 +359,40 @@
       "groupStrongest": "Group {{number}} — strongest",
       "groupMiddle": "Group {{number}}",
       "groupWeakest": "Group {{number}} — weakest"
+    },
+    "entrants": {
+      "empty": "Nobody has entered yet."
+    },
+    "rules": {
+      "tiebreakTitle": "How places are decided",
+      "tiebreakTeams": "Teams are ordered by wins, then by point difference, then by points scored. An unplayed game counts for nobody.",
+      "tiebreakRotation": "Players are ordered by wins, then by point difference. If two are still level, the lower-rated player takes the higher place — matching the same margin is the better result for whoever was expected to do worse.",
+      "roundRobin": {
+        "title": "Round robin",
+        "summary": "One table. Every team plays every other team, and the standings decide the winner — there is no knockout stage.",
+        "step1": "Teams register as pairs. Anyone entering without a partner waits in the pool until the organiser pairs them up.",
+        "step2": "The organiser generates the schedule: every pair of teams meets {{gamesPerPair}} time(s), spread across {{courts}} court(s).",
+        "step3": "Results are entered as they are played. When every game has a score, the top of the table wins."
+      },
+      "groupsPlayoff": {
+        "title": "Groups + playoff",
+        "summary": "A group stage followed by a knockout. {{groups}} group(s), the best {{qualifiers}} of each advancing to a bracket of {{bracketTeams}} teams.",
+        "step1": "Teams register as pairs, then the organiser generates the schedule and they are dealt into {{groups}} group(s).",
+        "step2": "Inside a group every team plays every other {{gamesPerPair}} time(s), on {{courts}} court(s).",
+        "step3": "Once every group game has a result, the top {{qualifiers}} of each group go through — {{bracketTeams}} teams in total — seeded so group winners meet the weakest qualifiers first.",
+        "step4": "The bracket is single elimination: lose once and you are out. The final decides 1st and 2nd, and a third-place match, if there is one, decides 3rd."
+      },
+      "fullRotation": {
+        "title": "Full rotation",
+        "summary": "An individual format. You enter alone, change partner every game, and move between groups as you win — {{groupSize}} players in each group, and the number of groups depends on how many take part.",
+        "step1": "Players register individually — there are no teams. Exactly {{players}} are needed to fill the groups.",
+        "step2": "For the first round players are seeded by rating: the strongest {{groupSize}} form group 1, the next {{groupSize}} group 2, and so on.",
+        "step3": "Within a group everyone partners everyone else exactly once — {{fixtures}} games, after which each player has their own place in the group table.",
+        "step4": "When every game of the round has a result, the top {{movers}} of each group move up and the bottom {{movers}} move down. The strongest group keeps its top {{movers}} and the weakest keeps its bottom {{movers}} — there is nowhere further to go.",
+        "step5": "After round {{rounds}} the strongest group’s table is the result: its winner wins the tournament, and the remaining groups fill the places below it."
+      },
+      "servingTitle": "Serving",
+      "serving": "Serve to the same player no more than once; a serve down the middle, between the players, does not count."
     }
   },
   "calendar": {

@@ -20,7 +20,11 @@ import { NewPlayerInlineForm } from "@/components/ongoing/new-player-inline";
 import { LoginRequiredDialog } from "@/components/auth/login-required-dialog";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/components/providers/auth-provider";
-import { canRegisterInOngoingEvent, isOngoingEventFull } from "@/lib/ongoing-permissions";
+import {
+  canRegisterInOngoingEvent,
+  isOngoingEventFull,
+  ongoingEntrantPlayerIds,
+} from "@/lib/ongoing-permissions";
 import API from "@/lib/api";
 import type { OngoingOpenEvent, Player } from "@/lib/types";
 
@@ -128,6 +132,8 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
 
   const canRegister = Boolean(user?.playerId) && Boolean(player2Id) && user?.playerId !== player2Id;
 
+  const isAlreadyEntered = Boolean(user?.playerId && ongoingEntrantPlayerIds(event).has(user.playerId));
+
   const renderPartnerField = () => (
     <div className="flex flex-col gap-2">
       <div className="flex items-end gap-2">
@@ -168,9 +174,14 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
     </div>
   );
 
-  // Both of these come before every other branch: nobody can register, logged in or not, and saying
-  // why is more use than a disabled button. The calendar lists these tournaments so people can
-  // follow them — see findOpen.
+  // Nothing to offer someone who is already in: the cancel control alongside this one is their
+  // action now. Checked before every other branch — being entered settles the question regardless of
+  // whether the tournament is full, private, or under way.
+  if (isAlreadyEntered) return null;
+
+  // Both of these come before the remaining branches: nobody can register, logged in or not, and
+  // saying why is more use than a disabled button. The calendar lists these tournaments so people
+  // can follow them — see findOpen.
   if (event.hasStarted) {
     return (
       <Badge variant="secondary" title={t("calendar.inProgressHint")}>

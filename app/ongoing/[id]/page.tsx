@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Settings, CalendarDays, ListOrdered, Trophy, FlagTriangleRight, Medal, Trash2, Repeat } from "lucide-react";
+import { Settings, CalendarDays, ListOrdered, Trophy, FlagTriangleRight, Medal, Trash2, Repeat, Users, BookOpen } from "lucide-react";
 import { Navigation } from "@/components/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,11 @@ import { OngoingMatchesTab } from "@/components/ongoing/ongoing-matches-tab";
 import { OngoingStandingsTab } from "@/components/ongoing/ongoing-standings-tab";
 import { OngoingBracketTab } from "@/components/ongoing/ongoing-bracket-tab";
 import { OngoingRotationTab } from "@/components/ongoing/ongoing-rotation-tab";
+import { OngoingEntrantsList } from "@/components/ongoing/ongoing-entrants-list";
+import { RegisterTeamDialog } from "@/components/ongoing/register-team-dialog";
+import { CancelRegistrationButton } from "@/components/ongoing/cancel-registration-button";
+import { toOpenEventShape } from "@/lib/ongoing-open-event";
+import { OngoingRulesTab } from "@/components/ongoing/ongoing-rules-tab";
 import { OngoingResultsTab } from "@/components/ongoing/ongoing-results-tab";
 import { useAuth } from "@/components/providers/auth-provider";
 import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
@@ -28,15 +33,16 @@ import API from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { isPlayed } from "@/lib/ongoing-standings";
 import { eventMetaLine } from "@/lib/ongoing-date";
+import { shouldShowPlayDayTabs } from "@/lib/ongoing-tabs";
 import {
   buildFinishTournamentPrefill,
   getFinishTournamentGate,
   ONGOING_FINISH_EVENT_ID_KEY,
   ONGOING_FINISH_PREFILL_KEY,
 } from "@/lib/ongoing-finish";
-import type { OngoingEvent } from "@/lib/types";
+import type { OngoingEvent, Player } from "@/lib/types";
 
-type OngoingTab = "config" | "matches" | "standings" | "bracket" | "rotation" | "results";
+type OngoingTab = "config" | "entrants" | "rules" | "matches" | "standings" | "bracket" | "rotation" | "results";
 
 class HttpError extends Error {
   constructor(public readonly status: number) {
@@ -45,11 +51,13 @@ class HttpError extends Error {
 }
 
 const TABS: { key: OngoingTab; labelKey: string; icon: typeof Settings }[] = [
+  { key: "entrants", labelKey: "ongoing.tabs.entrants", icon: Users },
   { key: "rotation", labelKey: "ongoing.tabs.rotation", icon: Repeat },
   { key: "matches", labelKey: "ongoing.tabs.matches", icon: CalendarDays },
   { key: "standings", labelKey: "ongoing.tabs.standings", icon: ListOrdered },
   { key: "bracket", labelKey: "ongoing.tabs.bracket", icon: Trophy },
   { key: "results", labelKey: "ongoing.tabs.results", icon: Medal },
+  { key: "rules", labelKey: "ongoing.tabs.rules", icon: BookOpen },
   { key: "config", labelKey: "ongoing.tabs.config", icon: Settings },
 ];
 
@@ -73,18 +81,34 @@ export default function OngoingEventPage() {
     },
   });
 
+  const { data: players = [] } = useQuery<Player[]>({
+    queryKey: ["players"],
+    queryFn: async () => {
+      const response = await fetch(API.GET_ALL_PLAYERS);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return response.json();
+    },
+  });
+
   const isNotFound = error instanceof HttpError && error.status === 404;
 
   const canManage = event ? canManageOngoingEvent(user, event.createdByUserId) : false;
   const hasPlayoffScheme = event?.config?.scheme === "groupsPlayoff";
   const isFullRotation = event?.config?.scheme === "fullRotation";
+  // Play-day tabs. Fixtures and final places are only meaningful once a schedule exists and the
+  // tournament is actually happening — before that they are an empty shell on a page whose useful
+  // content is the roster and the rules.
+  const showPlayDayTabs = Boolean(event && shouldShowPlayDayTabs(event));
+
   const visibleTabs = TABS.filter((item) => {
     if (item.key === "config") return canManage;
     if (item.key === "bracket") return hasPlayoffScheme;
+    if (item.key === "rotation" || item.key === "results") {
+      return showPlayDayTabs && (item.key === "results" || isFullRotation);
+    }
     // The rotation tab carries this scheme's fixtures AND its tables, so the flat match list and the
     // team-based standings table would only show the same games a second time, keyed on teams that
     // do not exist here.
-    if (item.key === "rotation") return isFullRotation;
     if (item.key === "matches" || item.key === "standings") return !isFullRotation;
     return true;
   });
@@ -232,6 +256,25 @@ export default function OngoingEventPage() {
             </div>
 
             <div className="mt-6">
+              {activeTab === "entrants" && (
+                <div className="flex flex-col gap-4">
+                  {/* Reuses the calendar's controls via the open-event shape, so every state they
+                      already handle — started, closed, full, private — behaves identically here. */}
+                  {!event.finishedAt && (
+                    <div className="flex flex-wrap items-start gap-2">
+                      <RegisterTeamDialog event={toOpenEventShape(event)} players={players} />
+                      <CancelRegistrationButton event={toOpenEventShape(event)} />
+                    </div>
+                  )}
+                  <OngoingEntrantsList
+                    teams={event.teams}
+                    soloPlayers={event.soloPlayers}
+                    scheme={event.config.scheme}
+                    emptyText={t("ongoing.entrants.empty")}
+                  />
+                </div>
+              )}
+              {activeTab === "rules" && <OngoingRulesTab event={event} />}
               {activeTab === "rotation" && <OngoingRotationTab event={event} />}
               {activeTab === "matches" && <OngoingMatchesTab event={event} />}
               {activeTab === "standings" && <OngoingStandingsTab event={event} />}
