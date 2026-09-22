@@ -27,6 +27,7 @@ export function toOpenEventShape(event: OngoingEvent): OngoingOpenEvent {
     teams: event.teams,
     visibility: event.config.visibility,
     allowSoloRegistration: event.config.allowSoloRegistration,
+    soloOnlyRegistration: event.config.soloOnlyRegistration ?? false,
     soloPlayers: event.soloPlayers,
     scheme: event.config.scheme,
     groupCount: event.config.groupCount,

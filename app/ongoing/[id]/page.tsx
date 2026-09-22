@@ -27,7 +27,7 @@ import { toOpenEventShape } from "@/lib/ongoing-open-event";
 import { OngoingRulesTab } from "@/components/ongoing/ongoing-rules-tab";
 import { OngoingResultsTab } from "@/components/ongoing/ongoing-results-tab";
 import { useAuth } from "@/components/providers/auth-provider";
-import { canManageOngoingEvent } from "@/lib/ongoing-permissions";
+import { canManageOngoingEvent, isSoloOnlyOngoingEvent } from "@/lib/ongoing-permissions";
 import { normalizeOngoingEvent, type OlderOngoingEvent } from "@/lib/ongoing-normalize";
 import API from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -269,7 +269,10 @@ export default function OngoingEventPage() {
                   <OngoingEntrantsList
                     teams={event.teams}
                     soloPlayers={event.soloPlayers}
-                    scheme={event.config.scheme}
+                    soloOnly={isSoloOnlyOngoingEvent({
+                      scheme: event.config.scheme,
+                      soloOnlyRegistration: event.config.soloOnlyRegistration,
+                    })}
                     emptyText={t("ongoing.entrants.empty")}
                   />
                 </div>

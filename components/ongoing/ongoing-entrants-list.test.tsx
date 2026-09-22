@@ -18,7 +18,7 @@ describe('OngoingEntrantsList', () => {
       <OngoingEntrantsList
         teams={[team('t1', 'Ann', 'Bob', 1800), team('t2', 'Cid', 'Dee', 2200)]}
         soloPlayers={[]}
-        scheme="roundRobin"
+        soloOnly={false}
       />,
     )
 
@@ -30,22 +30,24 @@ describe('OngoingEntrantsList', () => {
 
   it('lists partnerless entrants strongest first', () => {
     render(
-      <OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Low', 900), solo('s2', 'High', 1500)]} scheme="roundRobin" />,
+      <OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Low', 900), solo('s2', 'High', 1500)]} soloOnly={false} />,
     )
 
     const text = document.body.textContent ?? ''
     expect(text.indexOf('High')).toBeLessThan(text.indexOf('Low'))
   })
 
-  it('calls the pool "participants" for a rotation tournament', () => {
-    render(<OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Ann', 1000)]} scheme="fullRotation" />)
+  // True of fullRotation and of any solo-only tournament: with no pair half to contrast against,
+  // "waiting without a partner" would describe nobody.
+  it('calls the pool "participants" when pairs cannot enter at all', () => {
+    render(<OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Ann', 1000)]} soloOnly />)
 
     expect(screen.getByText('calendar.participants')).toBeInTheDocument()
     expect(screen.queryByText('calendar.soloPool')).not.toBeInTheDocument()
   })
 
   it('keeps the "without a partner" wording for pairs-based schemes', () => {
-    render(<OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Ann', 1000)]} scheme="roundRobin" />)
+    render(<OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Ann', 1000)]} soloOnly={false} />)
 
     expect(screen.getByText('calendar.soloPool')).toBeInTheDocument()
   })
@@ -55,7 +57,7 @@ describe('OngoingEntrantsList', () => {
       <OngoingEntrantsList
         teams={[team('t1', 'Ann', 'Bob', 1800)]}
         soloPlayers={[solo('s1', 'Cid', 1000)]}
-        scheme="roundRobin"
+        soloOnly={false}
       />,
     )
 
@@ -65,7 +67,7 @@ describe('OngoingEntrantsList', () => {
 
   it('masks an entrant who opted out of being named', () => {
     render(
-      <OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Artem Borzienkov', 1000, true)]} scheme="roundRobin" />,
+      <OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Artem Borzienkov', 1000, true)]} soloOnly={false} />,
     )
 
     expect(screen.getByText(/Ar\*\*\* Bo\*\*\*/)).toBeInTheDocument()
@@ -73,19 +75,19 @@ describe('OngoingEntrantsList', () => {
   })
 
   it('renders the empty text when given one and nobody has entered', () => {
-    render(<OngoingEntrantsList teams={[]} soloPlayers={[]} scheme="roundRobin" emptyText="nobody yet" />)
+    render(<OngoingEntrantsList teams={[]} soloPlayers={[]} soloOnly={false} emptyText="nobody yet" />)
 
     expect(screen.getByText('nobody yet')).toBeInTheDocument()
   })
 
   it('renders nothing at all when empty and given no empty text — the calendar card stays compact', () => {
-    const { container } = render(<OngoingEntrantsList teams={[]} soloPlayers={[]} scheme="roundRobin" />)
+    const { container } = render(<OngoingEntrantsList teams={[]} soloPlayers={[]} soloOnly={false} />)
 
     expect(container).toBeEmptyDOMElement()
   })
 
   it('omits the pairs section entirely when there are none', () => {
-    render(<OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Ann', 1000)]} scheme="roundRobin" />)
+    render(<OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Ann', 1000)]} soloOnly={false} />)
 
     expect(screen.queryByText('calendar.teams')).not.toBeInTheDocument()
   })
@@ -98,7 +100,7 @@ describe('OngoingEntrantsList — when each entry was made', () => {
 
   it('shows when a pair entered', () => {
     render(
-      <OngoingEntrantsList teams={[team('t1', 'Ann', 'Bob', 1800, at)]} soloPlayers={[]} scheme="roundRobin" />,
+      <OngoingEntrantsList teams={[team('t1', 'Ann', 'Bob', 1800, at)]} soloPlayers={[]} soloOnly={false} />,
     )
 
     expect(screen.getByRole('listitem').textContent).toMatch(/\d{1,2}:\d{2}/)
@@ -106,20 +108,20 @@ describe('OngoingEntrantsList — when each entry was made', () => {
   })
 
   it('shows when a partnerless player entered', () => {
-    render(<OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Cid', 1000, false, at)]} scheme="roundRobin" />)
+    render(<OngoingEntrantsList teams={[]} soloPlayers={[solo('s1', 'Cid', 1000, false, at)]} soloOnly={false} />)
 
     expect(document.body.textContent).toMatch(/Sep.*\d{1,2}:\d{2}/)
   })
 
   it('renders nothing extra when the payload carries no timestamp', () => {
-    render(<OngoingEntrantsList teams={[team('t1', 'Ann', 'Bob', 1800)]} soloPlayers={[]} scheme="roundRobin" />)
+    render(<OngoingEntrantsList teams={[team('t1', 'Ann', 'Bob', 1800)]} soloPlayers={[]} soloOnly={false} />)
 
     expect(screen.getByRole('listitem').textContent).not.toMatch(/\d{1,2}:\d{2}/)
   })
 
   it('ignores an unparseable timestamp rather than printing "Invalid Date"', () => {
     render(
-      <OngoingEntrantsList teams={[team('t1', 'Ann', 'Bob', 1800, 'not-a-date')]} soloPlayers={[]} scheme="roundRobin" />,
+      <OngoingEntrantsList teams={[team('t1', 'Ann', 'Bob', 1800, 'not-a-date')]} soloPlayers={[]} soloOnly={false} />,
     )
 
     expect(screen.getByRole('listitem').textContent).not.toMatch(/Invalid/)

@@ -122,10 +122,17 @@ the organiser, whether it is **public** or **private**, the entrants so far, and
 the players waiting without a partner. Registering opens a dialog; a logged-out
 visitor gets a login prompt first and is returned to the dialog afterwards. A full
 tournament stays listed with its control disabled and a "no spots left" note, and
-an entrant can cancel their own registration up to the day before.
+an entrant can cancel their own registration until **24 hours before the start**
+(`isOngoingCancellationOpen`, which mirrors the API rule and reads `startTime`
+against the event's UTC day; without a start time it measures from midnight). The
+organiser is not bound by it.
 
 "New tournament" creates one: name, capacity, place, time, date, who may register,
 and the **tournament type** — which is where a full-rotation event is set up.
+**Solo registration only** is there too: it closes the pair path on any scheme, so
+everyone enters alone and the organiser builds the teams from the pool
+(`isSoloOnlyOngoingEvent`, true for `fullRotation` by construction). The register
+dialog then offers the solo path alone, with no mode switch.
 
 #### `/ongoing/[id]` — Live tournament
 Tabs over one event. Which tabs appear depends on the scheme, so a tab never shows
@@ -133,12 +140,19 @@ the same games twice under a different model:
 
 | Tab | Shown for | Contents |
 |-----|-----------|----------|
-| **Rotation** | `fullRotation` | Every round's groups, their three fixtures with score entry, the per-player table, and "generate next round". |
+| **Entrants** | all | The roster: pairs and solo entrants, each with its registration time. |
+| **Rotation** | `fullRotation`, on the play day | Every round's groups, their three fixtures with score entry, the per-player table, and "generate next round". |
 | **Matches** | the other schemes | The flat fixture list, grouped by round, with score entry. |
 | **Standings** | the other schemes | The team table. |
 | **Bracket** | `groupsPlayoff` | The knockout tree. |
-| **Results** | all | Final places, and the hand-off into `/add-results`. |
-| **Config** | organiser/admin | Courts, caps, visibility, scheme and its fields. |
+| **Results** | on the play day | Final places, and the hand-off into `/add-results`. |
+| **Rules** | all, logged out included | How this tournament is run, in the reader's language. |
+| **Config** | organiser/admin | Courts, caps, visibility, registration mode, scheme and its fields, and which rules the Rules tab shows. |
+
+"On the play day" is `shouldShowPlayDayTabs` in
+[`lib/ongoing-tabs.ts`](lib/ongoing-tabs.ts): a schedule has to exist **and** the
+tournament has to be happening today. Before then those two tabs are an empty
+shell, and the useful content is the roster and the rules.
 
 **Full rotation** is the individual format: players register alone, are seeded by
 rating into groups of four, and every player partners every other player in their
@@ -149,6 +163,28 @@ put. After the configured last round the strongest group's table is the result. 
 promote/relegate arrows next to each place come from
 [`lib/ongoing-rotation.ts`](lib/ongoing-rotation.ts); the tables themselves are
 computed by the API, so a corrected score reshuffles them on the next refetch.
+
+**Forming teams from the pool** (solo-only tournaments and any event with a pool):
+"Form teams" opens the API's rating-based suggestion — strongest with weakest —
+as an editable draft. The organiser can swap either slot, remove a pair, add a
+blank pair and fill it by hand, or press "Pair the rest by rating" to complete the
+draft without disturbing what they built themselves
+([`lib/ongoing-pairing.ts`](lib/ongoing-pairing.ts) mirrors the API's `pairing.ts`
+so the two produce the same pairs). Confirming sends only the pairs in the draft —
+`POST :id/solo/form-teams` is additive, so anyone left over simply stays in the
+pool and can be paired later. A slot never offers a player already placed
+elsewhere, and an unfinished row blocks the confirm rather than being dropped
+silently on send.
+
+**The Rules tab** is built from a catalogue of rule keys,
+[`lib/ongoing-rules.ts`](lib/ongoing-rules.ts), which mirrors the API's own
+`rules.ts`: the numbered steps of the scheme, then the house rules (serving, how
+places are decided) as their own cards. The wording lives in the four locale files
+under `ongoing.rules.<key>`, with the event's own numbers interpolated into the
+steps. Each rule is a checkbox in Config; the *exclusions* are what travel to the
+API as `hiddenRules`, so a rule shipped later shows up on tournaments configured
+before it existed, and hiding a step of one scheme survives a switch to another
+and back.
 
 **Recording scores** is open to the tournament's entrants, not only its organiser — see
 `canRecordOngoingResult` in [`lib/ongoing-permissions.ts`](lib/ongoing-permissions.ts), which mirrors

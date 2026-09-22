@@ -181,7 +181,10 @@
       "soloPlayersLabel": "Players without a partner",
       "addSoloPlayer": "Add player",
       "removeSoloPlayer": "Remove player",
-      "incompleteSoloPlayer": "Pick a player or remove the empty row before saving."
+      "incompleteSoloPlayer": "Pick a player or remove the empty row before saving.",
+      "soloOnlyLabel": "Solo registration only",
+      "soloOnlyHint": "Pairs cannot register — everyone enters alone and you build the teams from the pool.",
+      "allowSoloLockedHint": "Solo-only registration is on, so this is the only way in."
     },
     "empty": "No tournaments yet.",
     "teams": "Teams",
@@ -248,15 +251,20 @@
         "empty": "Nobody is waiting without a partner.",
         "formTeams": "Form teams",
         "previewTitle": "Suggested teams",
-        "previewHint": "Strongest is paired with weakest. Swap anyone before confirming.",
+        "previewHint": "Strongest is paired with weakest. Swap anyone, build a pair by hand, or remove one before confirming.",
         "unpaired": "Left without a partner",
-        "oddWarning": "There is an odd number of players — one will stay in the pool.",
         "confirm": "Create these teams",
         "cancel": "Cancel",
         "remove": "Remove",
         "addPlayer": "Add player",
         "addPlayerHint": "This tournament accepts entrants without a partner — add one player instead of a team.",
-        "emptyRotation": "No players registered yet"
+        "emptyRotation": "No players registered yet",
+        "leftoverHint": "Anyone left here stays in the pool — you can pair them later.",
+        "addPair": "Add pair",
+        "autoPairRest": "Pair the rest by rating",
+        "removePair": "Remove pair",
+        "noPairs": "No teams yet — add a pair, or pair the rest by rating.",
+        "incompletePair": "Fill both slots of every pair, or remove the unfinished one."
       },
       "schemeFullRotation": "Full rotation",
       "rotationGroupCount": "Groups",
@@ -266,7 +274,10 @@
       "rotationRounds": "Rounds",
       "rotationRoundsHint": "After each round the top two of a group go up and the bottom two go down",
       "allowSoloLockedHint": "Full rotation registers players, not pairs — this cannot be turned off.",
-      "needRotationPlayers": "Register {{seats}} players to generate the first round — {{registered}} so far."
+      "needRotationPlayers": "Register {{seats}} players to generate the first round — {{registered}} so far.",
+      "soloOnlyLockedHint": "Full rotation registers players, not pairs — this cannot be turned off.",
+      "rulesTitle": "Rules shown to players",
+      "rulesHint": "Unticked rules are left off the Rules tab."
     },
     "matchesTab": {
       "round": "Round",
@@ -432,7 +443,8 @@
     "inProgressBadge": "In progress",
     "inProgressHint": "This tournament has started — its results are being recorded",
     "registrationClosedBadge": "Registration closed",
-    "registrationClosedHint": "Registration closed the day before the tournament"
+    "registrationClosedHint": "Registration closed the day before the tournament",
+    "soloOnlyHint": "This tournament registers players, not pairs — the organiser builds the teams"
   },
   "toast": {
     "tournamentCreated": "Tournament created",

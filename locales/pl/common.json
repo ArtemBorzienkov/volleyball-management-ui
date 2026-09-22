@@ -181,7 +181,10 @@
       "soloPlayersLabel": "Zawodnicy bez partnera",
       "addSoloPlayer": "Dodaj zawodnika",
       "removeSoloPlayer": "Usuń zawodnika",
-      "incompleteSoloPlayer": "Wybierz zawodnika albo usuń pusty wiersz przed zapisem."
+      "incompleteSoloPlayer": "Wybierz zawodnika albo usuń pusty wiersz przed zapisem.",
+      "soloOnlyLabel": "Tylko zapisy indywidualne",
+      "soloOnlyHint": "Pary nie mogą się zapisać — każdy wchodzi sam, a drużyny układasz z puli.",
+      "allowSoloLockedHint": "Włączone są tylko zapisy indywidualne, więc to jedyna droga."
     },
     "empty": "Nie ma jeszcze turniejów.",
     "teams": "Drużyny",
@@ -248,15 +251,20 @@
         "empty": "Nikt nie czeka bez partnera.",
         "formTeams": "Utwórz drużyny",
         "previewTitle": "Proponowane drużyny",
-        "previewHint": "Najsilniejszy trafia w parę z najsłabszym. Przed potwierdzeniem możesz zamienić dowolną osobę.",
+        "previewHint": "Najsilniejszy trafia z najsłabszym. Przed potwierdzeniem możesz zamienić zawodników, ułożyć parę ręcznie albo ją usunąć.",
         "unpaired": "Został bez partnera",
-        "oddWarning": "Nieparzysta liczba graczy — jedna osoba zostanie w puli.",
         "confirm": "Utwórz te drużyny",
         "cancel": "Anuluj",
         "remove": "Usuń",
         "addPlayer": "Dodaj gracza",
         "addPlayerHint": "Ten turniej przyjmuje zawodników bez partnera — możesz dodać jednego gracza zamiast drużyny.",
-        "emptyRotation": "Brak zapisanych zawodników"
+        "emptyRotation": "Brak zapisanych zawodników",
+        "leftoverHint": "Kto tu zostanie, zostaje w puli — można go dobrać później.",
+        "addPair": "Dodaj parę",
+        "autoPairRest": "Resztę według rankingu",
+        "removePair": "Usuń parę",
+        "noPairs": "Nie ma jeszcze drużyn — dodaj parę albo dobierz resztę według rankingu.",
+        "incompletePair": "Wypełnij oba miejsca w każdej parze albo usuń niedokończoną."
       },
       "schemeFullRotation": "Pełna rotacja",
       "rotationGroupCount": "Grupy",
@@ -266,7 +274,10 @@
       "rotationRounds": "Rundy",
       "rotationRoundsHint": "Po każdej rundzie dwóch pierwszych z grupy awansuje, dwóch ostatnich spada",
       "allowSoloLockedHint": "Pełna rotacja zapisuje zawodników, nie pary — nie można tego wyłączyć.",
-      "needRotationPlayers": "Zapisz {{seats}} zawodników, aby wygenerować pierwszą rundę — obecnie {{registered}}."
+      "needRotationPlayers": "Zapisz {{seats}} zawodników, aby wygenerować pierwszą rundę — obecnie {{registered}}.",
+      "soloOnlyLockedHint": "Pełna rotacja zapisuje zawodników, nie pary — nie można tego wyłączyć.",
+      "rulesTitle": "Zasady pokazywane zawodnikom",
+      "rulesHint": "Odznaczone zasady nie trafiają na zakładkę Zasady."
     },
     "matchesTab": {
       "round": "Runda",
@@ -432,7 +443,8 @@
     "inProgressBadge": "W toku",
     "inProgressHint": "Turniej już się rozpoczął — wyniki są wpisywane",
     "registrationClosedBadge": "Zapisy zamknięte",
-    "registrationClosedHint": "Zapisy zamknęły się dzień przed turniejem"
+    "registrationClosedHint": "Zapisy zamknęły się dzień przed turniejem",
+    "soloOnlyHint": "Ten turniej zapisuje zawodników, nie pary — drużyny układa organizator"
   },
   "toast": {
     "tournamentCreated": "Turniej utworzony",

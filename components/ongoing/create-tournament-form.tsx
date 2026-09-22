@@ -45,6 +45,7 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
   const [qualifiersPerGroup, setQualifiersPerGroup] = useState("2");
   const [rotationRounds, setRotationRounds] = useState("3");
   const [allowSoloRegistration, setAllowSoloRegistration] = useState(false);
+  const [soloOnlyRegistration, setSoloOnlyRegistration] = useState(false);
   const [teams, setTeams] = useState<TeamDraft[]>([]);
   const [soloPlayerIds, setSoloPlayerIds] = useState<string[]>([]);
 
@@ -62,9 +63,11 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
   // fullRotation registers players, so the pre-filled team roster and the maxTeams cap do not apply.
   const isFullRotation = scheme === "fullRotation";
   const isGroupsPlayoff = scheme === "groupsPlayoff";
-  // The pool is offered wherever the tournament accepts partnerless entrants — always for
-  // fullRotation, and for the other schemes once the organiser ticks the box.
-  const acceptsSoloPlayers = isFullRotation || allowSoloRegistration;
+  // The pool is offered wherever the tournament accepts partnerless entrants: always for
+  // fullRotation and for solo-only, which close the pair path entirely, and for the other schemes
+  // once the organiser ticks the box.
+  const isSoloOnly = isFullRotation || soloOnlyRegistration;
+  const acceptsSoloPlayers = isSoloOnly || allowSoloRegistration;
   const filledSoloPlayerIds = soloPlayerIds.filter(Boolean);
   const hasEmptySoloRow = acceptsSoloPlayers && soloPlayerIds.some((playerId) => !playerId);
 
@@ -88,8 +91,10 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
         // Forced by the API too; sending it keeps the created event's config predictable.
         body.allowSoloRegistration = true;
       } else {
-        body.allowSoloRegistration = allowSoloRegistration;
-        if (completeTeams.length) body.teams = completeTeams;
+        body.allowSoloRegistration = isSoloOnly ? true : allowSoloRegistration;
+        body.soloOnlyRegistration = soloOnlyRegistration;
+        // A pair roster cannot be seeded into a tournament pairs cannot enter — the API refuses it.
+        if (completeTeams.length && !isSoloOnly) body.teams = completeTeams;
       }
       if (isGroupsPlayoff) {
         // Sent explicitly so the bracket is the shape the organiser chose. The API defaults both
@@ -311,8 +316,9 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
         <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"
-            className="mt-1"
-            checked={allowSoloRegistration}
+            className="mt-1 disabled:cursor-not-allowed"
+            disabled={soloOnlyRegistration}
+            checked={isSoloOnly ? true : allowSoloRegistration}
             onChange={(event) => {
               setAllowSoloRegistration(event.target.checked);
               // Clearing on the way off: a row left behind would be invisible but still submitted.
@@ -324,7 +330,31 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
               {t("ongoing.create.allowSoloLabel")}
             </span>
             <span className="text-xs text-muted-foreground" suppressHydrationWarning>
-              {t("ongoing.create.allowSoloHint")}
+              {soloOnlyRegistration ? t("ongoing.create.allowSoloLockedHint") : t("ongoing.create.allowSoloHint")}
+            </span>
+          </span>
+        </label>
+        )}
+
+        {!isFullRotation && (
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={soloOnlyRegistration}
+            onChange={(event) => {
+              setSoloOnlyRegistration(event.target.checked);
+              // The pair rows below disappear with the box; leaving them would submit a roster the
+              // API rejects.
+              if (event.target.checked) setTeams([]);
+            }}
+          />
+          <span className="flex flex-col gap-0.5">
+            <span className="font-medium" suppressHydrationWarning>
+              {t("ongoing.create.soloOnlyLabel")}
+            </span>
+            <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+              {t("ongoing.create.soloOnlyHint")}
             </span>
           </span>
         </label>

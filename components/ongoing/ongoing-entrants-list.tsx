@@ -9,8 +9,8 @@ import type { OngoingSoloPlayer, OngoingTeam } from "@/lib/types";
 interface OngoingEntrantsListProps {
   teams: OngoingTeam[];
   soloPlayers: OngoingSoloPlayer[];
-  /** fullRotation has no pairs, so its pool is simply "the participants". */
-  scheme: string;
+  /** A tournament pairs cannot enter has no pool to distinguish — its entrants are the field. */
+  soloOnly: boolean;
   /** Shown when nobody has entered yet. Omitted on the calendar card, which stays compact. */
   emptyText?: string;
 }
@@ -21,9 +21,8 @@ interface OngoingEntrantsListProps {
  * used to show this only inside the manage-only Config tab, leaving entrants unable to see the
  * roster they are part of.
  */
-export function OngoingEntrantsList({ teams, soloPlayers, scheme, emptyText }: OngoingEntrantsListProps) {
+export function OngoingEntrantsList({ teams, soloPlayers, soloOnly, emptyText }: OngoingEntrantsListProps) {
   const { t } = useTranslation();
-  const isFullRotation = scheme === "fullRotation";
 
   if (!teams.length && !soloPlayers.length) {
     return emptyText ? (
@@ -59,7 +58,7 @@ export function OngoingEntrantsList({ teams, soloPlayers, scheme, emptyText }: O
       {soloPlayers.length > 0 && (
         <div className="flex flex-col gap-1 text-sm text-muted-foreground">
           <span className="text-xs font-medium" suppressHydrationWarning>
-            {isFullRotation ? t("calendar.participants") : t("calendar.soloPool")}
+            {soloOnly ? t("calendar.participants") : t("calendar.soloPool")}
           </span>
           {[...soloPlayers]
             .sort((a, b) => b.rating - a.rating)

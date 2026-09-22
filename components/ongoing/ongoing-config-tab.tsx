@@ -11,6 +11,8 @@ import API from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { OngoingEvent, Player } from "@/lib/types";
 import { OngoingRosterSection, rosterSignature } from "@/components/ongoing/ongoing-roster-section";
+import { isSchemeStep, ruleKeysForScheme, ruleTranslationKey } from "@/lib/ongoing-rules";
+import { ROTATION_GROUP_SIZE } from "@/lib/ongoing-permissions";
 
 interface OngoingConfigTabProps {
   event: OngoingEvent;
@@ -41,6 +43,10 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
   // Seeded once from the loaded config, never resynced — same as maxTeams/scheme above.
   const [visibility, setVisibility] = useState(event.config.visibility);
   const [allowSoloRegistration, setAllowSoloRegistration] = useState(event.config.allowSoloRegistration);
+  const [soloOnlyRegistration, setSoloOnlyRegistration] = useState(event.config.soloOnlyRegistration ?? false);
+  // Seeded once, like every field here. Keys of other schemes ride along untouched so switching
+  // scheme and back restores what was chosen before — the server keeps them for the same reason.
+  const [hiddenRules, setHiddenRules] = useState<string[]>(event.config.hiddenRules ?? []);
   // Kept as strings so the fields can be blank while typing; seeded once here, never resynced.
   const [groupCount, setGroupCount] = useState(String(event.config.groupCount));
   const [rotationRounds, setRotationRounds] = useState(String(event.config.rotationRounds));
@@ -50,11 +56,30 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
 
   const isGroupsPlayoff = scheme === "groupsPlayoff";
   const isFullRotation = scheme === "fullRotation";
+  // fullRotation has no pair entry path at all, so the flag is not the organiser's to turn off there.
+  const isSoloOnly = isFullRotation || soloOnlyRegistration;
+  const hiddenRuleSet = new Set(hiddenRules);
+  const toggleRule = (key: string, shown: boolean) =>
+    setHiddenRules((current) => (shown ? current.filter((entry) => entry !== key) : [...current, key]));
   // Number("") is 0, which would be an invalid group/qualifier count — fall back to the smallest
   // valid value instead of silently sending 0. The server has the final say on validity either way.
   const groupCountValue = groupCount.trim() === "" ? 2 : Number(groupCount);
   const qualifiersPerGroupValue = qualifiersPerGroup.trim() === "" ? 1 : Number(qualifiersPerGroup);
   const rotationRoundsValue = rotationRounds.trim() === "" ? 3 : Number(rotationRounds);
+
+  // The same numbers the Rules tab interpolates, so a step reads identically in both places.
+  const ruleValues = {
+    groups: groupCountValue,
+    qualifiers: qualifiersPerGroupValue,
+    bracketTeams: groupCountValue * qualifiersPerGroupValue,
+    rounds: rotationRoundsValue,
+    gamesPerPair,
+    courts,
+    groupSize: ROTATION_GROUP_SIZE,
+    players: groupCountValue * ROTATION_GROUP_SIZE,
+    fixtures: 3,
+    movers: 2,
+  };
 
   const { data: players = [] } = useQuery<Player[]>({
     queryKey: ["players"],
@@ -82,7 +107,10 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
         // Number("") is 0, which the backend would reject or treat as a real cap — blank must stay null.
         maxTeams: maxTeams.trim() === "" ? null : Number(maxTeams),
         visibility,
-        allowSoloRegistration: isFullRotation ? true : allowSoloRegistration,
+        // Solo-only leaves the pool as the only way in, so it carries solo registration with it.
+        allowSoloRegistration: isSoloOnly ? true : allowSoloRegistration,
+        soloOnlyRegistration: isSoloOnly,
+        hiddenRules,
         scheme,
         groupCount: groupCountValue,
         // Meaningless for roundRobin — the server forces null anyway, but send null rather than a stale number.
@@ -154,16 +182,40 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
             <input
               type="checkbox"
               className="mt-1 disabled:cursor-not-allowed"
-              checked={isFullRotation ? true : allowSoloRegistration}
-              disabled={isFullRotation}
+              checked={isSoloOnly ? true : allowSoloRegistration}
+              disabled={isSoloOnly}
               onChange={(changeEvent) => setAllowSoloRegistration(changeEvent.target.checked)}
             />
-            <span className={cn("flex flex-col gap-0.5", isFullRotation && "opacity-70")}>
+            <span className={cn("flex flex-col gap-0.5", isSoloOnly && "opacity-70")}>
               <span className="font-medium" suppressHydrationWarning>
                 {t("ongoing.create.allowSoloLabel")}
               </span>
               <span className="text-xs text-muted-foreground" suppressHydrationWarning>
-                {isFullRotation ? t("ongoing.config.allowSoloLockedHint") : t("ongoing.create.allowSoloHint")}
+                {isFullRotation
+                  ? t("ongoing.config.allowSoloLockedHint")
+                  : soloOnlyRegistration
+                    ? t("ongoing.create.allowSoloLockedHint")
+                    : t("ongoing.create.allowSoloHint")}
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-2 text-sm">
+            {/* Locked on for fullRotation for the same reason as the checkbox above: the API forces
+                it there regardless of what is sent. */}
+            <input
+              type="checkbox"
+              className="mt-1 disabled:cursor-not-allowed"
+              checked={isSoloOnly}
+              disabled={isFullRotation}
+              onChange={(changeEvent) => setSoloOnlyRegistration(changeEvent.target.checked)}
+            />
+            <span className={cn("flex flex-col gap-0.5", isFullRotation && "opacity-70")}>
+              <span className="font-medium" suppressHydrationWarning>
+                {t("ongoing.create.soloOnlyLabel")}
+              </span>
+              <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+                {isFullRotation ? t("ongoing.config.soloOnlyLockedHint") : t("ongoing.create.soloOnlyHint")}
               </span>
             </span>
           </label>
@@ -244,6 +296,35 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
               </label>
             </>
           )}
+
+          <div className="flex flex-col gap-2 border-t pt-4">
+            <div className="flex flex-col gap-0.5">
+              <p className="font-medium" suppressHydrationWarning>
+                {t("ongoing.config.rulesTitle")}
+              </p>
+              <p className="text-xs text-muted-foreground" suppressHydrationWarning>
+                {t("ongoing.config.rulesHint")}
+              </p>
+            </div>
+
+            {/* Listed for the scheme currently picked in the field above, not the saved one, so the
+                checkboxes match what the Rules tab will show once this form is saved. */}
+            {ruleKeysForScheme(scheme).map((key) => (
+              <label key={key} className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={!hiddenRuleSet.has(key)}
+                  onChange={(changeEvent) => toggleRule(key, changeEvent.target.checked)}
+                />
+                <span className="text-muted-foreground" suppressHydrationWarning>
+                  {isSchemeStep(key)
+                    ? t(ruleTranslationKey(key), ruleValues)
+                    : t(`${ruleTranslationKey(key)}Title`)}
+                </span>
+              </label>
+            ))}
+          </div>
 
           <Button
             className="self-start"

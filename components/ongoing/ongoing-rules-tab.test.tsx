@@ -117,4 +117,42 @@ describe('OngoingRulesTab', () => {
 
     expect(screen.queryByText(/NaN/)).not.toBeInTheDocument()
   })
+
+  it('leaves out a step the organiser switched off, and renumbers the rest', () => {
+    render(<OngoingRulesTab event={buildEvent({ scheme: 'roundRobin', hiddenRules: ['roundRobin.step2'] })} />)
+
+    const steps = screen.getAllByRole('listitem').map((item) => item.textContent ?? '')
+    expect(steps).toHaveLength(2)
+    expect(steps[0]).toContain('ongoing.rules.roundRobin.step1')
+    expect(steps[1]).toContain('ongoing.rules.roundRobin.step3')
+  })
+
+  it('leaves out a house rule that is switched off', () => {
+    render(<OngoingRulesTab event={buildEvent({ hiddenRules: ['serving'] })} />)
+
+    expect(screen.queryByText('ongoing.rules.serving')).not.toBeInTheDocument()
+    expect(screen.getByText('ongoing.rules.tiebreakTeams')).toBeInTheDocument()
+  })
+
+  // The format's own title and summary are not a rule and have no checkbox — hiding every step must
+  // still leave the reader knowing which format they turned up for.
+  it('keeps the title and summary when every step is hidden', () => {
+    render(
+      <OngoingRulesTab
+        event={buildEvent({
+          scheme: 'roundRobin',
+          hiddenRules: ['roundRobin.step1', 'roundRobin.step2', 'roundRobin.step3'],
+        })}
+      />,
+    )
+
+    expect(screen.getByText('ongoing.rules.roundRobin.title')).toBeInTheDocument()
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0)
+  })
+
+  it('ignores a hidden key belonging to a scheme this tournament does not use', () => {
+    render(<OngoingRulesTab event={buildEvent({ scheme: 'roundRobin', hiddenRules: ['fullRotation.step1'] })} />)
+
+    expect(screen.getAllByRole('listitem')).toHaveLength(3)
+  })
 })

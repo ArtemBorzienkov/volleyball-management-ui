@@ -23,6 +23,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import {
   canRegisterInOngoingEvent,
   isOngoingEventFull,
+  isSoloOnlyOngoingEvent,
   ongoingEntrantPlayerIds,
 } from "@/lib/ongoing-permissions";
 import API from "@/lib/api";
@@ -41,9 +42,11 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
   const [open, setOpen] = useState(false);
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [player2Id, setPlayer2Id] = useState("");
-  // fullRotation has no pairs to register: everyone enters alone and is grouped by rating.
+  // fullRotation has no pairs to register: everyone enters alone and is grouped by rating. A
+  // solo-only tournament of any other scheme enters the same way — the organiser forms the teams.
   const isFullRotation = event.scheme === "fullRotation";
-  const [mode, setMode] = useState<"partner" | "solo">(isFullRotation ? "solo" : "partner");
+  const isSoloOnly = isSoloOnlyOngoingEvent(event);
+  const [mode, setMode] = useState<"partner" | "solo">(isSoloOnly ? "solo" : "partner");
 
   // Players created inline this session, merged in below so the slot that triggered creation
   // can show and select them immediately, without waiting on the ["players"] refetch.
@@ -122,7 +125,7 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
     setOpen(nextOpen);
     if (!nextOpen) {
       setPlayer2Id("");
-      setMode(isFullRotation ? "solo" : "partner");
+      setMode(isSoloOnly ? "solo" : "partner");
       setCreatedPlayers([]);
       setIsCreatingPlayer(false);
       registerMutation.reset();
@@ -254,12 +257,12 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
       <DialogContent>
         <DialogHeader>
           <DialogTitle suppressHydrationWarning>
-            {isFullRotation ? t("calendar.registerSoloTitle") : t("calendar.registerTitle")}
+            {isSoloOnly ? t("calendar.registerSoloTitle") : t("calendar.registerTitle")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
-          {event.allowSoloRegistration && !isFullRotation && (
+          {event.allowSoloRegistration && !isSoloOnly && (
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -299,7 +302,7 @@ export function RegisterTeamDialog({ event, players }: RegisterTeamDialogProps) 
 
           {mode === "solo" && (
             <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-              {isFullRotation ? t("calendar.rotationSoloHint") : t("calendar.soloHint")}
+              {isFullRotation ? t("calendar.rotationSoloHint") : isSoloOnly ? t("calendar.soloOnlyHint") : t("calendar.soloHint")}
             </p>
           )}
 

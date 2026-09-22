@@ -13,16 +13,18 @@ import { useToast } from "@/components/ui/toast";
 import API from "@/lib/api";
 import type { OngoingEvent, OngoingSoloPairPreview, Player } from "@/lib/types";
 import { playerDisplayName } from "@/lib/player-name";
+import {
+  autoPairRemaining,
+  hasIncompletePair,
+  idsUsedOutside,
+  unplacedEntries,
+  type DraftPair,
+} from "@/lib/ongoing-pairing";
 
 interface SoloPoolSectionProps {
   event: OngoingEvent;
   players: Player[];
   disabled: boolean;
-}
-
-interface DraftPair {
-  player1Id: string;
-  player2Id: string;
 }
 
 // The preview arrives as players; the dialog edits ids and looks names back up, so a swap is a
@@ -74,7 +76,7 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ teams: draft }),
+        body: JSON.stringify({ teams: draft.filter((pair) => pair.player1Id && pair.player2Id) }),
       });
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: "Request failed" }));
@@ -150,10 +152,18 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
   const allPlayers = [...players, ...createdPlayers.filter((player) => !knownPlayerIds.has(player.id))];
   const eligiblePlayers = allPlayers.filter((player) => !takenPlayerIds.has(player.id));
 
-  const draftPlayerIds = draft.flatMap((pair) => [pair.player1Id, pair.player2Id]);
-  const leftoverIds = event.soloPlayers
-    .map((solo) => solo.player.id)
-    .filter((playerId) => !draftPlayerIds.includes(playerId));
+  // The pool as the pairing helpers want it — id plus rating, in the order the API sent it.
+  const poolEntries = event.soloPlayers.map((solo) => ({ playerId: solo.player.id, rating: solo.rating }));
+  const leftoverIds = unplacedEntries(poolEntries, draft).map((entry) => entry.playerId);
+  // A started-but-unfinished row must block the confirm rather than be dropped on send.
+  const isDraftIncomplete = hasIncompletePair(draft);
+
+  // A blank row the organiser fills in themselves — the point of pairing some teams by hand.
+  const addPair = () => setDraft((previous) => [...previous, { player1Id: "", player2Id: "" }]);
+  const removePair = (index: number) =>
+    setDraft((previous) => previous.filter((_pair, pairIndex) => pairIndex !== index));
+  // Keeps every hand-made pair and fills the rest by rating, the same rule the API's preview uses.
+  const autoPairRest = () => setDraft((previous) => autoPairRemaining(poolEntries, previous));
 
   const setSlot = (index: number, slot: "player1Id" | "player2Id", playerId: string) => {
     setDraft((previous) =>
@@ -161,20 +171,21 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
     );
   };
 
-  // Every pool member is offered; only the id already in the pair's other slot is excluded, because
-  // the backend rejects a player repeated across teams outright.
+  // Anyone already placed in another slot is left out of the options: the backend rejects a player
+  // repeated across teams, and finding that out on submit is no help while building a roster by hand.
   const renderSlot = (index: number, slot: "player1Id" | "player2Id") => {
     const pair = draft[index];
-    const otherId = slot === "player1Id" ? pair.player2Id : pair.player1Id;
+    const usedElsewhere = idsUsedOutside(draft, index, slot);
 
     return (
       <SelectInput
         className="flex-1"
         name={`solo-pair-${index}-${slot}`}
+        placeholder={t("ongoing.config.selectPlayer")}
         value={pair[slot]}
         onChange={(playerId) => setSlot(index, slot, playerId)}
         options={event.soloPlayers
-          .filter((solo) => solo.player.id !== otherId)
+          .filter((solo) => !usedElsewhere.has(solo.player.id))
           .map((solo) => ({ value: solo.player.id, label: solo.player.name, subtitle: String(solo.rating) }))}
       />
     );
@@ -310,8 +321,39 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
                 <span className="w-14 text-right text-sm text-muted-foreground">
                   {ratingOf(pair.player1Id) + ratingOf(pair.player2Id)}
                 </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => removePair(index)}
+                  aria-label={t("ongoing.config.solo.removePair")}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
               </div>
             ))}
+
+            {draft.length === 0 && (
+              <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                {t("ongoing.config.solo.noPairs")}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={addPair} disabled={leftoverIds.length < 2}>
+                <Plus className="mr-1 size-3.5" />
+                <span suppressHydrationWarning>{t("ongoing.config.solo.addPair")}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={autoPairRest}
+                disabled={leftoverIds.length < 2}
+              >
+                <span suppressHydrationWarning>{t("ongoing.config.solo.autoPairRest")}</span>
+              </Button>
+            </div>
           </div>
 
           {leftoverIds.length > 0 && (
@@ -323,9 +365,15 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
                 <span key={playerId}>{nameOf(playerId)}</span>
               ))}
               <span className="text-xs text-muted-foreground" suppressHydrationWarning>
-                {t("ongoing.config.solo.oddWarning")}
+                {t("ongoing.config.solo.leftoverHint")}
               </span>
             </div>
+          )}
+
+          {isDraftIncomplete && (
+            <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+              {t("ongoing.config.solo.incompletePair")}
+            </p>
           )}
 
           {formTeamsMutation.isError && (
@@ -336,7 +384,10 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
             <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
               <span suppressHydrationWarning>{t("ongoing.config.solo.cancel")}</span>
             </Button>
-            <Button onClick={() => formTeamsMutation.mutate()} disabled={!draft.length || formTeamsMutation.isPending}>
+            <Button
+              onClick={() => formTeamsMutation.mutate()}
+              disabled={!draft.length || isDraftIncomplete || formTeamsMutation.isPending}
+            >
               <span suppressHydrationWarning>{t("ongoing.config.solo.confirm")}</span>
             </Button>
           </DialogFooter>

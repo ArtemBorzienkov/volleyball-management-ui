@@ -180,6 +180,10 @@ export interface OngoingEventConfig {
   rotationRounds: number;
   visibility: string;
   allowSoloRegistration: boolean;
+  /** Pairs cannot register: everyone enters alone and the organiser forms the teams. */
+  soloOnlyRegistration?: boolean;
+  /** Rule keys the organiser switched off; everything not listed shows on the Rules tab. */
+  hiddenRules?: string[];
 }
 
 export interface OngoingTeamPlayer {
@@ -302,6 +306,7 @@ export interface OngoingOpenEvent {
   teams: OngoingTeam[];
   visibility: string;
   allowSoloRegistration: boolean;
+  soloOnlyRegistration?: boolean;
   soloPlayers: OngoingSoloPlayer[];
   scheme: string;
   groupCount: number;

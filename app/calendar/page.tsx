@@ -14,7 +14,7 @@ import { RegisterTeamDialog } from "@/components/ongoing/register-team-dialog";
 import { CreateTournamentForm } from "@/components/ongoing/create-tournament-form";
 import { CancelRegistrationButton } from "@/components/ongoing/cancel-registration-button";
 import { OngoingEntrantsList } from "@/components/ongoing/ongoing-entrants-list";
-import { isOngoingEventFull } from "@/lib/ongoing-permissions";
+import { isOngoingEventFull, isSoloOnlyOngoingEvent } from "@/lib/ongoing-permissions";
 import { eventMetaLine } from "@/lib/ongoing-date";
 import { normalizeOngoingOpenEvent, type OlderOngoingOpenEvent } from "@/lib/ongoing-normalize";
 import API from "@/lib/api";
@@ -163,7 +163,7 @@ export default function CalendarPage() {
                 <OngoingEntrantsList
                   teams={event.teams}
                   soloPlayers={event.soloPlayers}
-                  scheme={event.scheme}
+                  soloOnly={isSoloOnlyOngoingEvent(event)}
                 />
               </CardContent>
             </Card>
