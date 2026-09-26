@@ -176,6 +176,12 @@ pool and can be paired later. A slot never offers a player already placed
 elsewhere, and an unfinished row blocks the confirm rather than being dropped
 silently on send.
 
+**Disband all teams** sits next to "Form teams" and does the opposite
+(`POST :id/solo/disband-teams`): every pair returns to the pool, ready to be
+paired again. It asks first, and the confirmation says so when a schedule exists,
+since the fixtures go with the teams. Offered only while the tournament takes
+partnerless entrants and has teams, and locked once it has started.
+
 **The Rules tab** is built from a catalogue of rule keys,
 [`lib/ongoing-rules.ts`](lib/ongoing-rules.ts), which mirrors the API's own
 `rules.ts`: the numbered steps of the scheme, then the house rules (serving, how

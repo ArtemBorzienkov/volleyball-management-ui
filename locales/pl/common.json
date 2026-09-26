@@ -264,7 +264,10 @@
         "autoPairRest": "Resztę według rankingu",
         "removePair": "Usuń parę",
         "noPairs": "Nie ma jeszcze drużyn — dodaj parę albo dobierz resztę według rankingu.",
-        "incompletePair": "Wypełnij oba miejsca w każdej parze albo usuń niedokończoną."
+        "incompletePair": "Wypełnij oba miejsca w każdej parze albo usuń niedokończoną.",
+        "disbandTeams": "Rozwiąż wszystkie drużyny",
+        "disbandConfirm": "Rozwiązać wszystkie drużyny? Wszyscy zawodnicy wrócą do puli bez partnera.",
+        "disbandConfirmWithSchedule": "Rozwiązać wszystkie drużyny? Wszyscy zawodnicy wrócą do puli bez partnera, a harmonogram zostanie usunięty."
       },
       "schemeFullRotation": "Pełna rotacja",
       "rotationGroupCount": "Grupy",
@@ -462,7 +465,9 @@
     "playerAdded": "Gracz dodany",
     "playerRemoved": "Gracz usunięty",
     "rotationRoundGenerated": "Wygenerowano następną rundę",
-    "rotationRoundFailed": "Nie udało się wygenerować następnej rundy"
+    "rotationRoundFailed": "Nie udało się wygenerować następnej rundy",
+    "teamsDisbanded": "Drużyny rozwiązane",
+    "teamsDisbandFailed": "Nie udało się rozwiązać drużyn"
   },
   "cookies": {
     "settingsLink": "Ustawienia cookie",

@@ -264,7 +264,10 @@
         "autoPairRest": "Pair the rest by rating",
         "removePair": "Remove pair",
         "noPairs": "No teams yet — add a pair, or pair the rest by rating.",
-        "incompletePair": "Fill both slots of every pair, or remove the unfinished one."
+        "incompletePair": "Fill both slots of every pair, or remove the unfinished one.",
+        "disbandTeams": "Disband all teams",
+        "disbandConfirm": "Disband every team? All their players go back to the pool without a partner.",
+        "disbandConfirmWithSchedule": "Disband every team? All their players go back to the pool without a partner, and the schedule is deleted."
       },
       "schemeFullRotation": "Full rotation",
       "rotationGroupCount": "Groups",
@@ -462,7 +465,9 @@
     "playerAdded": "Player added",
     "playerRemoved": "Player removed",
     "rotationRoundGenerated": "Next round generated",
-    "rotationRoundFailed": "Could not generate the next round"
+    "rotationRoundFailed": "Could not generate the next round",
+    "teamsDisbanded": "Teams disbanded",
+    "teamsDisbandFailed": "Couldn't disband the teams"
   },
   "cookies": {
     "settingsLink": "Cookie settings",

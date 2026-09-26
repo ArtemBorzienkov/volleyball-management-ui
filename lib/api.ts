@@ -50,6 +50,7 @@ const API = {
   REMOVE_ONGOING_SOLO: (soloId: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/solo/${soloId}`,
   GET_ONGOING_SOLO_PREVIEW: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/solo/preview`,
   FORM_ONGOING_TEAMS: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/solo/form-teams`,
+  DISBAND_ONGOING_TEAMS: (id: string) => `${process.env.NEXT_PUBLIC_HOST_URL}/ongoing/${id}/solo/disband-teams`,
 };
 
 export default API;

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { OngoingEvent } from '@/lib/types'
 
@@ -6,7 +6,7 @@ vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => k
 
 // The preview the mocked mutation hands back, so a test can open the pairing dialog on a draft of
 // its choosing. Hoisted because vi.mock factories run before the module body.
-const mocks = vi.hoisted(() => ({ preview: { pairs: [] as unknown[], unpaired: [] as string[] } }))
+const mocks = vi.hoisted(() => ({ preview: { pairs: [] as unknown[], unpaired: [] as string[] }, toast: vi.fn() }))
 
 vi.mock('@tanstack/react-query', () => ({
   useMutation: (options: { onSuccess?: (data: unknown) => void }) => ({
@@ -17,7 +17,7 @@ vi.mock('@tanstack/react-query', () => ({
   }),
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }))
-vi.mock('@/components/ui/toast', () => ({ useToast: () => ({ toast: vi.fn(), dismiss: vi.fn() }) }))
+vi.mock('@/components/ui/toast', () => ({ useToast: () => ({ toast: mocks.toast, dismiss: vi.fn() }) }))
 
 import { SoloPoolSection } from './solo-pool-section'
 
@@ -192,5 +192,83 @@ describe('SoloPoolSection — building teams by hand', () => {
 
     expect(screen.getByText('ongoing.config.solo.noPairs')).toBeInTheDocument()
     expect(button('ongoing.config.solo.confirm')).toBeDisabled()
+  })
+})
+
+describe('SoloPoolSection — disbanding every team', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    mocks.toast.mockClear()
+  })
+
+  const pairedTeam = (id: string, a: string, b: string) => ({
+    id,
+    player1: { id: `p-${a}`, name: a },
+    player2: { id: `p-${b}`, name: b },
+    rating: 2000,
+    groupIndex: null,
+  })
+
+  const withTeams = (config: Partial<OngoingEvent['config']> = {}, games: unknown[] = []): OngoingEvent => {
+    const base = buildEvent('roundRobin', [])
+    return { ...base, config: { ...base.config, ...config }, teams: [pairedTeam('t1', 'Ann', 'Bob')], games } as OngoingEvent
+  }
+
+  const disbandButton = () => screen.queryByText('ongoing.config.solo.disbandTeams')?.closest('button') ?? null
+
+  it('is offered once there are teams to take apart', () => {
+    render(<SoloPoolSection event={withTeams()} players={[]} disabled={false} />)
+
+    expect(disbandButton()).not.toBeNull()
+  })
+
+  it('is not offered with no teams', () => {
+    render(<SoloPoolSection event={buildEvent('roundRobin', [entrant('Ann'), entrant('Bob')])} players={[]} disabled={false} />)
+
+    expect(disbandButton()).toBeNull()
+  })
+
+  // There would be no pool to send the players back to — the API refuses it for the same reason.
+  // A leftover pool member keeps the section on screen, so this checks the button's own rule rather
+  // than the section hiding altogether.
+  it('is not offered when the tournament takes no partnerless entrants', () => {
+    const event = { ...withTeams({ allowSoloRegistration: false }), soloPlayers: [entrant('Cid')] } as OngoingEvent
+    render(<SoloPoolSection event={event} players={[]} disabled={false} />)
+
+    expect(disbandButton()).toBeNull()
+  })
+
+  it('is locked once the tournament has started', () => {
+    render(<SoloPoolSection event={withTeams()} players={[]} disabled />)
+
+    expect(disbandButton()).toBeDisabled()
+  })
+
+  it('asks first, and does nothing when the organiser backs out', () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    render(<SoloPoolSection event={withTeams()} players={[]} disabled={false} />)
+
+    fireEvent.click(disbandButton()!)
+
+    expect(confirm).toHaveBeenCalledWith('ongoing.config.solo.disbandConfirm')
+    expect(mocks.toast).not.toHaveBeenCalled()
+  })
+
+  it('disbands once confirmed', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    render(<SoloPoolSection event={withTeams()} players={[]} disabled={false} />)
+
+    fireEvent.click(disbandButton()!)
+
+    expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'toast.teamsDisbanded' }))
+  })
+
+  it('warns that the schedule goes too when one exists', () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    render(<SoloPoolSection event={withTeams({}, [{ id: 'g1' }])} players={[]} disabled={false} />)
+
+    fireEvent.click(disbandButton()!)
+
+    expect(confirm).toHaveBeenCalledWith('ongoing.config.solo.disbandConfirmWithSchedule')
   })
 })

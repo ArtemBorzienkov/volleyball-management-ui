@@ -100,6 +100,24 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
     },
   });
 
+  const disbandMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(API.DISBAND_ONGOING_TEAMS(event.id), { method: "POST", credentials: "include" });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: "Request failed" }));
+        throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      invalidate();
+      toast({ title: t("toast.teamsDisbanded"), variant: "success" });
+    },
+    onError: (error: Error) => {
+      toast({ title: t("toast.teamsDisbandFailed"), description: error.message, variant: "error" });
+    },
+  });
+
   // The creator adds a lone entrant through the same endpoint a player self-registers with — the
   // backend takes playerId only from a manager, and refuses it when the tournament has solo off.
   const addSoloMutation = useMutation({
@@ -193,6 +211,9 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
 
   // Nothing to say when the tournament does not take partnerless entrants and none are waiting.
   const isFullRotation = event.config.scheme === "fullRotation";
+  // The reverse of forming teams, so it needs a pool to send the players back to — the API refuses
+  // it otherwise.
+  const canDisband = !isFullRotation && event.config.allowSoloRegistration && event.teams.length > 0;
 
   if (!event.config.allowSoloRegistration && !event.soloPlayers.length) return null;
 
@@ -286,14 +307,29 @@ export function SoloPoolSection({ event, players, disabled }: SoloPoolSectionPro
 
           {/* Not offered for fullRotation: pairing the pool into fixed teams is the opposite of a
               format whose whole point is a different partner every game. */}
-          {!isFullRotation && event.soloPlayers.length >= 2 && (
-            <Button
-              className="self-start"
-              disabled={disabled || previewMutation.isPending}
-              onClick={() => previewMutation.mutate()}
-            >
-              <span suppressHydrationWarning>{t("ongoing.config.solo.formTeams")}</span>
-            </Button>
+          {!isFullRotation && (event.soloPlayers.length >= 2 || canDisband) && (
+            <div className="flex flex-wrap gap-2">
+              {event.soloPlayers.length >= 2 && (
+                <Button disabled={disabled || previewMutation.isPending} onClick={() => previewMutation.mutate()}>
+                  <span suppressHydrationWarning>{t("ongoing.config.solo.formTeams")}</span>
+                </Button>
+              )}
+              {canDisband && (
+                <Button
+                  variant="outline"
+                  disabled={disabled || disbandMutation.isPending}
+                  onClick={() => {
+                    // Said up front when a schedule exists: its fixtures reference the teams and go too.
+                    const message = event.games.length
+                      ? t("ongoing.config.solo.disbandConfirmWithSchedule")
+                      : t("ongoing.config.solo.disbandConfirm");
+                    if (window.confirm(message)) disbandMutation.mutate();
+                  }}
+                >
+                  <span suppressHydrationWarning>{t("ongoing.config.solo.disbandTeams")}</span>
+                </Button>
+              )}
+            </div>
           )}
 
           {previewMutation.isError && (
