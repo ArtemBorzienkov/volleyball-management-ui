@@ -110,37 +110,19 @@ export type FinishTournamentGate =
   | { canFinish: true }
   | { canFinish: false; reasonKey: string };
 
-// Per the design spec §4: groupsPlayoff finishes once the final (and the 3rd-place match, if one
-// exists) has a result; roundRobin finishes once every scheduled game has a result.
+/**
+ * Finishing does not wait for every fixture: a day can end with games unplayed — the final
+ * included — and those are simply left out of the upload (buildFinishTournamentPrefill only carries
+ * played games, and the placements resolve from whatever has a result). The one thing that has to
+ * exist is a result. Mirrors the API's assertHasResult.
+ */
 export function getFinishTournamentGate(event: OngoingEvent): FinishTournamentGate {
-  if (event.config.scheme === "groupsPlayoff") {
-    const playoffGames = event.games.filter((game) => game.phase === "playoff");
-    const bracketGames = playoffGames.filter((game) => !game.thirdPlace && game.bracketRound !== null);
-    const thirdPlaceGame = playoffGames.find((game) => game.thirdPlace) ?? null;
-
-    if (!bracketGames.length) return { canFinish: false, reasonKey: "ongoing.finish.noPlayoff" };
-
-    const maxBracketRound = Math.max(...bracketGames.map((game) => game.bracketRound as number));
-    const finalGame = bracketGames.find((game) => game.bracketRound === maxBracketRound) ?? null;
-
-    if (!finalGame || !isPlayed(finalGame)) {
-      return { canFinish: false, reasonKey: "ongoing.finish.finalNotPlayed" };
-    }
-    if (thirdPlaceGame && !isPlayed(thirdPlaceGame)) {
-      return { canFinish: false, reasonKey: "ongoing.finish.thirdPlaceNotPlayed" };
-    }
-    return { canFinish: true };
-  }
-
   if (!event.games.length) return { canFinish: false, reasonKey: "ongoing.finish.noGames" };
-  if (!event.games.every(isPlayed)) return { canFinish: false, reasonKey: "ongoing.finish.gamesNotPlayed" };
-
-  // Every generated game being played is not enough for fullRotation: rounds are generated one at a
-  // time, so round 1 of 3 satisfies the check above while the ladder has decided nothing yet and
-  // finalStandings is still empty. Finishing there would upload a tournament with no placements.
-  if (event.config.scheme === "fullRotation" && !event.rotation?.isFinished) {
-    return { canFinish: false, reasonKey: "ongoing.finish.rotationNotFinished" };
-  }
-
+  if (!event.games.some(isPlayed)) return { canFinish: false, reasonKey: "ongoing.finish.noResults" };
   return { canFinish: true };
+}
+
+/** Scheduled games without a result — what the finish confirmation warns will not be uploaded. */
+export function countUnplayedGames(event: OngoingEvent): number {
+  return event.games.filter((game) => !isPlayed(game)).length;
 }

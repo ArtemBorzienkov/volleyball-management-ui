@@ -335,17 +335,14 @@
     },
     "finish": {
       "button": "Finish tournament",
-      "noPlayoff": "Generate the playoff before finishing the tournament.",
-      "finalNotPlayed": "The final hasn't been played yet.",
-      "thirdPlaceNotPlayed": "The 3rd-place match hasn't been played yet.",
       "noGames": "No matches are scheduled yet.",
-      "gamesNotPlayed": "Not every match has been played yet.",
       "confirmTitle": "Finish tournament?",
       "confirmBody": "This removes it from the current tournaments list and the calendar. You will then review and submit the final results.",
       "cancel": "Cancel",
       "confirm": "Finish tournament",
       "requestFailed": "Request failed",
-      "rotationNotFinished": "Every round must be complete before the tournament can be finished."
+      "noResults": "No match has a result yet — record at least one before finishing.",
+      "unplayedWarning": "Matches without a result: {{count}}. They will not be uploaded — only played matches reach the results page."
     },
     "newTournament": "New tournament",
     "results": {

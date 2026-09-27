@@ -197,7 +197,12 @@ and back.
 the API's own rule. Generating the schedule, editing the config and finishing the tournament remain
 manage-only.
 
-**Finishing** hands over to `/add-results`: the prefill goes into `sessionStorage` under
+**Finishing** is available as soon as one game has a result (`getFinishTournamentGate`, mirroring
+the API) — unplayed games do not block it. They are left out of the prefill, the places resolve from
+what was played, and the confirmation says how many games will not be uploaded
+(`countUnplayedGames`).
+
+It hands over to `/add-results`: the prefill goes into `sessionStorage` under
 `ongoing-finish-prefill`, and the tournament's id under `ongoing-finish-event-id` (a separate key,
 because the prefill is fed straight into the form's `reset()` and an extra field there would be
 submitted). Once `POST /events/with-games` returns 2xx, `/add-results` deletes the ongoing event and

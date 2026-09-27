@@ -335,17 +335,14 @@
     },
     "finish": {
       "button": "Zakończ turniej",
-      "noPlayoff": "Najpierw wygeneruj play-off, aby zakończyć turniej.",
-      "finalNotPlayed": "Finał nie został jeszcze rozegrany.",
-      "thirdPlaceNotPlayed": "Mecz o 3. miejsce nie został jeszcze rozegrany.",
       "noGames": "Nie zaplanowano jeszcze żadnych meczów.",
-      "gamesNotPlayed": "Nie wszystkie mecze zostały jeszcze rozegrane.",
       "confirmTitle": "Zakończyć turniej?",
       "confirmBody": "Turniej zniknie z listy bieżących turniejów i z kalendarza. Następnie sprawdzisz i wyślesz ostateczne wyniki.",
       "cancel": "Anuluj",
       "confirm": "Zakończ turniej",
       "requestFailed": "Żądanie nie powiodło się",
-      "rotationNotFinished": "Aby zakończyć turniej, wszystkie rundy muszą być rozegrane."
+      "noResults": "Żaden mecz nie ma jeszcze wyniku — wpisz przynajmniej jeden, zanim zakończysz.",
+      "unplayedWarning": "Mecze bez wyniku: {{count}}. Nie zostaną przesłane — na stronę wyników trafiają tylko rozegrane mecze."
     },
     "newTournament": "Nowy turniej",
     "results": {

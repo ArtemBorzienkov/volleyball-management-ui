@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildFinishTournamentPrefill, getFinishTournamentGate } from './ongoing-finish'
+import { buildFinishTournamentPrefill, countUnplayedGames, getFinishTournamentGate } from './ongoing-finish'
 import type { OngoingEvent } from './types'
 
 /**
@@ -200,44 +200,98 @@ describe('buildFinishTournamentPrefill — team-based schemes are unchanged', ()
   })
 })
 
-describe('getFinishTournamentGate — fullRotation', () => {
-  it('allows finishing once the last round is complete', () => {
+describe('getFinishTournamentGate', () => {
+  it('allows finishing once the last rotation round is complete', () => {
     expect(getFinishTournamentGate(rotationEvent())).toEqual({ canFinish: true })
   })
 
-  it('refuses while rounds remain, even though every generated game is played', () => {
+  // A day can end before the ladder does; the places come from the latest round's tables.
+  it('allows finishing a rotation with rounds still to come', () => {
     const event = rotationEvent()
     event.config.rotationRounds = 3
     event.rotation!.totalRounds = 3
     event.rotation!.isFinished = false
 
-    expect(getFinishTournamentGate(event)).toEqual({
-      canFinish: false,
-      reasonKey: 'ongoing.finish.rotationNotFinished',
-    })
+    expect(getFinishTournamentGate(event)).toEqual({ canFinish: true })
   })
 
-  it('still refuses when a fixture has no result', () => {
+  it('allows finishing with a fixture still unplayed', () => {
     const event = rotationEvent()
     event.games.push(rotationGame(1, 1, 4, ['b1', 'b3'], ['b2', 'b4'], null))
 
-    expect(getFinishTournamentGate(event)).toEqual({
-      canFinish: false,
-      reasonKey: 'ongoing.finish.gamesNotPlayed',
-    })
+    expect(getFinishTournamentGate(event)).toEqual({ canFinish: true })
   })
 
-  it('still refuses when no fixtures exist at all', () => {
+  it('allows finishing a team tournament with games still unplayed', () => {
+    const event = teamEvent()
+    event.games.push({ ...event.games[0], id: 'g-unplayed', team1Points: null, team2Points: null })
+
+    expect(getFinishTournamentGate(event)).toEqual({ canFinish: true })
+  })
+
+  it('allows finishing a groupsPlayoff tournament whose final is unplayed', () => {
+    const event = teamEvent()
+    event.config.scheme = 'groupsPlayoff'
+    event.games.push({
+      ...event.games[0],
+      id: 'final',
+      phase: 'playoff',
+      bracketRound: 1,
+      bracketSlot: 0,
+      team1Points: null,
+      team2Points: null,
+    })
+
+    expect(getFinishTournamentGate(event)).toEqual({ canFinish: true })
+  })
+
+  it('refuses when no fixtures exist at all', () => {
     const event = rotationEvent()
     event.games = []
 
-    expect(getFinishTournamentGate(event)).toEqual({
-      canFinish: false,
-      reasonKey: 'ongoing.finish.noGames',
-    })
+    expect(getFinishTournamentGate(event)).toEqual({ canFinish: false, reasonKey: 'ongoing.finish.noGames' })
   })
 
-  it('leaves the team-based gate alone', () => {
-    expect(getFinishTournamentGate(teamEvent())).toEqual({ canFinish: true })
+  // Nothing would reach /add-results — a schedule with no score is not a finished tournament.
+  it('refuses while no fixture has a result', () => {
+    const event = teamEvent()
+    event.games = event.games.map((game) => ({ ...game, team1Points: null, team2Points: null }))
+
+    expect(getFinishTournamentGate(event)).toEqual({ canFinish: false, reasonKey: 'ongoing.finish.noResults' })
+  })
+})
+
+describe('finishing with games unplayed', () => {
+  const withUnplayed = () => {
+    const event = teamEvent()
+    event.games.push({ ...event.games[0], id: 'g-unplayed', team1Points: null, team2Points: null })
+    return event
+  }
+
+  it('counts the games that will be left out', () => {
+    expect(countUnplayedGames(withUnplayed())).toBe(1)
+    expect(countUnplayedGames(teamEvent())).toBe(0)
+  })
+
+  it('carries only the played games to /add-results', () => {
+    const prefill = buildFinishTournamentPrefill(withUnplayed())
+
+    expect(prefill.games).toEqual([
+      {
+        team1Player1: 'x1',
+        team1Player2: 'x2',
+        team2Player1: 'y1',
+        team2Player2: 'y2',
+        team1Points: 21,
+        team2Points: 15,
+      },
+    ])
+  })
+
+  // The standings ignore an unplayed game, so the places are the same as if it were never scheduled.
+  it('places the teams from the played games only', () => {
+    const places = buildFinishTournamentPrefill(withUnplayed()).places
+
+    expect(places.filter((row) => row.place === '1').map((row) => row.playerId)).toEqual(['x1', 'x2'])
   })
 })

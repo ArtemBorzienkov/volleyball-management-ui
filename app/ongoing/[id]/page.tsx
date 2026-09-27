@@ -36,6 +36,7 @@ import { eventMetaLine } from "@/lib/ongoing-date";
 import { shouldShowPlayDayTabs } from "@/lib/ongoing-tabs";
 import {
   buildFinishTournamentPrefill,
+  countUnplayedGames,
   getFinishTournamentGate,
   ONGOING_FINISH_EVENT_ID_KEY,
   ONGOING_FINISH_PREFILL_KEY,
@@ -124,6 +125,7 @@ export default function OngoingEventPage() {
   const isInProgress = event ? event.games.some(isPlayed) : false;
   const eventMeta = event ? eventMetaLine(event, "short") : "";
   const finishGate = event ? getFinishTournamentGate(event) : null;
+  const unplayedCount = event ? countUnplayedGames(event) : 0;
 
   // Reuses the existing, already-reviewed /add-results submission path rather than writing to the
   // rating engine directly (see the design doc §4) — this only stages a prefill and navigates.
@@ -297,6 +299,11 @@ export default function OngoingEventPage() {
           <p className="text-sm text-muted-foreground" suppressHydrationWarning>
             {t("ongoing.finish.confirmBody")}
           </p>
+          {unplayedCount > 0 && (
+            <p className="text-sm text-warning" suppressHydrationWarning>
+              {t("ongoing.finish.unplayedWarning", { count: unplayedCount })}
+            </p>
+          )}
           {finishMutation.isError && (
             <p className="text-sm text-destructive">{(finishMutation.error as Error).message}</p>
           )}
