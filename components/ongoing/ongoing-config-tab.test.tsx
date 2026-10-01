@@ -1,10 +1,16 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { OngoingEvent } from '@/lib/types'
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }))
+// mutate runs the real mutationFn, so a test can read the body the form sends from the fetch stub.
 vi.mock('@tanstack/react-query', () => ({
-  useMutation: () => ({ mutate: vi.fn(), isPending: false, isError: false, error: null }),
+  useMutation: (options: { mutationFn?: () => unknown }) => ({
+    mutate: () => options.mutationFn?.(),
+    isPending: false,
+    isError: false,
+    error: null,
+  }),
   useQuery: () => ({ data: [] }),
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }))
@@ -32,7 +38,7 @@ const buildEvent = (
     createdByUserId: 'u1',
     config: {
       gamesPerPair: 1,
-      courts: 1,
+      courts: [{ label: '1', fromRound: 1, toRound: null }],
       maxTeams: null,
       scheme,
       groupCount: scheme === 'fullRotation' ? 2 : 1,
@@ -161,5 +167,139 @@ describe('OngoingConfigTab — rule checkboxes', () => {
 
     expect(checkboxFor('ongoing.rules.fullRotation.step5')).toBeChecked()
     expect(screen.queryByText('ongoing.rules.roundRobin.step1')).not.toBeInTheDocument()
+  })
+})
+
+describe('OngoingConfigTab — courts', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  const COURTS = [
+    { label: '5', fromRound: 1, toRound: null },
+    { label: '7', fromRound: 1, toRound: null },
+  ]
+  const fixture = (id: string, round: number, court: number, points?: [number, number]) => ({
+    id,
+    eventId: 'e1',
+    team1Id: 't1',
+    team2Id: 't2',
+    team1Points: points ? points[0] : null,
+    team2Points: points ? points[1] : null,
+    round,
+    court,
+    order: court - 1,
+    phase: 'group',
+    groupIndex: null,
+    bracketRound: null,
+    bracketSlot: null,
+    thirdPlace: false,
+    side1Players: [],
+    side2Players: [],
+  })
+  const withCourts = (games: unknown[] = []) =>
+    ({ ...buildEvent('roundRobin', false, { courts: COURTS }), games }) as OngoingEvent
+
+  const sentBody = (fetchStub: ReturnType<typeof vi.fn>) => JSON.parse(fetchStub.mock.calls[0][1].body)
+  const stubFetch = () => {
+    const stub = vi.fn(async () => ({ ok: true, json: async () => ({}) }))
+    vi.stubGlobal('fetch', stub)
+    return stub
+  }
+  const save = () => fireEvent.click(screen.getByText('ongoing.config.save'))
+
+  it('replaces the old courts number with the court list', () => {
+    render(<OngoingConfigTab event={withCourts()} />)
+
+    expect(screen.getByText('ongoing.courts.title')).toBeInTheDocument()
+    expect(screen.queryByText('ongoing.config.courts')).not.toBeInTheDocument()
+    expect(screen.getAllByLabelText('ongoing.courts.labelFor').map((input) => (input as HTMLInputElement).value)).toEqual(['5', '7'])
+  })
+
+  it('is hidden for full rotation, which schedules itself', () => {
+    render(<OngoingConfigTab event={buildEvent('fullRotation', true, { courts: COURTS })} />)
+
+    expect(screen.queryByText('ongoing.courts.title')).not.toBeInTheDocument()
+  })
+
+  it('does not send the hidden court list for full rotation', () => {
+    const fetchStub = stubFetch()
+    render(<OngoingConfigTab event={buildEvent('fullRotation', true, { courts: COURTS })} />)
+
+    save()
+
+    expect(sentBody(fetchStub)).not.toHaveProperty('courts')
+  })
+
+  it('sends the court list in order, a blank "to" as the end', () => {
+    const fetchStub = stubFetch()
+    render(<OngoingConfigTab event={withCourts()} />)
+
+    fireEvent.change(screen.getAllByLabelText('ongoing.courts.toRoundFor')[1], { target: { value: '4' } })
+    save()
+
+    expect(sentBody(fetchStub).courts).toEqual([
+      { label: '5', fromRound: 1, toRound: null },
+      { label: '7', fromRound: 1, toRound: 4 },
+    ])
+  })
+
+  it('asks before a change that rebuilds the schedule, and sends nothing if declined', () => {
+    const fetchStub = stubFetch()
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    render(<OngoingConfigTab event={withCourts([fixture('g1', 1, 1), fixture('g2', 1, 2)])} />)
+
+    fireEvent.click(screen.getByText('ongoing.courts.add'))
+    save()
+
+    expect(confirm).toHaveBeenCalledWith('ongoing.courts.rebuildConfirm')
+    expect(fetchStub).not.toHaveBeenCalled()
+  })
+
+  it('saves once the rebuild is confirmed', () => {
+    const fetchStub = stubFetch()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    render(<OngoingConfigTab event={withCourts([fixture('g1', 1, 1)])} />)
+
+    fireEvent.click(screen.getByText('ongoing.courts.add'))
+    save()
+
+    expect(sentBody(fetchStub).courts).toHaveLength(3)
+  })
+
+  it('does not ask for a rename — nothing is rebuilt', () => {
+    stubFetch()
+    const confirm = vi.spyOn(window, 'confirm')
+    render(<OngoingConfigTab event={withCourts([fixture('g1', 1, 1)])} />)
+
+    fireEvent.change(screen.getAllByLabelText('ongoing.courts.labelFor')[0], { target: { value: 'Центр' } })
+    save()
+
+    expect(confirm).not.toHaveBeenCalled()
+  })
+
+  it('does not ask when there is no schedule to rebuild', () => {
+    stubFetch()
+    const confirm = vi.spyOn(window, 'confirm')
+    render(<OngoingConfigTab event={withCourts()} />)
+
+    fireEvent.click(screen.getByText('ongoing.courts.add'))
+    save()
+
+    expect(confirm).not.toHaveBeenCalled()
+  })
+
+  it('locks everything but the names once a result is recorded', () => {
+    render(<OngoingConfigTab event={withCourts([fixture('g1', 1, 1, [21, 15])])} />)
+
+    expect(screen.getByText('ongoing.courts.lockedHint')).toBeInTheDocument()
+    expect(screen.getByText('ongoing.courts.add').closest('button')).toBeDisabled()
+    expect(screen.getAllByLabelText('ongoing.courts.labelFor')[0]).not.toBeDisabled()
+  })
+
+  it('will not save an invalid court list', () => {
+    render(<OngoingConfigTab event={withCourts()} />)
+
+    fireEvent.change(screen.getAllByLabelText('ongoing.courts.labelFor')[1], { target: { value: '5' } })
+
+    expect(screen.getByText('ongoing.config.save').closest('button')).toBeDisabled()
   })
 })

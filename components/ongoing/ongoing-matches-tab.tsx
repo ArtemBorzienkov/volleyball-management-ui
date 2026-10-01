@@ -6,6 +6,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { canRecordOngoingResult } from "@/lib/ongoing-permissions";
 import { roundLabel } from "@/lib/ongoing-bracket";
 import { teamName } from "@/lib/ongoing-standings";
+import { courtLabel, teamsWithDoubleRest } from "@/lib/ongoing-courts";
 import type { OngoingEvent, OngoingGame } from "@/lib/types";
 
 interface OngoingMatchesTabProps {
@@ -31,6 +32,8 @@ export function OngoingMatchesTab({ event }: OngoingMatchesTabProps) {
     rounds.set(game.round, existing);
   }
   const roundNumbers = Array.from(rounds.keys()).sort((a, b) => a - b);
+  // Worked out from the fixtures, so it only speaks up when the rule is actually broken.
+  const doubleRestCount = teamsWithDoubleRest(groupGames).length;
 
   const thirdPlaceGame = playoffGames.find((game) => game.thirdPlace) ?? null;
   const bracketGames = playoffGames.filter((game) => !game.thirdPlace);
@@ -68,12 +71,19 @@ export function OngoingMatchesTab({ event }: OngoingMatchesTabProps) {
         side1Label={teamName(team1)}
         side2Label={teamName(team2)}
         canEdit={canRecord}
+        courtLabel={courtLabel(game, event.config.courts)}
       />
     );
   };
 
   return (
     <div className="flex flex-col gap-8">
+      {doubleRestCount > 0 && (
+        <p className="text-sm text-warning" suppressHydrationWarning>
+          {t("ongoing.courts.doubleRestNote", { count: doubleRestCount })}
+        </p>
+      )}
+
       {roundNumbers.map((round) => (
         <section key={`group-${round}`} className="flex flex-col gap-3">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

@@ -170,9 +170,17 @@ export interface OngoingEventListItem {
   soloPlayers: OngoingSoloPlayer[];
 }
 
+/** A court in fill order: the first one is used first in every round. `toRound: null` = to the end. */
+export interface OngoingCourt {
+  label: string;
+  fromRound: number;
+  toRound: number | null;
+}
+
 export interface OngoingEventConfig {
   gamesPerPair: number;
-  courts: number;
+  /** In fill order. A scheduled game's `court` is its 1-based position in this list. */
+  courts: OngoingCourt[];
   maxTeams: number | null;
   scheme: string;
   groupCount: number;

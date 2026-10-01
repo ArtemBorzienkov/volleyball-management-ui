@@ -67,7 +67,7 @@ const buildEvent = (over: Partial<OngoingEvent> = {}): OngoingEvent =>
     createdByUserId: 'u1',
     config: {
       gamesPerPair: 1,
-      courts: 1,
+      courts: [{ label: '1', fromRound: 1, toRound: null }],
       maxTeams: null,
       scheme: 'fullRotation',
       groupCount: 2,

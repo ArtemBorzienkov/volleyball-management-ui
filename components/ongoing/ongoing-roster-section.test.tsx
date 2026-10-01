@@ -38,7 +38,7 @@ const buildEvent = (scheme: string, teams: unknown[], soloPlayers: unknown[]): O
     createdByUserId: 'u1',
     config: {
       gamesPerPair: 1,
-      courts: 1,
+      courts: [{ label: '1', fromRound: 1, toRound: null }],
       maxTeams: null,
       scheme,
       groupCount: scheme === 'fullRotation' ? 2 : 1,

@@ -20,7 +20,7 @@ interface OngoingRulesTabProps {
  */
 export function OngoingRulesTab({ event }: OngoingRulesTabProps) {
   const { t } = useTranslation();
-  const { scheme, groupCount, qualifiersPerGroup, rotationRounds, gamesPerPair, courts, hiddenRules } = event.config;
+  const { scheme, groupCount, qualifiersPerGroup, rotationRounds, gamesPerPair, hiddenRules } = event.config;
 
   const visible = visibleRuleKeys(scheme, hiddenRules);
   const stepKeys = visible.filter(isSchemeStep);
@@ -33,7 +33,6 @@ export function OngoingRulesTab({ event }: OngoingRulesTabProps) {
     bracketTeams: groupCount * (qualifiersPerGroup ?? 0),
     rounds: rotationRounds,
     gamesPerPair,
-    courts,
     groupSize: ROTATION_GROUP_SIZE,
     players: groupCount * ROTATION_GROUP_SIZE,
     fixtures: 3,

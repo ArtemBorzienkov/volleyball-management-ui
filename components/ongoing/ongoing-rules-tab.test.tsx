@@ -23,7 +23,7 @@ const buildEvent = (config: Partial<OngoingEvent['config']>): OngoingEvent =>
     createdByUserId: 'u1',
     config: {
       gamesPerPair: 1,
-      courts: 2,
+      courts: [{ label: '1', fromRound: 1, toRound: null }],
       maxTeams: null,
       scheme: 'roundRobin',
       groupCount: 1,
@@ -66,11 +66,21 @@ describe('OngoingRulesTab', () => {
     expect(screen.getAllByText(/"rounds":4/).length).toBeGreaterThan(0)
   })
 
-  it('carries the court and repeat counts into the copy', () => {
-    render(<OngoingRulesTab event={buildEvent({ scheme: 'roundRobin', courts: 3, gamesPerPair: 2 })} />)
+  it('carries the repeat count into the copy', () => {
+    render(<OngoingRulesTab event={buildEvent({ scheme: 'roundRobin', gamesPerPair: 2 })} />)
 
-    expect(screen.getAllByText(/"courts":3/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/"gamesPerPair":2/).length).toBeGreaterThan(0)
+  })
+
+  // Agreed: the Rules tab says nothing about courts, so nothing court-shaped is interpolated.
+  it('does not mention the courts', () => {
+    const courts = [
+      { label: '5', fromRound: 1, toRound: null },
+      { label: '9', fromRound: 1, toRound: 4 },
+    ]
+    render(<OngoingRulesTab event={buildEvent({ scheme: 'roundRobin', courts })} />)
+
+    expect(document.body.textContent).not.toMatch(/courts/)
   })
 
   it('shows the serving rule whatever the format is', () => {

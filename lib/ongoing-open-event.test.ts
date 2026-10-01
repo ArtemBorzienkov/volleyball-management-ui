@@ -39,7 +39,7 @@ const buildEvent = (over: Partial<OngoingEvent> = {}): OngoingEvent =>
     createdByUserId: 'u1',
     config: {
       gamesPerPair: 1,
-      courts: 1,
+      courts: [{ label: '1', fromRound: 1, toRound: null }],
       maxTeams: 8,
       scheme: 'roundRobin',
       groupCount: 1,

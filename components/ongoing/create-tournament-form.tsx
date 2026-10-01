@@ -12,6 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { TeamRosterEditor, type TeamDraft } from "@/components/ongoing/team-roster-editor";
 import { SoloPlayerDraftEditor } from "@/components/ongoing/solo-player-draft-editor";
+import { CourtListEditor } from "@/components/ongoing/court-list-editor";
+import { DEFAULT_COURT_DRAFTS, courtListProblem, fromCourtDrafts, type CourtDraft } from "@/lib/ongoing-courts";
 import { SelectInput } from "@/components/ui/select-input";
 import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -48,6 +50,7 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
   const [soloOnlyRegistration, setSoloOnlyRegistration] = useState(false);
   const [teams, setTeams] = useState<TeamDraft[]>([]);
   const [soloPlayerIds, setSoloPlayerIds] = useState<string[]>([]);
+  const [courts, setCourts] = useState<CourtDraft[]>(DEFAULT_COURT_DRAFTS);
 
   const { data: players = [] } = useQuery<Player[]>({
     queryKey: ["players"],
@@ -70,6 +73,8 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
   const acceptsSoloPlayers = isSoloOnly || allowSoloRegistration;
   const filledSoloPlayerIds = soloPlayerIds.filter(Boolean);
   const hasEmptySoloRow = acceptsSoloPlayers && soloPlayerIds.some((playerId) => !playerId);
+  // Rotation has no court list (one court per group, by construction), so its draft is never judged.
+  const hasCourtProblem = !isFullRotation && courtListProblem(courts) !== null;
 
   const createMutation = useMutation({
     mutationFn: async (): Promise<CreatedOngoingEvent> => {
@@ -85,6 +90,7 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
       // Sent unconditionally: flipping a control back to its default must not be silently dropped.
       body.visibility = visibility;
       body.scheme = scheme;
+      if (!isFullRotation) body.courts = fromCourtDrafts(courts);
       if (isFullRotation) {
         body.groupCount = Number(groupCount);
         body.rotationRounds = rotationRounds.trim() === "" ? 3 : Number(rotationRounds);
@@ -360,6 +366,8 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
         </label>
         )}
 
+        {!isFullRotation && <CourtListEditor courts={courts} onChange={setCourts} />}
+
         {!isFullRotation && (
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium" suppressHydrationWarning>
@@ -407,6 +415,7 @@ export function CreateTournamentForm({ onCreated }: CreateTournamentFormProps) {
               !name.trim() ||
               (!isFullRotation && hasIncompleteTeam) ||
               hasEmptySoloRow ||
+              hasCourtProblem ||
               createMutation.isPending
             }
           >

@@ -12,6 +12,15 @@ import { cn } from "@/lib/utils";
 import type { OngoingEvent, Player } from "@/lib/types";
 import { OngoingRosterSection, rosterSignature } from "@/components/ongoing/ongoing-roster-section";
 import { isSchemeStep, ruleKeysForScheme, ruleTranslationKey } from "@/lib/ongoing-rules";
+import { CourtListEditor } from "@/components/ongoing/court-list-editor";
+import {
+  courtListProblem,
+  fromCourtDrafts,
+  hasRecordedResult,
+  isStructuralCourtChange,
+  toCourtDrafts,
+  type CourtDraft,
+} from "@/lib/ongoing-courts";
 import { ROTATION_GROUP_SIZE } from "@/lib/ongoing-permissions";
 
 interface OngoingConfigTabProps {
@@ -36,7 +45,8 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [gamesPerPair, setGamesPerPair] = useState(event.config.gamesPerPair);
-  const [courts, setCourts] = useState(event.config.courts);
+  // Seeded once, like every field here; drafts keep the round fields as text so they can be blank.
+  const [courts, setCourts] = useState<CourtDraft[]>(() => toCourtDrafts(event.config.courts));
   // Kept as a string so the field can be blank (unlimited); seeded once here, never resynced.
   const [maxTeams, setMaxTeams] = useState(event.config.maxTeams != null ? String(event.config.maxTeams) : "");
   const [scheme, setScheme] = useState(event.config.scheme);
@@ -74,7 +84,6 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
     bracketTeams: groupCountValue * qualifiersPerGroupValue,
     rounds: rotationRoundsValue,
     gamesPerPair,
-    courts,
     groupSize: ROTATION_GROUP_SIZE,
     players: groupCountValue * ROTATION_GROUP_SIZE,
     fixtures: 3,
@@ -99,11 +108,22 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
     queryClient.invalidateQueries({ queryKey: ["ongoing-open"] });
   };
 
+  const courtPlan = fromCourtDrafts(courts);
+  const courtProblem = isFullRotation ? null : courtListProblem(courts);
+  // After the first result only renames are safe — the API refuses anything else.
+  const isCourtStructureLocked = hasRecordedResult(event);
+  // Saving a structural change rebuilds an existing schedule, so the organiser is asked first.
+  const willRebuildSchedule =
+    !isFullRotation &&
+    event.games.some((game) => game.phase === "group") &&
+    isStructuralCourtChange(event.config.courts, courtPlan);
+
   const saveConfigMutation = useMutation({
     mutationFn: () =>
       putJson(API.UPDATE_ONGOING_CONFIG(event.id), {
         gamesPerPair,
-        courts,
+        // Rotation does not use the court list, so a draft hidden from the organiser is never sent.
+        ...(isFullRotation ? {} : { courts: courtPlan }),
         // Number("") is 0, which the backend would reject or treat as a real cap — blank must stay null.
         maxTeams: maxTeams.trim() === "" ? null : Number(maxTeams),
         visibility,
@@ -135,18 +155,6 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
             onChange={(next) => setGamesPerPair(Number(next))}
             options={[1, 2, 3].map((count) => ({ value: String(count), label: String(count) }))}
           />
-
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-muted-foreground" suppressHydrationWarning>
-              {t("ongoing.config.courts")}
-            </span>
-            <Input
-              type="number"
-              min={1}
-              value={courts}
-              onChange={(changeEvent) => setCourts(Number(changeEvent.target.value))}
-            />
-          </label>
 
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-muted-foreground" suppressHydrationWarning>
@@ -297,6 +305,13 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
             </>
           )}
 
+          {/* Full rotation schedules itself — one court per group — so it has no court list. */}
+          {!isFullRotation && (
+            <div className="border-t pt-4">
+              <CourtListEditor courts={courts} onChange={setCourts} isStructureLocked={isCourtStructureLocked} />
+            </div>
+          )}
+
           <div className="flex flex-col gap-2 border-t pt-4">
             <div className="flex flex-col gap-0.5">
               <p className="font-medium" suppressHydrationWarning>
@@ -328,8 +343,11 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
 
           <Button
             className="self-start"
-            onClick={() => saveConfigMutation.mutate()}
-            disabled={saveConfigMutation.isPending}
+            onClick={() => {
+              if (willRebuildSchedule && !window.confirm(t("ongoing.courts.rebuildConfirm"))) return;
+              saveConfigMutation.mutate();
+            }}
+            disabled={saveConfigMutation.isPending || courtProblem !== null}
           >
             <span suppressHydrationWarning>{t("ongoing.config.save")}</span>
           </Button>
@@ -340,7 +358,7 @@ export function OngoingConfigTab({ event }: OngoingConfigTabProps) {
 
           {saveConfigMutation.isSuccess &&
             gamesPerPair === event.config.gamesPerPair &&
-            courts === event.config.courts &&
+            (isFullRotation || JSON.stringify(courtPlan) === JSON.stringify(event.config.courts)) &&
             (maxTeams.trim() === "" ? null : Number(maxTeams)) === event.config.maxTeams &&
             visibility === event.config.visibility &&
             allowSoloRegistration === event.config.allowSoloRegistration &&

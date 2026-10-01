@@ -18,9 +18,11 @@ interface OngoingMatchCardProps {
   side1Label: string;
   side2Label: string;
   canEdit: boolean;
+  /** The organiser's name for the court; falls back to the fixture's number. */
+  courtLabel?: string;
 }
 
-export function OngoingMatchCard({ game, side1Label, side2Label, canEdit }: OngoingMatchCardProps) {
+export function OngoingMatchCard({ game, side1Label, side2Label, canEdit, courtLabel }: OngoingMatchCardProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const played = isPlayed(game);
@@ -91,7 +93,7 @@ export function OngoingMatchCard({ game, side1Label, side2Label, canEdit }: Ongo
       <CardContent className="flex flex-col gap-3 p-4">
         <div className="flex items-center justify-between">
           <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium text-muted-foreground">
-            {t("ongoing.matchesTab.court")} {game.court}
+            {t("ongoing.matchesTab.court")} {courtLabel ?? game.court}
           </span>
           {canEdit && played && !isEditing && (
             <div className="flex gap-1">

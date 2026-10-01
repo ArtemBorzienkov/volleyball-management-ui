@@ -25,8 +25,16 @@ export type OlderOngoingOpenEvent = Older<
 export type OlderOngoingEvent = Omit<OngoingEvent, 'soloPlayers' | 'config' | 'games' | 'rotation'> &
   Partial<Pick<OngoingEvent, 'soloPlayers' | 'rotation'>> & {
     games: Array<Older<OngoingEvent['games'][number], 'groupIndex' | 'side1Players' | 'side2Players'>>
-    config: Older<OngoingEvent['config'], 'visibility' | 'allowSoloRegistration' | 'rotationRounds'>
+    config: Omit<Older<OngoingEvent['config'], 'visibility' | 'allowSoloRegistration' | 'rotationRounds'>, 'courts'> & {
+      // A backend from before named courts sends a bare count of all-day courts.
+      courts: OngoingEvent['config']['courts'] | number
+    }
   }
+
+const courtsFrom = (courts: OngoingEvent['config']['courts'] | number): OngoingEvent['config']['courts'] =>
+  typeof courts === 'number'
+    ? Array.from({ length: Math.max(1, courts) }, (_, index) => ({ label: String(index + 1), fromRound: 1, toRound: null }))
+    : courts
 
 export function normalizeOngoingListItem(raw: OlderOngoingEventListItem): OngoingEventListItem {
   return {
@@ -64,6 +72,7 @@ export function normalizeOngoingEvent(raw: OlderOngoingEvent): OngoingEvent {
       visibility: raw.config.visibility ?? 'public',
       allowSoloRegistration: raw.config.allowSoloRegistration ?? false,
       rotationRounds: raw.config.rotationRounds ?? 3,
+      courts: courtsFrom(raw.config.courts),
     },
     soloPlayers: raw.soloPlayers ?? [],
     // A backend without the rotation scheme sends neither the participants nor the ladder; the

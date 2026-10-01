@@ -147,7 +147,7 @@ the same games twice under a different model:
 | **Bracket** | `groupsPlayoff` | The knockout tree. |
 | **Results** | on the play day | Final places, and the hand-off into `/add-results`. |
 | **Rules** | all, logged out included | How this tournament is run, in the reader's language. |
-| **Config** | organiser/admin | Courts, caps, visibility, registration mode, scheme and its fields, and which rules the Rules tab shows. |
+| **Config** | organiser/admin | Courts (not for full rotation), caps, visibility, registration mode, scheme and its fields, and which rules the Rules tab shows. |
 
 "On the play day" is `shouldShowPlayDayTabs` in
 [`lib/ongoing-tabs.ts`](lib/ongoing-tabs.ts): a schedule has to exist **and** the
@@ -181,6 +181,19 @@ silently on send.
 paired again. It asks first, and the confirmation says so when a schedule exists,
 since the fixtures go with the teams. Offered only while the tournament takes
 partnerless entrants and has teams, and locked once it has started.
+
+**Courts** are edited with one shared component,
+[`court-list-editor.tsx`](components/ongoing/court-list-editor.tsx), in both the create
+form and Config: one row per court with a free-text label, "from round" and "to round"
+(blank = to the end), reordering (list order is fill order — the first court is used
+first in every round), add and remove. A new court is open all day and gets the next
+free number. The rules mirror the API in [`lib/ongoing-courts.ts`](lib/ongoing-courts.ts):
+labels are unique and at most 10 characters; a rename is allowed at any time, but any
+other change is locked once a result is recorded, and before that, saving it asks first
+because the API rebuilds the schedule. Match cards show the label (`courtLabel`). The
+Matches tab notes how many teams sit out two rounds in a row (`teamsWithDoubleRest`,
+worked out from the fixtures), which a court layout can make unavoidable. Full rotation
+has no court list; the Rules tab does not mention courts.
 
 **The Rules tab** is built from a catalogue of rule keys,
 [`lib/ongoing-rules.ts`](lib/ongoing-rules.ts), which mirrors the API's own

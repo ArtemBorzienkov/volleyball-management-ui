@@ -213,7 +213,6 @@
     "config": {
       "title": "Format",
       "gamesPerPair": "Games between each pair of teams",
-      "courts": "Courts",
       "save": "Save format",
       "saved": "Format saved",
       "teamsTitle": "Teams",
@@ -382,14 +381,14 @@
         "title": "Round robin",
         "summary": "One table. Every team plays every other team, and the standings decide the winner — there is no knockout stage.",
         "step1": "Teams register as pairs. Anyone entering without a partner waits in the pool until the organiser pairs them up.",
-        "step2": "The organiser generates the schedule: every pair of teams meets {{gamesPerPair}} time(s), spread across {{courts}} court(s).",
+        "step2": "The organiser generates the schedule: every pair of teams meets {{gamesPerPair}} time(s).",
         "step3": "Results are entered as they are played. When every game has a score, the top of the table wins."
       },
       "groupsPlayoff": {
         "title": "Groups + playoff",
         "summary": "A group stage followed by a knockout. {{groups}} group(s), the best {{qualifiers}} of each advancing to a bracket of {{bracketTeams}} teams.",
         "step1": "Teams register as pairs, then the organiser generates the schedule and they are dealt into {{groups}} group(s).",
-        "step2": "Inside a group every team plays every other {{gamesPerPair}} time(s), on {{courts}} court(s).",
+        "step2": "Inside a group every team plays every other {{gamesPerPair}} time(s).",
         "step3": "Once every group game has a result, the top {{qualifiers}} of each group go through — {{bracketTeams}} teams in total — seeded so group winners meet the weakest qualifiers first.",
         "step4": "The bracket is single elimination: lose once and you are out. The final decides 1st and 2nd, and a third-place match, if there is one, decides 3rd."
       },
@@ -404,6 +403,30 @@
       },
       "servingTitle": "Serving",
       "serving": "Serve to the same player no more than once; a serve down the middle, between the players, does not count."
+    },
+    "courts": {
+      "title": "Courts",
+      "hint": "In the order they fill: the first court is used first in every round. Leave \"to\" empty for the whole tournament.",
+      "label": "Court",
+      "fromRound": "From round",
+      "toRound": "To round",
+      "toEnd": "end",
+      "labelFor": "Court {{position}} name",
+      "fromRoundFor": "Court {{position}}: from round",
+      "toRoundFor": "Court {{position}}: to round",
+      "moveUp": "Move court {{position}} up",
+      "moveDown": "Move court {{position}} down",
+      "remove": "Remove court {{position}}",
+      "add": "Add court",
+      "lockedHint": "A result has been recorded, so courts can only be renamed now.",
+      "rebuildConfirm": "Changing the courts rebuilds the schedule. Continue?",
+      "doubleRestNote": "Teams sitting out two rounds in a row in this schedule: {{count}}. Add a court for those rounds to avoid it.",
+      "errorEmpty": "Add at least one court.",
+      "errorTooMany": "A tournament can have at most {{max}} courts.",
+      "errorLabelLength": "Court {{position}}: the name can be at most {{max}} characters.",
+      "errorDuplicate": "Court names must be unique — \"{{label}}\" is used twice.",
+      "errorFrom": "Court {{position}}: \"from round\" must be 1 or more.",
+      "errorTo": "Court {{position}}: \"to round\" must be empty or no earlier than \"from round\"."
     }
   },
   "calendar": {

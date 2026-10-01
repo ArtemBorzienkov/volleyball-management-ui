@@ -26,6 +26,24 @@ describe('normalizeOngoingEvent', () => {
       ...over,
     }) as unknown as OlderOngoingEvent
 
+  // An API from before named courts sends a count; every component now reads a list.
+  it('turns an older API’s court count into that many all-day courts', () => {
+    const raw = older({ config: { gamesPerPair: 1, courts: 3, maxTeams: null, scheme: 'roundRobin', groupCount: 1, qualifiersPerGroup: null } })
+
+    expect(normalizeOngoingEvent(raw).config.courts).toEqual([
+      { label: '1', fromRound: 1, toRound: null },
+      { label: '2', fromRound: 1, toRound: null },
+      { label: '3', fromRound: 1, toRound: null },
+    ])
+  })
+
+  it('keeps a court list the API did send', () => {
+    const courts = [{ label: '5', fromRound: 1, toRound: 4 }]
+    const raw = older({ config: { gamesPerPair: 1, courts, maxTeams: null, scheme: 'roundRobin', groupCount: 1, qualifiersPerGroup: null } })
+
+    expect(normalizeOngoingEvent(raw).config.courts).toEqual(courts)
+  })
+
   it('defaults the rotation round count rather than leaving it undefined', () => {
     expect(normalizeOngoingEvent(older()).config.rotationRounds).toBe(3)
   })
